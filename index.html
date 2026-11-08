@@ -1129,7 +1129,7 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
     if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); }
     const s = $('lkStart').value, en = $('lkEnd').value;
     draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, place: [lkLoc.label, lkLoc.admin1, lkLoc.country].filter(Boolean).join(', '), country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: s, end: en < s ? s : en, note: '' });
-    saveDraft(); $('lkAddMsg').textContent = `已加入：${lkLoc.label}（${md(s)}–${md(en)}）。記得到「編輯」頁按「儲存並發布」。`; $('lkAddMsg').className = 'ed-msg ok';
+    saveDraft(); $('lkAddMsg').textContent = `${draft.groups.find(g => g.id === $('lkGroup').value)?.name || ''}已加入${lkLoc.label}。`; $('lkAddMsg').className = 'ed-msg ok';
   });
 })();
 function isEditor() { return !!(draft || sget(DRAFT_KEY) || ghCfg().token); }
