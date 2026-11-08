@@ -5,8 +5,8 @@
   "updatedAt": "2026-11-08T14:00:00+08:00",
   "groups": [
     { "id": "g1", "name": "本隊" },
-    { "id": "g2", "name": "先遣 A" },
-    { "id": "g3", "name": "先遣 B" }
+    { "id": "g2", "name": "先遣A" },
+    { "id": "g3", "name": "先遣B" }
   ],
   "segments": [
     { "id": "s1", "groupId": "g2", "label": "羅馬", "country": "Italy", "countryCode": "IT", "lat": 41.89193, "lon": 12.51133, "timezone": "Europe/Rome", "start": "2026-11-12", "end": "2026-11-15", "note": "場勘" },
