@@ -58,6 +58,10 @@ h1{font-family:var(--f-display);font-size:clamp(24px,3.2vw,34px);line-height:1.2
 .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
 .tab{border:0;background:transparent;border-radius:7px;padding:7px 14px;font-weight:700;font-size:14px;color:var(--muted);text-decoration:none}
 .tab[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tab-edit{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-weight:700;font-size:14px;text-decoration:none}
+.tab-edit:hover{color:var(--accent);border-color:var(--accent)}
+.tab-edit[aria-current="page"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 
 .banner{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;background:var(--accent-soft);color:var(--ink);border:1px solid var(--line)}
 .banner.err{background:color-mix(in srgb,var(--bad) 12%,var(--surface));border-color:color-mix(in srgb,var(--bad) 30%,var(--line))}
@@ -439,11 +443,13 @@ footer a{color:var(--muted)}
       <h1 id="title">載入中…</h1>
       <p class="sub" id="subtitle"></p>
     </div>
-    <nav class="tabs" aria-label="頁面">
-      <a class="tab" href="#overview" data-view="overview">行程總覽</a>
-      <a class="tab" href="#lookup" data-view="lookup">單筆查詢</a>
-      <a class="tab" href="#edit" data-view="edit" id="editTab" hidden>編輯</a>
-    </nav>
+    <div class="top-actions">
+      <nav class="tabs" aria-label="頁面">
+        <a class="tab" href="#lookup" data-view="lookup">地點查詢</a>
+        <a class="tab" href="#overview" data-view="overview">行程總覽</a>
+      </nav>
+      <a class="tab-edit" href="#edit" data-view="edit" id="editTab"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 14.5V17h2.5l8.6-8.6-2.5-2.5L3 14.5Zm13.7-7.3a.9.9 0 0 0 0-1.3l-1.6-1.6a.9.9 0 0 0-1.3 0l-1.2 1.2 2.9 2.9 1.2-1.2Z" fill="currentColor"/></svg>編輯</a>
+    </div>
   </header>
   <div id="banner" class="banner" hidden></div>
 
@@ -568,7 +574,6 @@ footer a{color:var(--muted)}
 
   <footer>
     <span>天氣資料：Open-Meteo（ECMWF、NOAA GFS、DWD ICON 等國家級模型）。歷年平均：ERA5 再分析資料。重要行程請另查當地官方警報。</span>
-    <a href="#edit" id="editLink">編輯行程（管理者）</a>
   </footer>
 </div>
 
@@ -936,7 +941,7 @@ function hxButton(seg, date, showCity) {
 }
 function renderGrid(proj) {
   const grid = $('grid'), sp = tripSpan(proj);
-  if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。管理者可從頁尾「編輯行程」新增第一段。</div>`; return; }
+  if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。按右上「編輯」新增第一段。</div>`; return; }
   const dates = rangeDates(sp.a, sp.b), today = localISO(), hz = forecastHorizon();
   const kinds = dates.map(d => d < today ? 'past' : d <= hz ? 'fc' : 'cl');
   const cols = ['var(--vc-date)'], G = [];
@@ -1089,7 +1094,7 @@ $('scrim').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('drawer').hidden) closeDrawer(); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-seg][data-date]'); if (b && !b.closest('#view-edit')) openDrawer(b.dataset.seg, b.dataset.date); });
 
-/* ========= 單筆查詢 ========= */
+/* ========= 地點查詢 ========= */
 let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
 (function initLookup() {
   const t = localISO(); $('lkStart').value = t; $('lkEnd').value = addDays(t, 6);
@@ -1152,10 +1157,9 @@ $('lkEnd').addEventListener('change', () => { if (lkLoc) runLookup(); });
 const DRAFT_KEY = 'tripWeather.draft', GH_KEY = 'tripWeather.github';
 let selGroup = null, selSeg = null, pvTok = 0, pvTimer = null;
 function ghCfg() { return { ...CONFIG.github, ...(sget(GH_KEY) || {}) }; }
-function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; $('editTab').hidden = false; }
+function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; }
 function startEdit() {
   if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
-  $('editTab').hidden = false;
   $('edTitle').value = draft.title; $('edSub').value = draft.subtitle;
   const c = ghCfg(); $('ghOwner').value = c.owner || ''; $('ghRepo').value = c.repo || ''; $('ghBranch').value = c.branch || 'main'; $('ghPath').value = c.path || 'data.json'; $('ghToken').value = c.token || '';
   if (!c.token) $('ghSet').open = true;
@@ -1231,8 +1235,7 @@ function renderEdForm() {
   <div class="ed-pad">
     <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
     <div class="ac"><label class="f" for="sCity">搜尋地點</label><input type="search" id="sCity" value="${esc(s.place || '')}" placeholder="建議用英文搜尋，例如 Florence" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
-    <label class="f" for="sLabel">顯示名稱<input type="text" id="sLabel" value="${esc(s.label)}" maxlength="20" placeholder="例如：佛羅倫斯"></label>
-    <p class="hint" style="margin-top:-4px">總覽上顯示的城市名稱。可改成繁體中文，不影響座標。</p>
+    <label class="f" for="sLabel">顯示名稱<input type="text" id="sLabel" value="${esc(s.label)}" maxlength="20" placeholder="總覽上顯示的名稱，可改繁體中文（不影響座標）"></label>
     <div class="f" style="display:grid;gap:6px"><span>抵達與離開日期</span><div id="sCal"></div></div>
   </div>`;
   const geo = () => { const el = $('sGeo'); el.className = 'geo' + (s.lat == null ? ' bad' : ''); el.textContent = s.lat == null ? '尚未選定地點：輸入後請從選單點選，才會帶入正確座標' : `已選定：${s.place || s.label}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`; };
@@ -1381,7 +1384,7 @@ function route() {
   const h = location.hash;
   const v = h === '#lookup' ? 'lookup' : (h === '#edit') ? 'edit' : 'overview';
   ['overview', 'lookup', 'edit'].forEach(k => { $('view-' + k).hidden = k !== v; });
-  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.view === v || (v === 'overview' && h === '#edit-preview' && t.dataset.view === 'overview') ? 'page' : 'false'));
+  document.querySelectorAll('.tab, .tab-edit').forEach(t => t.setAttribute('aria-current', t.dataset.view === v || (v === 'overview' && h === '#edit-preview' && t.dataset.view === 'overview') ? 'page' : 'false'));
   closeDrawer();
   if (v === 'edit') startEdit();
   const proj = view();
@@ -1400,7 +1403,6 @@ window.addEventListener('hashchange', route);
 
 (async function boot() {
   await loadData();
-  if (sget(DRAFT_KEY) || sget(GH_KEY)?.token) $('editTab').hidden = false;
   route();
 })();
 </script>
