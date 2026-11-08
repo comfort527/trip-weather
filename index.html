@@ -237,6 +237,54 @@ details.gh-set summary{cursor:pointer;font-weight:700;font-size:14px;padding:12p
 details.gh-set .ed-body{border-top:1px solid var(--line)}
 .hint{font-size:12px;color:var(--muted);margin:0}
 
+/* Editor — three columns: groups | segments of the selected group | form + weather preview */
+.ed-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:10px 14px;margin-top:18px}
+.ed-bar h2{margin:0;font-size:16px}
+.ed-bar .sp{flex:1}
+.ed-bar #edMsg{flex-basis:100%}
+.ed-bar #edMsg:empty{display:none}
+.ed-cols{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr) minmax(300px,380px);gap:16px;margin-top:16px;align-items:start}
+.ed-col{display:grid;gap:16px;min-width:0}
+.ed-col.right{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 92px);overflow-y:auto;border-radius:14px}
+.ed-h{margin:0;font-size:13px;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:50px}
+.ed-pad{padding:12px 14px;display:grid;gap:10px}
+.g-item{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;border:1px solid transparent;border-radius:9px;padding:8px 10px;background:transparent;text-align:left;color:var(--ink)}
+.g-item:hover{background:var(--surface-2)}
+.g-item.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.g-item .gdot{width:12px;height:12px;border-radius:3px}
+.g-item .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-item .c{font-size:12px;color:var(--muted)}
+.g-edit{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin:2px 0 6px}
+.g-edit-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.seg-list{padding:12px 14px 16px}
+.seg-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:11px 12px;color:var(--ink)}
+.seg-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.seg-card.on{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.seg-card .dates{font-family:var(--f-num);font-weight:600;font-size:13px;line-height:1.35;white-space:nowrap;min-width:104px}
+.seg-card .dates small{display:block;font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:11px}
+.seg-card .city{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg-card .city small{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+.seg-card .meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg-card .warn{color:var(--bad);font-weight:700}
+.seg-gap{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:3px 0 3px 46px;min-height:22px}
+.seg-gap.over{color:var(--warn);font-weight:700}
+.seg-gap.tight{min-height:10px;padding:0}
+.ed-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+.form-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.geo{font-size:11px;color:var(--muted);margin-top:4px}
+.geo.bad{color:var(--bad)}
+.pv-row{display:grid;grid-template-columns:70px 26px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--line-2);font-size:13px}
+.pv-row:last-child{border-bottom:0}
+.pv-row.cl{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
+.pv-row svg.ic{width:24px;height:24px}
+.pv-row .d{font-family:var(--f-num);font-weight:600}
+.pv-row .d small{font-family:var(--f-body);font-weight:400;color:var(--muted);margin-left:3px}
+.pv-row .t{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+.ed-foot-hint{margin:12px 2px 0}
+@media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar #draftState,#downloadBtn{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
+@media (max-width:1120px){.ed-cols{grid-template-columns:minmax(210px,230px) minmax(0,1fr) minmax(280px,330px)}}
+@media (max-width:900px){.ed-cols{grid-template-columns:minmax(0,1fr)}.ed-col.left{display:contents}.ed-col.mid{order:1}.ed-col.right{order:2;position:static;max-height:none;overflow:visible}#ghSet{order:3}}
+
 footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--muted)}
 
@@ -353,51 +401,60 @@ footer a{color:var(--muted)}
 
   <!-- Editor -->
   <main id="view-edit" hidden>
-    <section class="editor">
-      <div class="card ed-sec">
-        <h2 class="sect-h">行程基本資料<span class="ed-msg" id="draftState"></span></h2>
-        <div class="ed-body ed-grid2">
-          <label class="f" for="edTitle">行程名稱<input id="edTitle" type="text" maxlength="60" placeholder="例如：歐洲行程"></label>
-          <label class="f" for="edSub">說明（選填）<input id="edSub" type="text" maxlength="120" placeholder="例如：第一梯次"></label>
-        </div>
-      </div>
-      <div class="card ed-sec">
-        <h2 class="sect-h">組別<button class="btn sm" type="button" id="addGroup">＋ 新增組別</button></h2>
-        <div class="ed-body"><div class="grp-list" id="grpList"></div></div>
-      </div>
-      <div class="card ed-sec">
-        <h2 class="sect-h">行程段落<button class="btn sm" type="button" id="addSeg">＋ 新增一段</button></h2>
-        <div class="ed-body">
-          <p class="hint">每一段是「某組在某城市的起訖日期」。城市輸入後請從選單點選，才會帶入正確座標。</p>
-          <div class="tbl-wrap"><table class="seg-table"><thead><tr><th>組別</th><th>城市</th><th>起</th><th>迄</th><th>備註（會公開顯示）</th><th></th></tr></thead><tbody id="segRows"></tbody></table></div>
-        </div>
-      </div>
-      <div class="card ed-sec">
-        <div class="ed-body">
-          <div class="ed-actions">
-            <button class="btn primary" type="button" id="publishBtn">儲存並發布</button>
-            <button class="btn" type="button" id="previewBtn">預覽總覽</button>
-            <button class="btn" type="button" id="downloadBtn">下載 data.json</button>
-            <button class="btn danger" type="button" id="discardBtn">放棄修改</button>
-            <span class="ed-msg" id="edMsg"></span>
+    <div class="card ed-bar">
+      <h2>編輯行程</h2>
+      <span class="ed-msg" id="draftState"></span>
+      <span class="sp"></span>
+      <button class="btn sm" type="button" id="previewBtn">預覽總覽</button>
+      <button class="btn sm" type="button" id="downloadBtn">下載 data.json</button>
+      <button class="btn sm danger" type="button" id="discardBtn">放棄修改</button>
+      <button class="btn sm primary" type="button" id="publishBtn">儲存並發布</button>
+      <div class="ed-msg" id="edMsg"></div>
+    </div>
+    <div class="ed-cols">
+      <div class="ed-col left">
+        <section class="card">
+          <h3 class="ed-h">行程資料</h3>
+          <div class="ed-pad">
+            <label class="f" for="edTitle">行程名稱<input id="edTitle" type="text" maxlength="60" placeholder="例如：歐洲行程"></label>
+            <label class="f" for="edSub">說明（選填）<input id="edSub" type="text" maxlength="120" placeholder="例如：第一梯次"></label>
           </div>
-          <p class="hint">發布後約 1 分鐘，同仁重新整理即可看到。歷年同期平均會在發布時一併計算並存入行程檔。</p>
-        </div>
-      </div>
-      <details class="card gh-set" id="ghSet">
-        <summary>GitHub 發布設定</summary>
-        <div class="ed-body">
-          <div class="ed-grid2">
+        </section>
+        <section class="card">
+          <h3 class="ed-h">組別<button class="btn sm" type="button" id="addGroup">＋ 新增組別</button></h3>
+          <div class="ed-pad" id="grpList" style="gap:4px"></div>
+        </section>
+        <details class="card gh-set" id="ghSet">
+          <summary>GitHub 發布設定</summary>
+          <div class="ed-pad" style="border-top:1px solid var(--line)">
             <label class="f" for="ghOwner">帳號<input id="ghOwner" type="text" placeholder="your-account"></label>
             <label class="f" for="ghRepo">Repo 名稱<input id="ghRepo" type="text" placeholder="trip-weather"></label>
-            <label class="f" for="ghBranch">分支<input id="ghBranch" type="text" placeholder="main"></label>
-            <label class="f" for="ghPath">檔案路徑<input id="ghPath" type="text" placeholder="data.json"></label>
+            <div class="form-2">
+              <label class="f" for="ghBranch">分支<input id="ghBranch" type="text" placeholder="main"></label>
+              <label class="f" for="ghPath">檔案路徑<input id="ghPath" type="text" placeholder="data.json"></label>
+            </div>
+            <label class="f" for="ghToken">存取權杖<input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off"></label>
+            <p class="hint">Fine-grained token，只需這個 repo 的 Contents 讀寫權限。權杖只存在這台瀏覽器。</p>
+            <div class="ed-actions"><button class="btn sm" type="button" id="ghSave">儲存設定</button><button class="btn sm" type="button" id="ghTest">測試連線</button><button class="btn sm danger" type="button" id="ghClear">清除權杖</button></div>
+            <span class="ed-msg" id="ghMsg"></span>
           </div>
-          <label class="f" for="ghToken">存取權杖（Fine-grained token，只需此 repo 的 Contents 讀寫權限）<input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off"></label>
-          <div class="ed-actions"><button class="btn" type="button" id="ghSave">儲存設定（只存在這台瀏覽器）</button><button class="btn" type="button" id="ghTest">測試連線</button><button class="btn danger" type="button" id="ghClear">清除權杖</button><span class="ed-msg" id="ghMsg"></span></div>
-        </div>
-      </details>
-    </section>
+        </details>
+      </div>
+      <div class="ed-col mid">
+        <section class="card">
+          <h3 class="ed-h"><span id="midTitle">行程段落</span><button class="btn sm" type="button" id="addSeg">＋ 新增一段</button></h3>
+          <div class="seg-list" id="segList"></div>
+        </section>
+      </div>
+      <div class="ed-col right">
+        <section class="card" id="segForm"></section>
+        <section class="card" id="edWxCard">
+          <h3 class="ed-h">天氣預覽<span class="muted" style="font-weight:400;font-size:12px" id="edWxNote"></span></h3>
+          <div class="ed-pad" id="edWx" style="gap:0"></div>
+        </section>
+      </div>
+    </div>
+    <p class="hint ed-foot-hint">修改會自動暫存在這台瀏覽器。按「儲存並發布」後約 1 分鐘，同仁重新整理即可看到；歷年同期平均會在發布時一併算好存入行程檔。</p>
   </main>
 
   <footer>
@@ -631,7 +688,7 @@ function climKey(seg) { return `${locKey(seg.lat, seg.lon)}|${seg.start}|${seg.e
 const climMem = new Map();
 async function ensureClimate(segs) {
   // 依地點合併，避免重複呼叫
-  const need = segs.filter(s => s.lat != null && !(s.climate && s.climate.key === climKey(s)));
+  const need = segs.filter(s => { const c = s.lat != null ? climFor(s) : true; return !c || c.error; });
   const byLoc = new Map();
   for (const s of need) {
     const cached = sget('cl:' + climKey(s));
@@ -646,7 +703,7 @@ async function ensureClimate(segs) {
     } catch (e) { list.forEach(s => climMem.set(s.id, { error: e.message || '無法取得歷年資料' })); }
   });
 }
-function climFor(seg) { if (seg.climate && seg.climate.key === climKey(seg)) return seg.climate; return climMem.get(seg.id) || null; }
+function climFor(seg) { if (seg.climate && seg.climate.key === climKey(seg)) return seg.climate; const c = climMem.get(seg.id); return c && (c.error || c.key === climKey(seg)) ? c : null; }
 
 /* ========= 狀態 ========= */
 let data = null;          // 已發布的行程
@@ -960,75 +1017,136 @@ $('lkEnd').addEventListener('change', () => { if (lkLoc) runLookup(); });
 
 /* ========= 編輯 ========= */
 const DRAFT_KEY = 'tripWeather.draft', GH_KEY = 'tripWeather.github';
+let selGroup = null, selSeg = null, pvTok = 0, pvTimer = null;
 function ghCfg() { return { ...CONFIG.github, ...(sget(GH_KEY) || {}) }; }
-function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改（已暫存在這台瀏覽器）'; $('editTab').hidden = false; }
+function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; $('editTab').hidden = false; }
 function startEdit() {
-  if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); if (saved) $('draftState').textContent = '已載入上次未發布的修改'; }
+  if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
   $('editTab').hidden = false;
   $('edTitle').value = draft.title; $('edSub').value = draft.subtitle;
   const c = ghCfg(); $('ghOwner').value = c.owner || ''; $('ghRepo').value = c.repo || ''; $('ghBranch').value = c.branch || 'main'; $('ghPath').value = c.path || 'data.json'; $('ghToken').value = c.token || '';
   if (!c.token) $('ghSet').open = true;
-  renderGroups(); renderSegs();
+  if (!draft.groups.some(g => g.id === selGroup)) selGroup = draft.groups[0].id;
+  if (!draft.segments.some(s => s.id === selSeg && s.groupId === selGroup)) selSeg = null;
+  renderEditor();
 }
-$('edTitle').addEventListener('input', () => { draft.title = $('edTitle').value; saveDraft(); });
-$('edSub').addEventListener('input', () => { draft.subtitle = $('edSub').value; saveDraft(); });
-function renderGroups() {
-  $('grpList').innerHTML = draft.groups.map((g, i) => {
-    const n = draft.segments.filter(s => s.groupId === g.id).length;
-    return `<div class="grp-row" data-g="${esc(g.id)}"><span class="gdot" style="background:${gColor(draft, g.id)}"></span><input type="text" id="gname-${esc(g.id)}" value="${esc(g.name)}" maxlength="20" aria-label="組名"><button class="btn sm" type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="上移">↑</button><button class="btn sm" type="button" data-down ${i === draft.groups.length - 1 ? 'disabled' : ''} aria-label="下移">↓</button><span class="del-wrap"><button class="btn sm danger" type="button" data-del ${draft.groups.length === 1 ? 'disabled' : ''}>刪除${n ? `（含 ${n} 段）` : ''}</button></span></div>`;
+function renderEditor() { renderEdGroups(); renderEdSegs(); renderEdForm(); }
+$('edTitle').addEventListener('input', () => { draft.title = $('edTitle').value; saveDraft(); renderHeader(draft); });
+$('edSub').addEventListener('input', () => { draft.subtitle = $('edSub').value; saveDraft(); renderHeader(draft); });
+function groupSegs(gid) { return draft.segments.filter(s => s.groupId === gid).sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end)); }
+
+/* 左：組別 */
+function renderEdGroups() {
+  const box = $('grpList');
+  box.innerHTML = draft.groups.map((g, i) => {
+    const n = draft.segments.filter(s => s.groupId === g.id).length, on = g.id === selGroup;
+    const item = `<button type="button" class="g-item${on ? ' on' : ''}" data-gsel="${esc(g.id)}" aria-pressed="${on}"><span class="gdot" style="background:${gColor(draft, g.id)}"></span><span class="n" data-gname-label="${esc(g.id)}">${esc(g.name || '未命名')}</span><span class="c">${n} 段</span></button>`;
+    const edit = on ? `<div class="g-edit"><label class="f" for="gname-${esc(g.id)}">組名<input type="text" id="gname-${esc(g.id)}" value="${esc(g.name)}" maxlength="20"></label><div class="g-edit-row"><button class="btn sm" type="button" data-gup ${i === 0 ? 'disabled' : ''}>↑ 上移</button><button class="btn sm" type="button" data-gdown ${i === draft.groups.length - 1 ? 'disabled' : ''}>↓ 下移</button><span class="sp" style="flex:1"></span><span class="del-wrap"><button class="btn sm danger" type="button" data-gdel ${draft.groups.length === 1 ? 'disabled title="至少要保留一組"' : ''}>刪除此組</button></span></div></div>` : '';
+    return item + edit;
   }).join('');
-  $('grpList').querySelectorAll('.grp-row').forEach(row => {
-    const id = row.dataset.g, idx = draft.groups.findIndex(g => g.id === id);
-    row.querySelector('input').addEventListener('input', e => { draft.groups[idx].name = e.target.value; saveDraft(); renderSegs(); });
-    row.querySelector('[data-up]').addEventListener('click', () => { const [g] = draft.groups.splice(idx, 1); draft.groups.splice(idx - 1, 0, g); saveDraft(); renderGroups(); renderSegs(); });
-    row.querySelector('[data-down]').addEventListener('click', () => { const [g] = draft.groups.splice(idx, 1); draft.groups.splice(idx + 1, 0, g); saveDraft(); renderGroups(); renderSegs(); });
-    row.querySelector('[data-del]').addEventListener('click', e => {
-      const wrap = e.target.closest('.del-wrap');
-      wrap.innerHTML = `<span class="inline-confirm">確定刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
-      wrap.querySelector('[data-yes]').addEventListener('click', () => { draft.groups.splice(idx, 1); draft.segments = draft.segments.filter(s => s.groupId !== id); saveDraft(); renderGroups(); renderSegs(); });
-      wrap.querySelector('[data-no]').addEventListener('click', renderGroups);
-    });
+  box.querySelectorAll('[data-gsel]').forEach(b => b.addEventListener('click', () => { if (selGroup === b.dataset.gsel) return; selGroup = b.dataset.gsel; selSeg = groupSegs(selGroup)[0]?.id || null; renderEditor(); }));
+  const g = draft.groups.find(x => x.id === selGroup); if (!g) return;
+  const idx = draft.groups.indexOf(g);
+  const nameIn = $(`gname-${g.id}`);
+  nameIn?.addEventListener('input', () => { g.name = nameIn.value; saveDraft(); const lab = box.querySelector(`[data-gname-label="${CSS.escape(g.id)}"]`); if (lab) lab.textContent = g.name || '未命名'; $('midTitle').textContent = `${g.name || '未命名'} 的行程`; });
+  box.querySelector('[data-gup]')?.addEventListener('click', () => { draft.groups.splice(idx, 1); draft.groups.splice(idx - 1, 0, g); saveDraft(); renderEditor(); });
+  box.querySelector('[data-gdown]')?.addEventListener('click', () => { draft.groups.splice(idx, 1); draft.groups.splice(idx + 1, 0, g); saveDraft(); renderEditor(); });
+  box.querySelector('[data-gdel]')?.addEventListener('click', e => {
+    const n = draft.segments.filter(s => s.groupId === g.id).length, wrap = e.target.closest('.del-wrap');
+    wrap.innerHTML = `<span class="inline-confirm">${n ? `連同 ${n} 段行程一起刪除？` : '確定刪除？'}<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
+    wrap.querySelector('[data-yes]').addEventListener('click', () => { draft.groups.splice(idx, 1); draft.segments = draft.segments.filter(s => s.groupId !== g.id); selGroup = draft.groups[0].id; selSeg = null; saveDraft(); renderEditor(); });
+    wrap.querySelector('[data-no]').addEventListener('click', renderEdGroups);
   });
 }
-$('addGroup').addEventListener('click', () => { const names = draft.groups.map(g => g.name); let n = '新組別', k = 2; while (names.includes(n)) n = `新組別 ${k++}`; draft.groups.push({ id: uid(), name: n }); saveDraft(); renderGroups(); renderSegs(); const last = draft.groups.at(-1); $(`gname-${last.id}`)?.select(); });
-function renderSegs() {
-  const order = new Map(draft.groups.map((g, i) => [g.id, i]));
-  const segs = [...draft.segments].sort((a, b) => (order.get(a.groupId) - order.get(b.groupId)) || a.start.localeCompare(b.start));
-  $('segRows').innerHTML = segs.length ? segs.map(s => `<tr data-s="${esc(s.id)}">
-    <td><select id="sg-${esc(s.id)}" aria-label="組別">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select></td>
-    <td class="city"><div class="ac"><input type="text" id="sc-${esc(s.id)}" value="${esc(s.label)}" placeholder="輸入城市後點選" aria-label="城市"><div class="ac-list" hidden></div></div><div class="geo${s.lat == null ? ' bad' : ''}">${s.lat == null ? '尚未選定位置，請從選單點選' : `${esc(s.country)}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`}</div></td>
-    <td><input type="date" id="ss-${esc(s.id)}" value="${esc(s.start)}" aria-label="起"></td>
-    <td><input type="date" id="se-${esc(s.id)}" value="${esc(s.end)}" aria-label="迄"></td>
-    <td><input type="text" id="sn-${esc(s.id)}" value="${esc(s.note)}" maxlength="40" placeholder="例如：場勘" aria-label="備註"></td>
-    <td class="del-wrap"><button class="btn sm danger" type="button" data-del>刪除</button></td></tr>`).join('') : `<tr><td colspan="6" class="muted" style="padding:14px 6px">還沒有行程段落，按右上「＋ 新增一段」。</td></tr>`;
-  $('segRows').querySelectorAll('tr[data-s]').forEach(tr => {
-    const s = draft.segments.find(x => x.id === tr.dataset.s);
-    tr.querySelector('select').addEventListener('change', e => { s.groupId = e.target.value; saveDraft(); renderSegs(); });
-    const ci = tr.querySelector('.ac input');
-    attachAC(ci, tr.querySelector('.ac-list'), (r, label) => { Object.assign(s, { label, lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; saveDraft(); renderSegs(); });
-    ci.addEventListener('input', () => { s.label = ci.value; if (s.lat != null) { s.lat = null; s.lon = null; delete s.climate; tr.querySelector('.geo').textContent = '尚未選定位置，請從選單點選'; tr.querySelector('.geo').classList.add('bad'); } saveDraft(); });
-    tr.querySelector(`#ss-${CSS.escape(s.id)}`).addEventListener('change', e => { s.start = e.target.value; if (s.end < s.start) s.end = s.start; delete s.climate; saveDraft(); renderSegs(); });
-    tr.querySelector(`#se-${CSS.escape(s.id)}`).addEventListener('change', e => { s.end = e.target.value < s.start ? s.start : e.target.value; delete s.climate; saveDraft(); renderSegs(); });
-    tr.querySelector(`#sn-${CSS.escape(s.id)}`).addEventListener('input', e => { s.note = e.target.value; saveDraft(); });
-    tr.querySelector('[data-del]').addEventListener('click', e => {
-      const wrap = e.target.closest('.del-wrap');
-      wrap.innerHTML = `<span class="inline-confirm"><button class="btn sm danger" type="button" data-yes>確定</button><button class="btn sm" type="button" data-no>取消</button></span>`;
-      wrap.querySelector('[data-yes]').addEventListener('click', () => { draft.segments = draft.segments.filter(x => x.id !== s.id); saveDraft(); renderSegs(); renderGroups(); });
-      wrap.querySelector('[data-no]').addEventListener('click', renderSegs);
-    });
+$('addGroup').addEventListener('click', () => {
+  const names = draft.groups.map(g => g.name); let n = '新組別', k = 2; while (names.includes(n)) n = `新組別 ${k++}`;
+  const g = { id: uid(), name: n }; draft.groups.push(g); selGroup = g.id; selSeg = null; saveDraft(); renderEditor();
+  const inp = $(`gname-${g.id}`); inp?.focus(); inp?.select();
+});
+
+/* 中：該組行程段落 */
+function renderEdSegs() {
+  const g = draft.groups.find(x => x.id === selGroup);
+  $('midTitle').textContent = `${g?.name || '未命名'} 的行程`;
+  const segs = groupSegs(selGroup), box = $('segList');
+  if (!segs.length) { box.innerHTML = `<div class="ed-empty">這一組還沒有行程。<br>按右上「＋ 新增一段」開始。</div>`; return; }
+  let html = '';
+  segs.forEach((s, i) => {
+    if (i > 0) {
+      const prev = segs[i - 1], gap = diffDays(prev.end, s.start) - 1;
+      html += gap > 0 ? `<div class="seg-gap">↕ 中間空 ${gap} 天（${md(addDays(prev.end, 1))}${gap > 1 ? '–' + md(addDays(s.start, -1)) : ''}）</div>`
+        : gap === -1 ? `<div class="seg-gap">↕ ${md(s.start)} 移動日（兩段同一天）</div>`
+        : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
+    }
+    const n = diffDays(s.start, s.end) + 1, on = s.id === selSeg;
+    html += `<button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : '<span class="warn">未填城市</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null && s.label ? '<span class="warn">尚未從選單選定位置</span>' : esc(s.note || '　')}</span></span></button>`;
   });
+  box.innerHTML = html;
+  box.querySelectorAll('[data-ssel]').forEach(b => b.addEventListener('click', () => { selSeg = b.dataset.ssel; renderEdSegs(); renderEdForm(); if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
 }
 $('addSeg').addEventListener('click', () => {
-  const last = [...draft.segments].sort((a, b) => b.end.localeCompare(a.end))[0];
-  const start = last ? addDays(last.end, 1) : addDays(localISO(), 7);
-  const s = { id: uid(), groupId: draft.groups[0].id, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start, end: addDays(start, 2), note: '' };
-  draft.segments.push(s); saveDraft(); renderSegs(); renderGroups(); $(`sc-${s.id}`)?.focus();
+  const segs = groupSegs(selGroup), last = segs.at(-1);
+  const start = last ? last.end : addDays(localISO(), 7);
+  const s = { id: uid(), groupId: selGroup, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start, end: addDays(start, 2), note: '' };
+  draft.segments.push(s); selSeg = s.id; saveDraft(); renderEditor(); $('sCity')?.focus();
 });
+
+/* 右：編輯表單＋天氣預覽 */
+function renderEdForm() {
+  const box = $('segForm'), s = draft.segments.find(x => x.id === selSeg);
+  if (!s) { box.innerHTML = `<h3 class="ed-h">編輯這一段</h3><div class="ed-empty">從中間選一段行程來編輯，<br>或按「＋ 新增一段」。</div>`; $('edWx').innerHTML = ''; $('edWxNote').textContent = ''; $('edWxCard').hidden = true; return; }
+  $('edWxCard').hidden = false;
+  box.innerHTML = `<h3 class="ed-h">編輯這一段<span class="del-wrap"><button class="btn sm danger" type="button" id="sDel">刪除這一段</button></span></h3>
+  <div class="ed-pad">
+    <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
+    <div class="ac"><label class="f" for="sCity">城市</label><input type="text" id="sCity" value="${esc(s.label)}" placeholder="輸入城市，再從選單點選" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
+    <div class="form-2"><label class="f" for="sStart">抵達<input type="date" id="sStart" value="${esc(s.start)}"></label><label class="f" for="sEnd">離開<input type="date" id="sEnd" value="${esc(s.end)}"></label></div>
+    <label class="f" for="sNote">備註（會公開顯示）<input type="text" id="sNote" value="${esc(s.note)}" maxlength="40" placeholder="例如：場勘"></label>
+  </div>`;
+  const geo = () => { const el = $('sGeo'); el.className = 'geo' + (s.lat == null ? ' bad' : ''); el.textContent = s.lat == null ? (s.label ? '尚未選定位置，請從選單點選' : '輸入城市後從選單點選，才會帶入正確座標') : `${[s.country, s.timezone !== 'auto' ? s.timezone : ''].filter(Boolean).join('・')}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`; };
+  geo();
+  $('sGroup').addEventListener('change', e => { s.groupId = e.target.value; selGroup = s.groupId; saveDraft(); renderEditor(); });
+  const ci = $('sCity');
+  attachAC(ci, $('sCityAc'), (r, label) => { Object.assign(s, { label, lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
+  ci.addEventListener('input', () => { s.label = ci.value; if (s.lat != null) { s.lat = null; s.lon = null; s.country = ''; s.countryCode = ''; delete s.climate; } saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
+  $('sStart').addEventListener('change', e => { if (!e.target.value) return; s.start = e.target.value; if (s.end < s.start) { s.end = s.start; $('sEnd').value = s.end; } delete s.climate; saveDraft(); renderEdSegs(); schedulePreview(); });
+  $('sEnd').addEventListener('change', e => { if (!e.target.value) return; s.end = e.target.value < s.start ? s.start : e.target.value; e.target.value = s.end; delete s.climate; saveDraft(); renderEdSegs(); schedulePreview(); });
+  $('sNote').addEventListener('input', e => { s.note = e.target.value; saveDraft(); renderEdSegs(); });
+  $('sDel').addEventListener('click', e => {
+    const wrap = e.target.closest('.del-wrap');
+    wrap.innerHTML = `<span class="inline-confirm">確定刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
+    wrap.querySelector('[data-yes]').addEventListener('click', () => { const segs = groupSegs(selGroup); const i = segs.findIndex(x => x.id === s.id); draft.segments = draft.segments.filter(x => x.id !== s.id); const rest = groupSegs(selGroup); selSeg = (rest[i] || rest[i - 1])?.id || null; saveDraft(); renderEditor(); });
+    wrap.querySelector('[data-no]').addEventListener('click', renderEdForm);
+  });
+  schedulePreview(0);
+}
+function schedulePreview(ms = 350) { clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, ms); }
+async function renderPreview() {
+  const s = draft.segments.find(x => x.id === selSeg), box = $('edWx'); if (!s) return;
+  const my = ++pvTok;
+  if (s.lat == null) { box.innerHTML = '<p class="hint">選定城市後，這裡會顯示這段期間的天氣。</p>'; $('edWxNote').textContent = ''; return; }
+  const dates = rangeDates(s.start, s.end).slice(0, 31);
+  $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`;
+  box.innerHTML = '<p class="hint">天氣資料載入中…</p>';
+  const k = locKey(s.lat, s.lon);
+  try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(k, 'err'); }
+  if (my !== pvTok) return;
+  const today = localISO();
+  if (dates.some(d => d >= today && !fcDay(fcByLoc.get(k) === 'err' ? null : fcByLoc.get(k), d))) { box.innerHTML = '<p class="hint">正在計算歷年同期平均…</p>'; await ensureClimate([s]); if (my !== pvTok) return; }
+  box.innerHTML = dates.map(d => {
+    const cd = cellData(s, d), head = `<span class="d">${md(d)}<small>週${wd(d)}</small></span>`;
+    if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted" style="font-size:12px">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
+    if (cd.kind === 'cl') return `<div class="pv-row cl">${head}${icon('avg')}<span>歷年平均<span class="muted" style="font-size:12px">　雨日 ${cd.c.rain}%</span></span><span class="t"><span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span></span></div>`;
+    return `<div class="pv-row">${head}<span></span><span class="muted">${cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : esc(cd.msg || '無資料')}</span><span></span></div>`;
+  }).join('') + (rangeDates(s.start, s.end).length > 31 ? '<p class="hint" style="margin-top:8px">只預覽前 31 天。</p>' : '');
+}
+
+/* 發布 */
 function edMsg(t, kind) { $('edMsg').textContent = t; $('edMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
 function validateDraft() {
   if (!draft.title.trim()) return '請填行程名稱。';
   const bad = draft.segments.find(s => s.lat == null);
-  if (bad) return `「${bad.label || '未填城市'}」還沒有從選單選定位置。`;
+  if (bad) { selGroup = bad.groupId; selSeg = bad.id; renderEditor(); return `「${bad.label || '未填城市'}」還沒有從選單選定位置（已在右側打開）。`; }
   return null;
 }
 async function prepareForPublish() {
@@ -1045,7 +1163,7 @@ async function prepareForPublish() {
 function b64utf8(str) { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); }
 async function ghRequest(method, cfg, body) {
   const url = `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}` + (method === 'GET' ? `?ref=${encodeURIComponent(cfg.branch)}` : '');
-  const r = await fetch(url, { method, headers: { Authorization: `Bearer ${cfg.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await fetch(url, { method, cache: 'no-store', headers: { Authorization: `Bearer ${cfg.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
   return { r, j };
 }
@@ -1059,7 +1177,7 @@ function ghError(r, j) {
 $('publishBtn').addEventListener('click', async () => {
   const err = validateDraft(); if (err) { edMsg(err, 'err'); return; }
   const cfg = ghCfg();
-  if (!cfg.owner || !cfg.repo || !cfg.token) { edMsg('請先在下方「GitHub 發布設定」填好帳號、Repo 和權杖。', 'err'); $('ghSet').open = true; return; }
+  if (!cfg.owner || !cfg.repo || !cfg.token) { edMsg('請先在左下「GitHub 發布設定」填好帳號、Repo 和權杖。', 'err'); $('ghSet').open = true; return; }
   $('publishBtn').disabled = true;
   try {
     const { out, missing } = await prepareForPublish();
@@ -1068,9 +1186,9 @@ $('publishBtn').addEventListener('click', async () => {
     if (!cur.r.ok && cur.r.status !== 404) throw new Error(ghError(cur.r, cur.j));
     const put = await ghRequest('PUT', cfg, { message: `更新行程：${out.title}`, content: b64utf8(JSON.stringify(out, null, 2) + '\n'), branch: cfg.branch, ...(cur.r.ok ? { sha: cur.j.sha } : {}) });
     if (!put.r.ok) throw new Error(ghError(put.r, put.j));
-    data = normalize(out); draft = null; sdel(DRAFT_KEY); $('draftState').textContent = '';
-    edMsg(`已發布。約 1 分鐘後同仁重新整理即可看到。${missing.length ? `（${missing.join('、')} 的歷年平均暫時無法取得，同仁開啟時會自動補算）` : ''}`, 'ok');
+    data = normalize(out); draft = null; sdel(DRAFT_KEY);
     startEdit(); loadWeather(data);
+    edMsg(`已發布。約 1 分鐘後同仁重新整理即可看到。${missing.length ? `（${missing.join('、')} 的歷年平均暫時無法取得，同仁開啟時會自動補算）` : ''}`, 'ok');
   } catch (e) { edMsg(e.message || '發布失敗。', 'err'); }
   finally { $('publishBtn').disabled = false; }
 });
@@ -1082,8 +1200,8 @@ $('downloadBtn').addEventListener('click', async () => {
   edMsg('已下載 data.json。', 'ok');
 });
 $('discardBtn').addEventListener('click', e => {
-  const btn = e.target; if (btn.dataset.armed) { draft = null; sdel(DRAFT_KEY); $('draftState').textContent = ''; btn.textContent = '放棄修改'; delete btn.dataset.armed; startEdit(); edMsg('已還原為目前發布的版本。'); return; }
-  btn.dataset.armed = '1'; btn.textContent = '再按一次確認放棄'; setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = '放棄修改'; } }, 4000);
+  const btn = e.target; if (btn.dataset.armed) { draft = null; sdel(DRAFT_KEY); btn.textContent = '放棄修改'; delete btn.dataset.armed; selSeg = null; startEdit(); renderHeader(data); edMsg('已還原為目前發布的版本。'); return; }
+  btn.dataset.armed = '1'; btn.textContent = '再按一次確認'; setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = '放棄修改'; } }, 4000);
 });
 function readGhForm() { return { owner: $('ghOwner').value.trim(), repo: $('ghRepo').value.trim(), branch: $('ghBranch').value.trim() || 'main', path: $('ghPath').value.trim() || 'data.json', token: $('ghToken').value.trim() }; }
 function ghMsg(t, kind) { $('ghMsg').textContent = t; $('ghMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
@@ -1092,8 +1210,13 @@ $('ghClear').addEventListener('click', () => { const c = readGhForm(); c.token =
 $('ghTest').addEventListener('click', async () => {
   const c = readGhForm(); if (!c.owner || !c.repo || !c.token) { ghMsg('請填完帳號、Repo 和權杖。', 'err'); return; }
   ghMsg('測試中…');
-  try { const { r, j } = await ghRequest('GET', c); if (r.ok || r.status === 404) { const rr = await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`, { headers: { Authorization: `Bearer ${c.token}` } }); const rj = await rr.json(); if (!rr.ok) throw new Error(ghError(rr, rj)); ghMsg(rj.permissions?.push === false ? '連得到，但這個權杖沒有寫入權限。' : `連線成功${r.status === 404 ? '（檔案尚未建立，第一次發布會自動建立）' : ''}。`, rj.permissions?.push === false ? 'err' : 'ok'); } else throw new Error(ghError(r, j)); }
-  catch (e) { ghMsg(e.message || '連線失敗。', 'err'); }
+  try {
+    const rr = await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`, { headers: { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github+json' } });
+    const rj = await rr.json().catch(() => ({}));
+    if (!rr.ok) throw new Error(ghError(rr, rj));
+    if (rj.permissions && rj.permissions.push === false) { ghMsg('連得到，但這個權杖沒有寫入權限。', 'err'); return; }
+    sset(GH_KEY, c); ghMsg('連線成功，設定已儲存。', 'ok');
+  } catch (e) { ghMsg(e.message || '連線失敗。', 'err'); }
 });
 
 /* ========= 路由 ========= */
