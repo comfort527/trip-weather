@@ -321,7 +321,7 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .hx-dim{font-size:12px;color:var(--muted);padding:4px 8px}
 
 /* Editor: group tabs + calendar */
-.g-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px 6px;align-items:center}
+.g-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px;align-items:center;border-bottom:1px solid var(--line)}
 .g-tab-wrap{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
 .g-tab-wrap.on{background:var(--accent-soft);border-color:var(--accent)}
 .g-tab{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;padding:6px 12px;font-weight:700;font-size:14px;color:var(--ink)}
@@ -330,7 +330,8 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .g-x{border:0;border-left:1px solid var(--line);background:transparent;color:var(--muted);width:30px;font-size:16px;line-height:1}
 .g-x:hover{color:var(--bad)}
 .g-add{border:1px dashed color-mix(in srgb,var(--accent) 50%,var(--line));border-radius:999px;background:transparent;width:36px;height:36px;padding:0;font-weight:700;font-size:18px;line-height:1;color:var(--accent)}
-.g-hint{margin:0;padding:0 14px 12px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.g-hint:empty{display:none}
+.g-hint{margin:0;padding:10px 14px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .cal-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cal-box{border:1px solid var(--line);border-radius:10px;padding:7px 10px;text-align:left;background:var(--surface);color:var(--ink)}
 .cal-box small{display:block;font-size:11px;color:var(--muted);font-weight:700}
@@ -1175,7 +1176,7 @@ function renderEdGroups() {
     return `<span class="g-tab-wrap${on ? ' on' : ''}"><button type="button" class="g-tab" role="tab" aria-selected="${on}" data-gsel="${esc(g.id)}"><span class="gdot" style="background:${gColor(draft, g.id)}"></span>${esc(g.name)}<span class="c">${n}</span></button>${i > 0 && adv > 1 ? `<button type="button" class="g-x" data-gdel="${esc(g.id)}" aria-label="刪除${esc(g.name)}">×</button>` : ''}</span>`;
   }).join('') + (adv < MAX_ADV ? `<button type="button" class="g-add" id="addGroup" aria-label="新增先遣組" title="新增先遣組">＋</button>` : '');
   const hint = $('gHint');
-  hint.textContent = '本隊與先遣固定存在；按「＋」增加先遣組，名稱會自動編為先遣A、B…';
+  hint.textContent = '';
   box.querySelectorAll('[data-gsel]').forEach(b => b.addEventListener('click', () => { if (selGroup === b.dataset.gsel) return; selGroup = b.dataset.gsel; selSeg = groupSegs(selGroup)[0]?.id || null; renderEditor(); }));
   box.querySelectorAll('[data-gdel]').forEach(b => b.addEventListener('click', () => {
     const g = draft.groups.find(x => x.id === b.dataset.gdel); if (!g) return;
