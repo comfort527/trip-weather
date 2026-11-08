@@ -700,7 +700,10 @@ async function geocode(input) {
   groups.flat().forEach(r => { const k = r.id || locKey(r.latitude, r.longitude); const prev = byId.get(k); if (!prev) byId.set(k, { ...r, zhName: r.name }); });
   // 讓英文版的國家名稱覆蓋（較一致）
   groups.forEach((g, i) => { if (i % 2 === 1) g.forEach(r => { const o = byId.get(r.id); if (o) { o.country = r.country; o.admin1 = r.admin1; o.enName = r.name; } }); });
-  return [...byId.values()].sort((a, b) => (b.population || 0) - (a.population || 0)).slice(0, 10);
+  // 排序：名稱完全相符 > 城市/聚落（PPL*）> 人口
+  const keys = new Set(variants.map(v => v.toLowerCase()));
+  const score = r => (keys.has(String(r.enName || '').toLowerCase()) || keys.has(String(r.zhName || '').toLowerCase()) || keys.has(String(r.name || '').toLowerCase()) ? 2 : 0) + (/^PPL/.test(r.feature_code || '') ? 1 : 0);
+  return [...byId.values()].sort((a, b) => score(b) - score(a) || (b.population || 0) - (a.population || 0)).slice(0, 10);
 }
 const EN2ZH = {};
 Object.entries(CITY_ALIASES).forEach(([zh, ens]) => ens.forEach(en => { const k = en.toLowerCase(); if (!EN2ZH[k]) EN2ZH[k] = zh; }));
@@ -843,7 +846,8 @@ let draft = null;         // 編輯中的行程
 let isDemoFallback = false;
 const GROUP_COLORS = ['--g1', '--g2', '--g3', '--g4', '--g5', '--g6'];
 function gColor(proj, gid) { const i = proj.groups.findIndex(g => g.id === gid); return `var(${GROUP_COLORS[(i < 0 ? 0 : i) % GROUP_COLORS.length]})`; }
-function view() { return draft && location.hash === '#edit-preview' ? draft : (data || draft); }
+function dated(p) { return p && { ...p, segments: p.segments.filter(s => s.start && s.end) }; }
+function view() { return dated(draft && location.hash === '#edit-preview' ? draft : (data || draft)); }
 
 async function loadData() {
   try {
@@ -867,21 +871,21 @@ function fixGroups(groups) {
   groups.slice(1).forEach((g, i) => { g.name = advName(i, n); });
   return groups;
 }
-function normalize(p) {
+function normalize(p, keepUndated = false) {
   p = p && typeof p === 'object' ? p : {};
   const groups = fixGroups((Array.isArray(p.groups) ? p.groups : []).map(g => ({ id: String(g.id || uid()), name: String(g.name || '') })));
   const ids = new Set(groups.map(g => g.id));
-  const segments = (Array.isArray(p.segments) ? p.segments : []).filter(s => s && s.start && s.end).map(s => ({
+  const segments = (Array.isArray(p.segments) ? p.segments : []).filter(s => s && (keepUndated || (s.start && s.end))).map(s => ({
     id: String(s.id || uid()), groupId: ids.has(s.groupId) ? s.groupId : groups[0].id, label: String(s.label || s.city || ''), country: String(s.country || ''), countryCode: String(s.countryCode || ''),
     lat: Number.isFinite(+s.lat) && s.lat !== null && s.lat !== '' ? +s.lat : null, lon: Number.isFinite(+s.lon) && s.lon !== null && s.lon !== '' ? +s.lon : null, timezone: String(s.timezone || 'auto'),
-    start: String(s.start), end: String(s.end < s.start ? s.start : s.end), place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
+    start: String(s.start || ''), end: String(!s.end || s.end < s.start ? (s.start || '') : s.end), place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
   }));
   return { version: 1, title: String(p.title || '行程天氣'), subtitle: String(p.subtitle || ''), updatedAt: p.updatedAt || null, groups, segments };
 }
 
 /* ========= 總覽 ========= */
 function tripSpan(proj) {
-  const segs = proj.segments; if (!segs.length) return null;
+  const segs = proj.segments.filter(s => s.start && s.end); if (!segs.length) return null;
   const a = segs.reduce((m, s) => s.start < m ? s.start : m, segs[0].start), b = segs.reduce((m, s) => s.end > m ? s.end : m, segs[0].end);
   return { a, b: diffDays(a, b) > 120 ? addDays(a, 120) : b };
 }
@@ -1126,9 +1130,8 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
   $('lkMapBox').addEventListener('toggle', () => { if ($('lkMapBox').open && lkLoc) renderLookupMap(); });
   $('lkAdd').addEventListener('click', () => {
     if (!lkLoc) return;
-    if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); }
-    const s = $('lkStart').value, en = $('lkEnd').value;
-    draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, place: [lkLoc.label, lkLoc.admin1, lkLoc.country].filter(Boolean).join(', '), country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: s, end: en < s ? s : en, note: '' });
+    if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved, true) : normalize(JSON.parse(JSON.stringify(data)), true); }
+    draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, place: [lkLoc.label, lkLoc.admin1, lkLoc.country].filter(Boolean).join(', '), country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: '', end: '', note: '' });
     saveDraft(); $('lkAddMsg').textContent = `${draft.groups.find(g => g.id === $('lkGroup').value)?.name || ''}已加入${lkLoc.label}。`; $('lkAddMsg').className = 'ed-msg ok';
   });
 })();
@@ -1181,7 +1184,7 @@ let selGroup = null, selSeg = null, pvTok = 0, pvTimer = null;
 function ghCfg() { return { ...CONFIG.github, ...(sget(GH_KEY) || {}) }; }
 function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; }
 function startEdit() {
-  if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
+  if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved, true) : normalize(JSON.parse(JSON.stringify(data)), true); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
   $('edTitle').value = draft.title; $('edSub').value = draft.subtitle;
   const c = ghCfg(); $('ghOwner').value = c.owner || ''; $('ghRepo').value = c.repo || ''; $('ghBranch').value = c.branch || 'main'; $('ghPath').value = c.path || 'data.json'; $('ghToken').value = c.token || '';
   if (!c.token) $('ghSet').open = true;
@@ -1229,14 +1232,14 @@ function renderEdSegs() {
   if (!segs.length) { box.innerHTML = `<div class="ed-empty">這一組還沒有行程。<br>按右上「＋ 新增一段」開始。</div>`; return; }
   let html = '';
   segs.forEach((s, i) => {
-    if (i > 0) {
+    if (i > 0 && segs[i - 1].start && s.start) {
       const prev = segs[i - 1], gap = diffDays(prev.end, s.start) - 1;
       html += gap > 0 ? `<div class="seg-gap">↕ 中間空 ${gap} 天（${md(addDays(prev.end, 1))}${gap > 1 ? '–' + md(addDays(s.start, -1)) : ''}）</div>`
         : gap === -1 ? `<div class="seg-gap">↕ ${md(s.start)} 移動日（兩段同一天）</div>`
         : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
     }
-    const n = diffDays(s.start, s.end) + 1, on = s.id === selSeg;
-    html += `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="刪除這一段" title="刪除這一段">×</button></span></div>`;
+    const n = s.start ? diffDays(s.start, s.end) + 1 : 0, on = s.id === selSeg;
+    html += `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${s.start ? `${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small>` : '<span class="warn">尚未設定日期</span><small>點選後在右側日曆選擇</small>'}</span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="刪除這一段" title="刪除這一段">×</button></span></div>`;
   });
   box.innerHTML = html;
   box.querySelectorAll('[data-ssel]').forEach(b => b.addEventListener('click', () => { selSeg = b.dataset.ssel; renderEdSegs(); renderEdForm(); if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
@@ -1256,7 +1259,7 @@ function renderEdSegs() {
 }
 $('addSeg').addEventListener('click', () => {
   const segs = groupSegs(selGroup), last = segs.at(-1);
-  const start = last ? last.end : addDays(localISO(), 7);
+  const start = last?.end || addDays(localISO(), 7);
   const s = { id: uid(), groupId: selGroup, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start, end: addDays(start, 2), note: '' };
   draft.segments.push(s); selSeg = s.id; saveDraft(); renderEditor(); $('sCity')?.focus();
 });
@@ -1278,8 +1281,8 @@ function renderEdForm() {
   $('sGroup').addEventListener('change', e => { s.groupId = e.target.value; selGroup = s.groupId; saveDraft(); renderEditor(); });
   const ci = $('sCity');
   attachAC(ci, $('sCityAc'), r => { const q = ci.value; Object.assign(s, { label: suggestLabel(q, r), place: placeName(r), lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = s.place; $('sLabel').value = s.label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
-  $('sLabel').addEventListener('input', e => { s.label = e.target.value; saveDraft(); renderEdSegs(); if (s.lat != null) $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`; });
-  calState = { month: s.start.slice(0, 7), phase: 'start' }; renderCal(s);
+  $('sLabel').addEventListener('input', e => { s.label = e.target.value; saveDraft(); renderEdSegs(); if (s.lat != null && s.start) $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`; });
+  calState = { month: (s.start || localISO()).slice(0, 7), phase: 'start' }; renderCal(s);
   schedulePreview(0);
 }
 let calState = { month: null, phase: 'start' };
@@ -1295,15 +1298,16 @@ function renderCal(s) {
     const cls = [d === s.start ? 's' : '', d === s.end ? 'e' : '', d > s.start && d < s.end ? 'in' : '', d === today ? 'today' : '', occ.has(d) ? 'occ' : '', isWeekend(d) ? 'wk' : '', d < today ? 'past' : ''].filter(Boolean).join(' ');
     cells += `<button type="button" class="cal-d ${cls}" data-cal="${d}" aria-label="${M}月${day}日"${occ.has(d) ? ` title="本組這天已有：${esc(occ.get(d))}"` : ''}><span>${day}</span></button>`;
   }
-  const n = diffDays(s.start, s.end) + 1, ph = calState.phase;
-  box.innerHTML = `<div class="cal-pick"><button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small><b>${md(s.start)}</b>（${wd(s.start)}）</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small><b>${md(s.end)}</b>（${wd(s.end)}）</button></div>
+  const n = s.start ? diffDays(s.start, s.end) + 1 : 0, ph = calState.phase;
+  const dl = v => v ? `<b>${md(v)}</b>（${wd(v)}）` : '<b class="muted">未選</b>';
+  box.innerHTML = `<div class="cal-pick"><button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button></div>
   <div class="cal"><div class="cal-h"><button type="button" class="cal-nav" data-nav="-1" aria-label="上個月">‹</button><b>${Y} 年 ${M} 月</b><button type="button" class="cal-nav" data-nav="1" aria-label="下個月">›</button></div><div class="cal-g">${cells}</div></div>
-  <div class="cal-hint"><span>${ph === 'start' ? '點日曆選抵達日' : '再點一下選離開日'}・共 ${n} 天</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
+  <div class="cal-hint"><span>${ph === 'start' ? '點日曆選抵達日' : '再點一下選離開日'}${n ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
   box.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { const d = parseISO(calState.month + '-01'); d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.nav)); calState.month = toISO(d).slice(0, 7); renderCal(s); }));
-  box.querySelectorAll('[data-phase]').forEach(b => b.addEventListener('click', () => { calState.phase = b.dataset.phase; calState.month = (b.dataset.phase === 'start' ? s.start : s.end).slice(0, 7); renderCal(s); }));
+  box.querySelectorAll('[data-phase]').forEach(b => b.addEventListener('click', () => { calState.phase = b.dataset.phase; calState.month = ((b.dataset.phase === 'start' ? s.start : s.end) || calState.month).slice(0, 7); renderCal(s); }));
   box.querySelectorAll('[data-cal]').forEach(b => b.addEventListener('click', () => {
     const d = b.dataset.cal;
-    if (calState.phase === 'start') { s.start = d; if (s.end < d) s.end = d; calState.phase = 'end'; }
+    if (calState.phase === 'start' || !s.start) { s.start = d; if (!s.end || s.end < d) s.end = d; calState.phase = 'end'; }
     else if (d < s.start) { s.start = d; }
     else { s.end = d; calState.phase = 'start'; }
     delete s.climate; saveDraft(); renderEdSegs(); renderCal(s); schedulePreview();
@@ -1314,6 +1318,7 @@ async function renderPreview() {
   const s = draft.segments.find(x => x.id === selSeg), box = $('edWx'); if (!s) return;
   const my = ++pvTok;
   if (s.lat == null) { box.innerHTML = '<p class="hint">選定城市後，這裡會顯示這段期間的天氣。</p>'; $('edWxNote').textContent = ''; return; }
+  if (!s.start) { box.innerHTML = '<p class="hint">選好日期後，這裡會顯示這段期間的天氣。</p>'; $('edWxNote').textContent = s.label; return; }
   const dates = rangeDates(s.start, s.end).slice(0, 31);
   $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`;
   box.innerHTML = '<p class="hint">天氣資料載入中…</p>';
@@ -1334,6 +1339,8 @@ async function renderPreview() {
 function edMsg(t, kind) { $('edMsg').textContent = t; $('edMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
 function validateDraft() {
   if (!draft.title.trim()) return '請填行程名稱。';
+  const nod = draft.segments.find(s => !s.start || !s.end);
+  if (nod) { selGroup = nod.groupId; selSeg = nod.id; renderEditor(); return `「${nod.label || '未命名'}」還沒設定日期（已在右側打開）。`; }
   const bad = draft.segments.find(s => s.lat == null);
   if (bad) { selGroup = bad.groupId; selSeg = bad.id; renderEditor(); return `「${bad.label || '未填城市'}」還沒有從選單選定位置（已在右側打開）。`; }
   return null;
