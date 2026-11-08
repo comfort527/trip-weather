@@ -214,6 +214,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 .wtable{width:100%;border-collapse:collapse;min-width:720px}
 .wtable th{font-size:12px;color:var(--muted);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
 .wtable td{padding:10px 14px;border-bottom:1px solid var(--line-2);font-size:14px;vertical-align:middle}
+.wtable tr.ob td{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
 .wtable tr.cl td{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
 .wtable .wcell{display:flex;align-items:center;gap:8px}
 .wtable svg.ic{width:26px;height:26px}
@@ -313,6 +314,9 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .vd.today{box-shadow:inset 3px 0 0 var(--today);background:color-mix(in srgb,var(--today) 9%,var(--surface))}
 .vd.today .w{color:var(--today);font-weight:700}
 .vtag{margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px;width:max-content;background:var(--surface);line-height:16px}
+.vtag.ob{color:var(--ink);background:var(--surface);border-color:var(--line)}
+.vd.ob,.vcell.ob,.vlane.ob{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
+.sw.obs{background:color-mix(in srgb,var(--ink) 8%,var(--surface))}
 .vtag.fc{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 .vlane,.vcell{border-bottom:1px solid var(--line-2)}
 .vcell{padding:3px 8px 3px 4px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:54px;min-width:0}
@@ -480,6 +484,7 @@ footer a{color:var(--muted)}
         <div class="legend">
           <span class="lg"><span class="sw"></span>預報</span>
           <span class="lg"><span class="sw clim"></span>歷年同期平均（非預報）</span>
+          <span class="lg"><span class="sw obs"></span>已過：實際天氣</span>
           <span class="lg"><span class="dot high"></span>可信度高</span>
           <span class="lg"><span class="dot mid"></span>中</span>
           <span class="lg"><span class="dot low"></span>低</span>
@@ -763,13 +768,52 @@ function fetchForecast(lat, lon) {
   fcMem.set(k, p);
   return p;
 }
+// Open-Meteo 以查詢當下的時差輸出整段時間；跨日光節約時間時，用當地時區重新換算日出日落
+const tzFmt = new Map();
+function fixLocalTime(iso, off, tz) {
+  if (!iso || off == null || !tz || tz === 'GMT') return iso;
+  try {
+    if (!tzFmt.has(tz)) tzFmt.set(tz, new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }));
+    const ms = Date.parse(iso + ':00Z') - off * 1000; if (Number.isNaN(ms)) return iso;
+    return iso.slice(0, 11) + tzFmt.get(tz).format(ms);
+  } catch { return iso; }
+}
+/* 已過日期：近 90 天用氣象模型分析資料（可到昨天），更早用 ERA5 歷史資料 */
+const PAST_DAILY = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset';
+const pastMem = new Map(); // locKey -> { [date]: day } ；載入中為 Promise
+async function fetchPast(lat, lon, dates) {
+  const today = localISO(), recentStart = addDays(today, -90), out = {};
+  const past = [...new Set(dates)].filter(d => d && d < today).sort(); if (!past.length) return out;
+  const old = past.filter(d => d < recentStart), recent = past.filter(d => d >= recentStart);
+  const parts = [];
+  if (old.length) parts.push(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=${PAST_DAILY}&timezone=auto&start_date=${old[0]}&end_date=${old.at(-1)}`);
+  if (recent.length) parts.push(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=${PAST_DAILY}&timezone=auto&start_date=${recent[0]}&end_date=${recent.at(-1)}`);
+  for (const url of parts) {
+    const ck = 'ob:' + url, cached = sget(ck, url.includes('archive') ? undefined : 's');
+    const j = cached || await getJSON(url);
+    if (!cached) sset(ck, j, url.includes('archive') ? undefined : 's');
+    const D = j.daily;
+    D.time.forEach((t, i) => { if (D.temperature_2m_max[i] != null) out[t] = { date: t, code: D.weather_code?.[i], tmax: D.temperature_2m_max[i], tmin: D.temperature_2m_min[i], psum: D.precipitation_sum?.[i], wind: D.wind_speed_10m_max?.[i], gust: D.wind_gusts_10m_max?.[i], sunrise: fixLocalTime(D.sunrise?.[i], j.utc_offset_seconds, j.timezone), sunset: fixLocalTime(D.sunset?.[i], j.utc_offset_seconds, j.timezone), src: url.includes('archive') ? 'era5' : 'analysis' }; });
+  }
+  return out;
+}
+async function ensurePast(segs) {
+  const today = localISO(), byLoc = new Map();
+  segs.filter(s => s.lat != null && s.start && s.start < today).forEach(s => { const k = locKey(s.lat, s.lon); if (!byLoc.has(k)) byLoc.set(k, { s, dates: new Set() }); rangeDates(s.start, s.end < today ? s.end : addDays(today, -1)).forEach(d => byLoc.get(k).dates.add(d)); });
+  await pool([...byLoc.entries()], 2, async ([k, { s, dates }]) => {
+    const have = pastMem.get(k); const need = [...dates].filter(d => !have || !(d in have));
+    if (!need.length) return;
+    try { const got = await fetchPast(s.lat, s.lon, need); pastMem.set(k, { ...(pastMem.get(k) || {}), ...got, ...Object.fromEntries(need.filter(d => !got[d]).map(d => [d, null])) }); }
+    catch { pastMem.set(k, { ...(pastMem.get(k) || {}), ...Object.fromEntries(need.map(d => [d, null])) }); }
+  });
+}
 function fcDay(fc, date) {
   if (!fc) return null;
   const D = fc.main.daily, i = D.time.indexOf(date);
   if (i < 0 || D.temperature_2m_max[i] == null) return null;
   const g = n => D[n] ? D[n][i] : null;
   const day = { date, code: g('weather_code'), tmax: g('temperature_2m_max'), tmin: g('temperature_2m_min'), amax: g('apparent_temperature_max'), amin: g('apparent_temperature_min'),
-    pop: g('precipitation_probability_max'), psum: g('precipitation_sum'), wind: g('wind_speed_10m_max'), gust: g('wind_gusts_10m_max'), uv: g('uv_index_max'), sunrise: g('sunrise'), sunset: g('sunset'), models: [] };
+    pop: g('precipitation_probability_max'), psum: g('precipitation_sum'), wind: g('wind_speed_10m_max'), gust: g('wind_gusts_10m_max'), uv: g('uv_index_max'), sunrise: fixLocalTime(g('sunrise'), fc.main.utc_offset_seconds, fc.main.timezone), sunset: fixLocalTime(g('sunset'), fc.main.utc_offset_seconds, fc.main.timezone), models: [] };
   if (fc.models?.daily) {
     const M = fc.models.daily, j = M.time.indexOf(date);
     if (j >= 0) CONFIG.models.forEach(m => { const tx = M[`temperature_2m_max_${m.key}`]?.[j], tn = M[`temperature_2m_min_${m.key}`]?.[j], ps = M[`precipitation_sum_${m.key}`]?.[j]; if (tx != null) day.models.push({ ...m, tmax: tx, tmin: tn, psum: ps }); });
@@ -903,7 +947,7 @@ function lanesFor(segs) {
 const fcByLoc = new Map(); // locKey -> forecast | 'err'
 function cellData(seg, date) {
   const today = localISO();
-  if (date < today) return { kind: 'past' };
+  if (date < today) { const pm = pastMem.get(locKey(seg.lat, seg.lon)); if (!pm || !(date in pm)) return { kind: 'loading' }; return pm[date] ? { kind: 'obs', o: pm[date] } : { kind: 'past' }; }
   const fc = fcByLoc.get(locKey(seg.lat, seg.lon));
   if (fc === undefined) return { kind: 'loading' };
   const day = fc !== 'err' ? fcDay(fc, date) : null;
@@ -957,6 +1001,10 @@ function hxButton(seg, date, showCity) {
     const d = cd.day, w = wxInfo(d.code), pop = d.pop ?? 0;
     return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} ${w.text} 高溫${r0(d.tmax)}度 低溫${r0(d.tmin)}度 降雨機率${pop}% ${CONF_TXT[d.conf.level]}">${city}${icon(d.code == null ? 'cloud' : w.icon)}<span class="t num"><span class="hi">${r0(d.tmax)}°</span>/<span class="lo">${r0(d.tmin)}°</span></span><span class="r num"><span class="rbar"><i style="width:${Math.min(100, pop)}%"></i></span>${d.pop == null ? '—' : pop + '%'}</span><span class="dot ${d.conf.level}" title="${CONF_TXT[d.conf.level]}"></span></button>`;
   }
+  if (cd.kind === 'obs') {
+    const o = cd.o, w = wxInfo(o.code);
+    return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} 實際天氣 ${w.text} 高溫${r0(o.tmax)}度 低溫${r0(o.tmin)}度 雨量${r1(o.psum)}毫米">${city}${icon(o.code == null ? 'cloud' : w.icon)}<span class="t num"><span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span></span><span class="r num">雨量 ${r1(o.psum)} mm</span><span></span></button>`;
+  }
   if (cd.kind === 'cl') {
     const c = cd.c;
     return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} 歷年同期平均 高溫${r0(c.tmax)}度 低溫${r0(c.tmin)}度 雨日比例${c.rain}%">${city}${icon('avg')}<span class="t num"><span class="hi">${r0(c.tmax)}°</span>/<span class="lo">${r0(c.tmin)}°</span></span><span class="r num">雨日 ${c.rain}%</span><span></span></button>`;
@@ -976,9 +1024,9 @@ function renderGrid(proj) {
   let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
   G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
   dates.forEach((d, i) => {
-    const row = i + 2, k = kinds[i], firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc');
-    const rc = `${k === 'cl' ? ' cl' : ''}${d === today ? ' today' : ''}${firstCl ? ' first-cl' : ''}`;
-    html += `<div class="vd${rc}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${row};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '<span class="lg">今天・</span>週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag"><span class="lg">以下為歷年平均</span><span class="sh">平均</span></span>' : firstFc ? '<span class="vtag fc">預報</span>' : ''}</div>`;
+    const row = i + 2, k = kinds[i], firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc'), firstOb = k === 'past' && i === 0;
+    const rc = `${k === 'cl' ? ' cl' : ''}${k === 'past' ? ' ob' : ''}${d === today ? ' today' : ''}${firstCl ? ' first-cl' : ''}`;
+    html += `<div class="vd${rc}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${row};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '<span class="lg">今天・</span>週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag"><span class="lg">以下為歷年平均</span><span class="sh">平均</span></span>' : firstFc ? '<span class="vtag fc">預報</span>' : firstOb ? '<span class="vtag ob"><span class="lg">已過・</span>實際</span>' : ''}</div>`;
     G.forEach(({ segs, lanes, c0 }) => {
       for (let l = 0; l < lanes; l++) html += `<div class="vlane${rc}${l === 0 ? ' gsep' : ''}" style="grid-row:${row};grid-column:${c0 + l}"></div>`;
       const act = segs.filter(s => s.start <= d && s.end >= d);
@@ -1080,7 +1128,8 @@ async function loadWeather(proj) {
   const climNeeded = segs.filter(s => s.end > hz || true); // 全部計算：預報日也可對照歷年平均
   const tasks = [
     pool(locs, 3, async s => { try { fcByLoc.set(locKey(s.lat, s.lon), await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(locKey(s.lat, s.lon), 'err'); } if (my === loadToken) renderOverview(); }),
-    ensureClimate(climNeeded).then(() => { if (my === loadToken) renderOverview(); })
+    ensureClimate(climNeeded).then(() => { if (my === loadToken) renderOverview(); }),
+    ensurePast(segs).then(() => { if (my === loadToken) renderOverview(); })
   ];
   await Promise.all(tasks);
   if (my === loadToken) { $('fetchedAt').textContent = `天氣資料取得時間：${new Date().toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`; renderOverview(); }
@@ -1100,6 +1149,12 @@ function openDrawer(segId, date) {
     if (x.models.length) body += `<table class="mtable"><thead><tr><th>模型</th><th>高溫</th><th>低溫</th><th>雨量</th></tr></thead><tbody>${x.models.map(m => `<tr><td>${esc(m.name)} <span class="muted" style="font-size:11px">${esc(m.org)}</span></td><td class="num hi">${r1(m.tmax)}°</td><td class="num lo">${r1(m.tmin)}°</td><td class="num">${r1(m.psum)} mm</td></tr>`).join('')}</tbody></table>`;
     body += `</div>`;
     if (cl) { const dt = x.tmax - cl.tmax; body += `<div class="dr-sec"><h4>與歷年同期比較</h4><p>歷年平均 <b class="num hi">${r0(cl.tmax)}°</b> / <b class="num lo">${r0(cl.tmin)}°</b>，雨日比例 ${cl.rain}%。這天的預報高溫${Math.abs(dt) < 1.5 ? '和往年差不多' : dt > 0 ? `比往年高約 ${r0(dt)}°` : `比往年低約 ${r0(-dt)}°`}。</p></div>`; }
+  } else if (cd.kind === 'obs') {
+    const o = cd.o, w = wxInfo(o.code);
+    hero = `<div class="dr-hero">${icon(o.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(o.tmax)}°</span> / <span class="lo">${r0(o.tmin)}°</span></div><div class="muted" style="font-size:12px">實際天氣（已過）</div></div></div>`;
+    body += `<dl class="kv"><div><dt>當日雨量</dt><dd class="num">${r1(o.psum)} mm</dd></div><div><dt>最大風速／陣風</dt><dd class="num">${r0(o.wind)} / ${r0(o.gust)} km/h</dd></div><div><dt>日出／日落</dt><dd class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</dd></div><div><dt>資料類型</dt><dd>${o.src === 'era5' ? 'ERA5 再分析' : '氣象模型分析'}</dd></div></dl>`;
+    if (cl) { const dt = o.tmax - cl.tmax; body += `<div class="dr-sec"><h4>與歷年同期比較</h4><p>歷年平均 <b class="num hi">${r0(cl.tmax)}°</b> / <b class="num lo">${r0(cl.tmin)}°</b>。這天的高溫${Math.abs(dt) < 1.5 ? '和往年差不多' : dt > 0 ? `比往年高約 ${r0(dt)}°` : `比往年低約 ${r0(-dt)}°`}。</p></div>`; }
+    body += `<div class="dr-sec"><h4>資料來源</h4><p>已過的日期顯示當天的實際天氣：近 90 天為氣象模型的分析資料，更早為 ERA5 再分析資料。數值接近實測，但不是單一氣象站的紀錄。</p></div>`;
   } else if (cd.kind === 'cl') {
     const c = cd.c, yrs = climYears();
     hero = `<div class="dr-hero cl">${icon('avg')}<div><div class="desc">歷年同期平均（非預報）</div><div class="big num"><span class="hi">${r0(c.tmax)}°</span> / <span class="lo">${r0(c.tmin)}°</span></div><div class="muted" style="font-size:12px">${yrs[0]}–${yrs.at(-1)} 年</div></div></div>`;
@@ -1107,7 +1162,7 @@ function openDrawer(segId, date) {
     body += `<dl class="kv"><div><dt>平均高溫</dt><dd class="num">${r1(c.tmax)}°C</dd></div><div><dt>平均低溫</dt><dd class="num">${r1(c.tmin)}°C</dd></div><div><dt>雨日比例（≥1 mm）</dt><dd class="num">${c.rain}%</dd></div><div><dt>平均日雨量</dt><dd class="num">${r1(c.psum)} mm</dd></div></dl>`;
     body += `<div class="dr-sec"><h4>這是什麼數字？</h4><p>距今超過 ${CONFIG.forecastDays} 天，還沒有可用的預報。這裡是過去 ${CONFIG.climateYears} 年、每年 ${md(date)} 前後 ${CONFIG.climateWindow} 天（共 ${c.n} 天）的實測平均。雨日比例 ${c.rain}% 表示往年這段時間約每 10 天有 ${Math.round(c.rain / 10)} 天下雨。</p>${segDays.length > 1 ? `<p style="margin-top:6px">以往年推估，這段 ${segDays.length} 天的停留約會遇到 <b>${expWet.toFixed(1)}</b> 天下雨。</p>` : ''}<p style="margin-top:6px">進入 ${CONFIG.forecastDays} 天內後，這一格會自動改成預報。</p></div>`;
   } else {
-    hero = `<div class="dr-hero"><div class="muted">${cd.kind === 'past' ? '這天已經過了。' : cd.kind === 'loading' ? '資料載入中…' : esc(cd.msg || '目前沒有資料。')}</div></div>`;
+    hero = `<div class="dr-hero"><div class="muted">${cd.kind === 'past' ? '這天的實際天氣資料暫時無法取得。' : cd.kind === 'loading' ? '資料載入中…' : esc(cd.msg || '目前沒有資料。')}</div></div>`;
   }
   if (s.note) body += `<div class="dr-sec"><h4>備註</h4><div class="note-box">${esc(s.note)}</div></div>`;
   const q = encodeURIComponent(`${s.label} ${s.country}`), la = (+s.lat).toFixed(3), lo = (+s.lon).toFixed(3);
@@ -1152,6 +1207,8 @@ async function runLookup() {
     const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(() => null);
     const dates = rangeDates(a, b), today = localISO();
     const needCl = dates.filter(d => d >= today && !fcDay(fc, d));
+    const pastDates = dates.filter(d => d < today); let ob = {};
+    if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(() => ({})); }
     let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(() => ({})); }
     if (my !== lkReq) return;
     $('lkTitle').textContent = lkLoc.label;
@@ -1159,6 +1216,8 @@ async function runLookup() {
     $('lkRows').innerHTML = dates.map(d => {
       const x = fcDay(fc, d);
       if (x) { const w = wxInfo(x.code); return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(x.code == null ? 'cloud' : w.icon)}${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span></span></td><td class="num hi">${r0(x.tmax)}°</td><td class="num lo">${r0(x.tmin)}°</td><td class="num">${x.pop ?? '—'}%・${r1(x.psum)} mm</td><td class="num">${r0(x.wind)} km/h</td><td class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</td></tr>`; }
+      const o = ob[d];
+      if (o) { const w = wxInfo(o.code); return `<tr class="ob"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(o.code == null ? 'cloud' : w.icon)}${w.text} <span class="vtag ob" style="margin:0">實際</span></span></td><td class="num hi">${r0(o.tmax)}°</td><td class="num lo">${r0(o.tmin)}°</td><td class="num">${r1(o.psum)} mm</td><td class="num">${r0(o.wind)} km/h</td><td class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</td></tr>`; }
       const c = cl[d];
       if (c) return `<tr class="cl"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon('avg')}歷年同期平均</span></td><td class="num hi">${r0(c.tmax)}°</td><td class="num lo">${r0(c.tmin)}°</td><td class="num">雨日 ${c.rain}%</td><td class="muted">—</td><td class="muted">—</td></tr>`;
       return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td class="muted" colspan="6">${d < today ? '已過' : '無資料'}</td></tr>`;
@@ -1359,10 +1418,12 @@ async function renderPreview() {
   try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(k, 'err'); }
   if (my !== pvTok) return;
   const today = localISO();
+  if (dates.some(d => d < today)) { await ensurePast([s]); if (my !== pvTok) return; }
   if (dates.some(d => d >= today && !fcDay(fcByLoc.get(k) === 'err' ? null : fcByLoc.get(k), d))) { box.innerHTML = '<p class="hint">正在計算歷年同期平均…</p>'; await ensureClimate([s]); if (my !== pvTok) return; }
   box.innerHTML = dates.map(d => {
     const cd = cellData(s, d), head = `<span class="d">${md(d)}<small>週${wd(d)}</small></span>`;
     if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted" style="font-size:12px">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
+    if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); return `<div class="pv-row">${head}${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}<span class="muted" style="font-size:12px">　實際・雨量 ${r1(o.psum)} mm</span></span><span class="t"><span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span></span></div>`; }
     if (cd.kind === 'cl') return `<div class="pv-row cl">${head}${icon('avg')}<span>歷年平均<span class="muted" style="font-size:12px">　雨日 ${cd.c.rain}%</span></span><span class="t"><span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span></span></div>`;
     return `<div class="pv-row">${head}<span></span><span class="muted">${cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : esc(cd.msg || '無資料')}</span><span></span></div>`;
   }).join('') + (rangeDates(s.start, s.end).length > 31 ? '<p class="hint" style="margin-top:8px">只預覽前 31 天。</p>' : '');
