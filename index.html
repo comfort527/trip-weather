@@ -405,6 +405,10 @@ details.alerts summary::-webkit-details-marker{display:none}
 .mapcard > summary .al-title::before{content:"";width:0;height:0;border-left:6px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
 .mapcard[open] > summary{border-bottom:1px solid var(--line)}
 .mapcard[open] > summary .al-title::before{transform:rotate(90deg)}
+.gate{max-width:520px;margin:28px auto 0;padding:22px 22px 14px;display:grid;gap:10px}
+.gate h2{margin:0;font-size:18px}
+.gate-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+@media (max-width:480px){.gate-row{grid-template-columns:minmax(0,1fr)}}
 footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--muted)}
 
@@ -477,7 +481,7 @@ footer a{color:var(--muted)}
         <a class="tab" href="#lookup" data-view="lookup">地點查詢</a>
         <a class="tab" href="#overview" data-view="overview">行程總覽</a>
       </nav>
-      <a class="tab-edit" href="#edit" data-view="edit" id="editTab"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 14.5V17h2.5l8.6-8.6-2.5-2.5L3 14.5Zm13.7-7.3a.9.9 0 0 0 0-1.3l-1.6-1.6a.9.9 0 0 0-1.3 0l-1.2 1.2 2.9 2.9 1.2-1.2Z" fill="currentColor"/></svg>編輯</a>
+      <a class="tab-edit" href="#edit" data-view="edit" id="editTab" hidden><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 14.5V17h2.5l8.6-8.6-2.5-2.5L3 14.5Zm13.7-7.3a.9.9 0 0 0 0-1.3l-1.6-1.6a.9.9 0 0 0-1.3 0l-1.2 1.2 2.9 2.9 1.2-1.2Z" fill="currentColor"/></svg>編輯</a>
     </div>
   </header>
   <div id="banner" class="banner" hidden></div>
@@ -541,6 +545,20 @@ footer a{color:var(--muted)}
         <h2 class="sect-h"><span id="lkTitle"></span><span class="muted" id="lkMeta" style="font-weight:400;font-size:12px"></span></h2>
         <div class="tbl-wrap"><table class="wtable"><thead><tr><th>日期</th><th>天氣</th><th>高溫</th><th>低溫</th><th>降雨</th><th>風速</th><th>日出／日落</th></tr></thead><tbody id="lkRows"></tbody></table></div>
       </div>
+    </section>
+  </main>
+
+  <!-- Gate -->
+  <main id="view-gate" hidden>
+    <section class="card gate">
+      <h2>管理者登入</h2>
+      <p class="hint">編輯行程需要 GitHub 存取權杖。權杖只會存在這台瀏覽器，不會傳給其他人。</p>
+      <form id="gateForm" class="gate-row" autocomplete="off">
+        <label class="f" for="gateToken">存取權杖<input id="gateToken" type="password" placeholder="github_pat_…" autocomplete="off" required></label>
+        <button class="btn primary" type="submit" id="gateBtn">驗證並進入</button>
+      </form>
+      <p class="ed-msg" id="gateMsg"></p>
+      <p class="hint"><a href="#overview">回到行程總覽</a></p>
     </section>
   </main>
 
@@ -1203,7 +1221,8 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
     saveDraft(); $('lkAddMsg').textContent = `${draft.groups.find(g => g.id === $('lkGroup').value)?.name || ''}已加入${lkLoc.label}。`; $('lkAddMsg').className = 'ed-msg ok';
   });
 })();
-function isEditor() { return !!(draft || sget(DRAFT_KEY) || ghCfg().token); }
+function isEditor() { return !!ghCfg().token; }
+function syncEditTab() { $('editTab').hidden = !isEditor(); }
 function lkStatus(msg, err) { const el = $('lkStatus'); el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
 async function runLookup() {
   const a = $('lkStart').value, b = $('lkEnd').value; if (!lkLoc || !a || !b) return;
@@ -1521,8 +1540,22 @@ $('discardBtn').addEventListener('click', e => {
 });
 function readGhForm() { return { owner: $('ghOwner').value.trim(), repo: $('ghRepo').value.trim(), branch: $('ghBranch').value.trim() || 'main', path: $('ghPath').value.trim() || 'data.json', token: $('ghToken').value.trim() }; }
 function ghMsg(t, kind) { $('ghMsg').textContent = t; $('ghMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
-$('ghSave').addEventListener('click', () => { sset(GH_KEY, readGhForm()); ghMsg('已儲存在這台瀏覽器。', 'ok'); });
-$('ghClear').addEventListener('click', () => { const c = readGhForm(); c.token = ''; sset(GH_KEY, c); $('ghToken').value = ''; ghMsg('權杖已清除。', 'ok'); });
+$('ghSave').addEventListener('click', () => { sset(GH_KEY, readGhForm()); syncEditTab(); ghMsg('已儲存在這台瀏覽器。', 'ok'); });
+$('ghClear').addEventListener('click', () => { const c = readGhForm(); c.token = ''; sset(GH_KEY, c); $('ghToken').value = ''; syncEditTab(); location.hash = '#overview'; });
+$('gateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const token = $('gateToken').value.trim(), c = { ...ghCfg(), token }, msg = $('gateMsg');
+  if (!token) return;
+  msg.className = 'ed-msg'; msg.textContent = '驗證中…'; $('gateBtn').disabled = true;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(ghError(r, j));
+    if (!j.permissions || j.permissions.push !== true) throw new Error('這個權杖沒有寫入權限，無法編輯行程。');
+    sset(GH_KEY, c); $('gateToken').value = ''; route();
+  } catch (err) { msg.className = 'ed-msg err'; msg.textContent = err.message || '驗證失敗。'; }
+  finally { $('gateBtn').disabled = false; }
+});
 $('ghTest').addEventListener('click', async () => {
   const c = readGhForm(); if (!c.owner || !c.repo || !c.token) { ghMsg('請填完帳號、Repo 和權杖。', 'err'); return; }
   ghMsg('測試中…');
@@ -1538,13 +1571,16 @@ $('ghTest').addEventListener('click', async () => {
 /* ========= 路由 ========= */
 function route() {
   const h = location.hash;
-  const v = h === '#lookup' ? 'lookup' : (h === '#edit') ? 'edit' : 'overview';
-  ['overview', 'lookup', 'edit'].forEach(k => { $('view-' + k).hidden = k !== v; });
+  let v = h === '#lookup' ? 'lookup' : (h === '#edit') ? 'edit' : 'overview';
+  if (v === 'edit' && !isEditor()) v = 'gate';
+  syncEditTab();
+  ['overview', 'lookup', 'edit', 'gate'].forEach(k => { $('view-' + k).hidden = k !== v; });
   document.querySelectorAll('.tab, .tab-edit').forEach(t => t.setAttribute('aria-current', t.dataset.view === v || (v === 'overview' && h === '#edit-preview' && t.dataset.view === 'overview') ? 'page' : 'false'));
   closeDrawer();
   if (v === 'edit') startEdit();
   const proj = view();
   if (proj) renderHeader(v === 'edit' && draft ? draft : proj);
+  if (v === 'gate') { $('banner').hidden = true; $('gateMsg').textContent = ''; setTimeout(() => $('gateToken').focus(), 50); }
   if (v === 'overview' && proj) {
     const b = $('banner');
     if (h === '#edit-preview' && draft) { b.hidden = false; b.className = 'banner'; b.innerHTML = '這是<b>編輯中尚未發布</b>的預覽，同仁還看不到。<a href="#edit">回到編輯</a>'; }
