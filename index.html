@@ -623,7 +623,7 @@ function parseISO(s) { const [y,m,d] = s.split('-').map(Number); return new Date
 function toISO(dt) { return dt.toISOString().slice(0, 10); }
 function addDays(s, n) { const d = parseISO(s); d.setUTCDate(d.getUTCDate() + n); return toISO(d); }
 function diffDays(a, b) { return Math.round((parseISO(b) - parseISO(a)) / 864e5); }
-function rangeDates(a, b) { const out = []; for (let d = a; d <= b; d = addDays(d, 1)) out.push(d); return out; }
+function rangeDates(a, b) { const out = []; if (!a || !b) return out; for (let d = a; d <= b; d = addDays(d, 1)) out.push(d); return out; }
 function md(s) { const d = parseISO(s); return `${d.getUTCMonth()+1}/${d.getUTCDate()}`; }
 function wd(s) { return WD[parseISO(s).getUTCDay()]; }
 function isWeekend(s) { const g = parseISO(s).getUTCDay(); return g === 0 || g === 6; }
@@ -1289,7 +1289,7 @@ function renderCal(s) {
   const [Y, M] = calState.month.split('-').map(Number);
   const startDow = parseISO(`${calState.month}-01`).getUTCDay(), dim = new Date(Date.UTC(Y, M, 0)).getUTCDate(), today = localISO();
   const occ = new Map();
-  draft.segments.filter(x => x.groupId === s.groupId && x.id !== s.id).forEach(x => rangeDates(x.start, x.end).forEach(d => { if (!occ.has(d)) occ.set(d, x.label || '未填城市'); }));
+  draft.segments.filter(x => x.groupId === s.groupId && x.id !== s.id && x.start && x.end).forEach(x => rangeDates(x.start, x.end).forEach(d => { if (!occ.has(d)) occ.set(d, x.label || '未填城市'); }));
   let cells = WD.map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(startDow);
   for (let day = 1; day <= dim; day++) {
     const d = `${calState.month}-${pad(day)}`;
