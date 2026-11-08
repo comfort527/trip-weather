@@ -366,16 +366,26 @@ details.alerts{padding:0}
 details.alerts summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:14px 16px}
 details.alerts summary::-webkit-details-marker{display:none}
 .al-title{font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
-.al-title::before{content:"";width:0;height:0;border-left:6px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
-details[open] .al-title::before{transform:rotate(90deg)}
 .al-sum{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
-.al-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;background:var(--surface-2);color:var(--ink);font-weight:700}
+.al-head{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:12px 16px}
+.alerts{padding:0}
+.al-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:4px 11px;background:var(--surface-2);color:var(--ink);font-weight:700;font-size:13px;cursor:pointer}
+.al-chip:hover{border-color:var(--accent)}
+.al-chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 15%,transparent)}
+.al-chip:disabled{cursor:default;opacity:.7}
 .al-chip .gdot{width:8px;height:8px;border-radius:2px}
 .al-chip b{font-family:var(--f-num);font-weight:600;color:var(--bad)}
 .al-chip.zero b{color:var(--muted)}
 .al-body{padding:12px 16px 14px;display:grid;gap:14px;border-top:1px solid var(--line)}
 .al-grp h3{margin:0 0 6px;font-size:13px;display:flex;align-items:center;gap:6px}
 .al-grp h3 .gdot{width:9px;height:9px;border-radius:3px}
+.lookup .mapcard{margin-top:0}
+.form-row .ac{display:grid;gap:5px}
+.mapcard > summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;font-size:14px}
+.mapcard > summary::-webkit-details-marker{display:none}
+.mapcard > summary .al-title::before{content:"";width:0;height:0;border-left:6px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+.mapcard[open] > summary{border-bottom:1px solid var(--line)}
+.mapcard[open] > summary .al-title::before{transform:rotate(90deg)}
 footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--muted)}
 
@@ -466,10 +476,10 @@ footer a{color:var(--muted)}
           <span class="lg"><span class="dot low"></span>低</span>
         </div>
       </div>
-      <details class="card alerts" id="alertsBox">
-        <summary><span class="al-title">需要留意</span><span class="al-sum" id="alertSum">天氣資料載入中…</span></summary>
-        <div class="al-body" id="alerts"></div>
-      </details>
+      <section class="card alerts" id="alertsBox" aria-label="需要留意">
+        <div class="al-head"><span class="al-title">需要留意</span><span class="al-sum" id="alertSum">天氣資料載入中…</span></div>
+        <div class="al-body" id="alerts" hidden></div>
+      </section>
     </section>
 
     <section class="card board" aria-label="行程天氣矩陣">
@@ -500,18 +510,16 @@ footer a{color:var(--muted)}
         </form>
         <div id="lkStatus" class="status" hidden></div>
       </div>
-      <div id="lkResult" hidden>
-        <div class="card">
-          <h2 class="sect-h"><span id="lkTitle"></span><span class="muted" id="lkMeta" style="font-weight:400;font-size:12px"></span></h2>
-          <div class="tbl-wrap"><table class="wtable"><thead><tr><th>日期</th><th>天氣</th><th>高溫</th><th>低溫</th><th>降雨</th><th>風速</th><th>日出／日落</th></tr></thead><tbody id="lkRows"></tbody></table></div>
-        </div>
-        <div class="card mapcard">
-          <h2>位置<span>點地圖或拖曳圖標可改查該處</span></h2>
-          <div id="lookupMap"></div>
-        </div>
-        <div id="lkAddBox" class="card ed-body" hidden style="margin-top:16px">
-          <div class="ed-actions"><label class="f" for="lkGroup" style="min-width:160px">加入行程的組別<select id="lkGroup"></select></label><button class="btn primary" type="button" id="lkAdd" style="align-self:end">加入編輯中的行程</button><span class="ed-msg" id="lkAddMsg"></span></div>
-        </div>
+      <div id="lkAddBox" class="card" hidden>
+        <div class="ed-pad"><div class="ed-actions"><label class="f" for="lkGroup" style="min-width:160px">加入行程的組別<select id="lkGroup"></select></label><button class="btn primary" type="button" id="lkAdd" style="align-self:end">加入行程</button><span class="ed-msg" id="lkAddMsg"></span></div></div>
+      </div>
+      <details class="card mapcard" id="lkMapBox" hidden>
+        <summary><span class="al-title">位置</span><span class="muted" style="font-weight:400;font-size:12px">點地圖或拖曳圖標可改查該處</span></summary>
+        <div id="lookupMap"></div>
+      </details>
+      <div id="lkResult" class="card" hidden>
+        <h2 class="sect-h"><span id="lkTitle"></span><span class="muted" id="lkMeta" style="font-weight:400;font-size:12px"></span></h2>
+        <div class="tbl-wrap"><table class="wtable"><thead><tr><th>日期</th><th>天氣</th><th>高溫</th><th>低溫</th><th>降雨</th><th>風速</th><th>日出／日落</th></tr></thead><tbody id="lkRows"></tbody></table></div>
       </div>
     </section>
   </main>
@@ -912,9 +920,10 @@ function wxButton(seg, date, showCity) {
 function renderHeader(proj) {
   $('title').textContent = proj.title;
   document.title = proj.title ? `${proj.title}・行程天氣` : '行程天氣總覽';
-  const sp = tripSpan(proj);
+  const mainSegs = proj.segments.filter(s => s.groupId === proj.groups[0]?.id);
+  const sp = tripSpan({ segments: mainSegs.length ? mainSegs : proj.segments });
   const bits = [];
-  if (sp) bits.push(`${sp.a.replace(/-/g, '/')} – ${md(sp.b)}（${diffDays(sp.a, sp.b) + 1} 天）`);
+  if (sp) bits.push(`${mainSegs.length ? '本隊 ' : ''}${sp.a.replace(/-/g, '/')} – ${md(sp.b)}（${diffDays(sp.a, sp.b) + 1} 天）`);
   bits.push(`${proj.groups.length} 組・${proj.segments.length} 段行程`);
   if (proj.subtitle) bits.push(proj.subtitle);
   $('subtitle').textContent = bits.join('　·　');
@@ -989,6 +998,7 @@ function renderDayList(proj) {
     return `<article class="card day${kind === 'cl' ? ' cl' : ''}"><div class="day-h"><span><span class="d">${md(d)}</span><span class="w">週${wd(d)}</span></span>${pill}</div>${rows || '<div class="drow none">這天沒有安排行程</div>'}</article>`;
   }).join('');
 }
+let alertGroup = null;
 function renderAlerts(proj) {
   const today = localISO(), sum = $('alertSum'), body = $('alerts');
   if (!proj.segments.length) { sum.textContent = '尚無行程'; body.innerHTML = ''; return; }
@@ -1011,12 +1021,15 @@ function renderAlerts(proj) {
   const msg = r => r.tag === 'rain' ? `降雨機率最高 ${Math.max(...r.vs)}%${r.v2 >= 1 ? `，${r.d0 === r.d1 ? '' : '累計'}雨量約 ${r0(r.v2)} mm` : ''}`
     : r.tag === 'hot' ? `最高 ${r0(Math.max(...r.vs))}°C` : r.tag === 'cold' ? `最低 ${r0(Math.min(...r.vs))}°C${r.snow ? '，可能下雪' : ''}` : `陣風最高 ${r0(Math.max(...r.vs))} km/h`;
   const byGroup = proj.groups.map(g => ({ g, list: runs.filter(r => r.s.groupId === g.id).sort((a, b) => a.d0.localeCompare(b.d0) || a.tag.localeCompare(b.tag)) }));
-  const total = runs.length;
-  sum.innerHTML = pending && !total ? '天氣資料載入中…'
-    : byGroup.map(({ g, list }) => `<span class="al-chip${list.length ? '' : ' zero'}"><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)} <b>${list.length}</b></span>`).join('') + (total ? '' : '<span>預報期間內沒有大雨、高溫、低溫或強風</span>');
-  body.innerHTML = byGroup.map(({ g, list }) => `<div class="al-grp"><h3><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)}</h3><ul class="alert-list">${list.length
-    ? list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${esc(r.s.label)}：${esc(msg(r))}</button></li>`).join('')
-    : `<li class="muted">${pending ? '載入中…' : '預報期間內沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
+  if (!byGroup.some(x => x.g.id === alertGroup)) alertGroup = null;
+  sum.innerHTML = pending && !runs.length ? '天氣資料載入中…'
+    : byGroup.map(({ g, list }) => `<button type="button" class="al-chip${list.length ? '' : ' zero'}" data-alg="${esc(g.id)}" aria-pressed="${g.id === alertGroup}" aria-controls="alerts"><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)} <b>${list.length}</b></button>`).join('');
+  sum.querySelectorAll('[data-alg]').forEach(b => b.addEventListener('click', () => { alertGroup = alertGroup === b.dataset.alg ? null : b.dataset.alg; renderAlerts(view()); }));
+  const sel = byGroup.find(x => x.g.id === alertGroup);
+  body.hidden = !sel;
+  body.innerHTML = !sel ? '' : `<ul class="alert-list">${sel.list.length
+    ? sel.list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${esc(r.s.label)}：${esc(msg(r))}</button></li>`).join('')
+    : `<li class="muted">${pending ? '載入中…' : `${esc(sel.g.name)}在預報期間內沒有大雨、高溫、低溫或強風。`}</li>`}</ul>`;
 }
 
 let tripMap = null, tripLayer = null;
@@ -1104,13 +1117,16 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
     if (!lkLoc || lkLoc.label !== q) { lkStatus('搜尋城市中…'); const rs = await geocode(q); if (!rs.length) { lkStatus('找不到這個城市。可改用英文，或加上國家名稱。', true); return; } const r = rs[0]; lkLoc = { label: pickLabel(q, r), lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto', admin1: r.admin1 || '' }; }
     runLookup();
   });
+  $('lkMapBox').addEventListener('toggle', () => { if ($('lkMapBox').open && lkLoc) renderLookupMap(); });
   $('lkAdd').addEventListener('click', () => {
-    if (!draft || !lkLoc) return;
+    if (!lkLoc) return;
+    if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved) : normalize(JSON.parse(JSON.stringify(data))); }
     const s = $('lkStart').value, en = $('lkEnd').value;
     draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, place: [lkLoc.label, lkLoc.admin1, lkLoc.country].filter(Boolean).join(', '), country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: s, end: en < s ? s : en, note: '' });
     saveDraft(); $('lkAddMsg').textContent = `已加入：${lkLoc.label}（${md(s)}–${md(en)}）。記得到「編輯」頁按「儲存並發布」。`; $('lkAddMsg').className = 'ed-msg ok';
   });
 })();
+function isEditor() { return !!(draft || sget(DRAFT_KEY) || ghCfg().token); }
 function lkStatus(msg, err) { const el = $('lkStatus'); el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
 async function runLookup() {
   const a = $('lkStart').value, b = $('lkEnd').value; if (!lkLoc || !a || !b) return;
@@ -1132,9 +1148,9 @@ async function runLookup() {
       if (c) return `<tr class="cl"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon('avg')}歷年同期平均</span></td><td class="num hi">${r0(c.tmax)}°</td><td class="num lo">${r0(c.tmin)}°</td><td class="num">雨日 ${c.rain}%</td><td class="muted">—</td><td class="muted">—</td></tr>`;
       return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td class="muted" colspan="6">${d < today ? '已過' : '無資料'}</td></tr>`;
     }).join('');
-    $('lkResult').hidden = false; lkStatus('');
-    renderLookupMap();
-    if (draft) { $('lkAddBox').hidden = false; $('lkGroup').innerHTML = draft.groups.map(g => `<option value="${esc(g.id)}">${esc(g.name)}</option>`).join(''); $('lkAddMsg').textContent = ''; }
+    $('lkResult').hidden = false; $('lkMapBox').hidden = false; lkStatus('');
+    if ($('lkMapBox').open) renderLookupMap();
+    if (isEditor()) { const groups = (draft || data).groups; $('lkAddBox').hidden = false; $('lkGroup').innerHTML = groups.map(g => `<option value="${esc(g.id)}">${esc(g.name)}</option>`).join(''); $('lkAddMsg').textContent = ''; }
   } catch (e) { lkStatus(e.message || '查詢失敗，請稍後再試。', true); }
   finally { if (my === lkReq) $('lkBtn').disabled = false; }
 }
