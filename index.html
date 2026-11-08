@@ -357,6 +357,20 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .cal-hint{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
 .cal-hint .occ-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:middle}
 
+details.alerts{padding:0}
+details.alerts summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:14px 16px}
+details.alerts summary::-webkit-details-marker{display:none}
+.al-title{font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.al-title::before{content:"";width:0;height:0;border-left:6px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+details[open] .al-title::before{transform:rotate(90deg)}
+.al-sum{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
+.al-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;background:var(--surface-2);color:var(--ink);font-weight:700}
+.al-chip .gdot{width:8px;height:8px;border-radius:2px}
+.al-chip b{font-family:var(--f-num);font-weight:600;color:var(--bad)}
+.al-chip.zero b{color:var(--muted)}
+.al-body{padding:12px 16px 14px;display:grid;gap:14px;border-top:1px solid var(--line)}
+.al-grp h3{margin:0 0 6px;font-size:13px;display:flex;align-items:center;gap:6px}
+.al-grp h3 .gdot{width:9px;height:9px;border-radius:3px}
 footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--muted)}
 
@@ -445,10 +459,10 @@ footer a{color:var(--muted)}
           <span class="lg"><span class="dot low"></span>低</span>
         </div>
       </div>
-      <div class="card alerts">
-        <h2>需要留意</h2>
-        <ul class="alert-list" id="alerts"><li class="muted">天氣資料載入中…</li></ul>
-      </div>
+      <details class="card alerts" id="alertsBox">
+        <summary><span class="al-title">需要留意</span><span class="al-sum" id="alertSum">天氣資料載入中…</span></summary>
+        <div class="al-body" id="alerts"></div>
+      </details>
     </section>
 
     <section class="card board" aria-label="行程天氣矩陣">
@@ -668,6 +682,10 @@ async function geocode(input) {
   groups.forEach((g, i) => { if (i % 2 === 1) g.forEach(r => { const o = byId.get(r.id); if (o) { o.country = r.country; o.admin1 = r.admin1; o.enName = r.name; } }); });
   return [...byId.values()].sort((a, b) => (b.population || 0) - (a.population || 0)).slice(0, 10);
 }
+const EN2ZH = {};
+Object.entries(CITY_ALIASES).forEach(([zh, ens]) => ens.forEach(en => { const k = en.toLowerCase(); if (!EN2ZH[k]) EN2ZH[k] = zh; }));
+function suggestLabel(input, r) { const q = input.trim(); if (/[\u4e00-\u9fff]/.test(q)) return pickLabel(q, r); return EN2ZH[(r.enName || r.name || '').toLowerCase()] || EN2ZH[q.toLowerCase()] || r.enName || r.name; }
+function placeName(r) { return [r.enName || r.name, r.admin1, r.country].filter((v, i, a) => v && a.indexOf(v) === i).join(', '); }
 function pickLabel(input, r) { const q = input.trim(); return CITY_ALIASES[q] ? q : (/[一-鿿]/.test(q) && r.zhName && /[一-鿿]/.test(r.zhName) ? r.zhName : (r.enName || r.name)); }
 
 /* 自動完成 */
@@ -836,7 +854,7 @@ function normalize(p) {
   const segments = (Array.isArray(p.segments) ? p.segments : []).filter(s => s && s.start && s.end).map(s => ({
     id: String(s.id || uid()), groupId: ids.has(s.groupId) ? s.groupId : groups[0].id, label: String(s.label || s.city || ''), country: String(s.country || ''), countryCode: String(s.countryCode || ''),
     lat: Number.isFinite(+s.lat) && s.lat !== null && s.lat !== '' ? +s.lat : null, lon: Number.isFinite(+s.lon) && s.lon !== null && s.lon !== '' ? +s.lon : null, timezone: String(s.timezone || 'auto'),
-    start: String(s.start), end: String(s.end < s.start ? s.start : s.end), note: String(s.note || ''), climate: s.climate && s.climate.key ? s.climate : undefined
+    start: String(s.start), end: String(s.end < s.start ? s.start : s.end), place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
   }));
   return { version: 1, title: String(p.title || '行程天氣'), subtitle: String(p.subtitle || ''), updatedAt: p.updatedAt || null, groups, segments };
 }
@@ -966,34 +984,33 @@ function renderDayList(proj) {
   }).join('');
 }
 function renderAlerts(proj) {
-  const today = localISO();
-  if (!proj.segments.length) { $('alerts').innerHTML = '<li class="muted">尚無行程。</li>'; return; }
+  const today = localISO(), sum = $('alertSum'), body = $('alerts');
+  if (!proj.segments.length) { sum.textContent = '尚無行程'; body.innerHTML = ''; return; }
   let pending = false; const hits = [];
   proj.segments.forEach(s => rangeDates(s.start, s.end).forEach(d => {
     if (d < today) return;
     const cd = cellData(s, d); if (cd.kind === 'loading') pending = true;
     if (cd.kind !== 'fc') return;
-    const x = cd.day, g = proj.groups.find(g => g.id === s.groupId)?.name || '';
-    if ((x.pop ?? 0) >= 60 || (x.psum ?? 0) >= 10) hits.push({ d, s, g, tag: 'rain', v: x.pop ?? 0, v2: x.psum ?? 0 });
-    if ((x.tmax ?? -99) >= 33) hits.push({ d, s, g, tag: 'hot', v: x.tmax });
-    if ((x.tmin ?? 99) <= 0) hits.push({ d, s, g, tag: 'cold', v: x.tmin, snow: [71, 73, 75, 77, 85, 86].includes(x.code) });
-    if ((x.gust ?? 0) >= 55) hits.push({ d, s, g, tag: 'wind', v: x.gust });
+    const x = cd.day;
+    if ((x.pop ?? 0) >= 60 || (x.psum ?? 0) >= 10) hits.push({ d, s, tag: 'rain', v: x.pop ?? 0, v2: x.psum ?? 0 });
+    if ((x.tmax ?? -99) >= 33) hits.push({ d, s, tag: 'hot', v: x.tmax });
+    if ((x.tmin ?? 99) <= 0) hits.push({ d, s, tag: 'cold', v: x.tmin, snow: [71, 73, 75, 77, 85, 86].includes(x.code) });
+    if ((x.gust ?? 0) >= 55) hits.push({ d, s, tag: 'wind', v: x.gust });
   }));
   // 同一段行程、同一類，連續日期合併成一筆
   hits.sort((a, b) => (a.s.id + a.tag).localeCompare(b.s.id + b.tag) || a.d.localeCompare(b.d));
   const runs = [];
   hits.forEach(h => { const last = runs.at(-1); if (last && last.s.id === h.s.id && last.tag === h.tag && addDays(last.d1, 1) === h.d) { last.d1 = h.d; last.vs.push(h.v); last.v2 += h.v2 || 0; last.snow ||= h.snow; } else runs.push({ ...h, d0: h.d, d1: h.d, vs: [h.v], v2: h.v2 || 0 }); });
-  // 不同組在同城市、同日期、同類 → 合併組名
-  const merged = []; const seen = new Map();
-  runs.forEach(r => { const k = `${r.s.label}|${r.tag}|${r.d0}|${r.d1}`; if (seen.has(k)) { const m = seen.get(k); if (!m.g.split('、').includes(r.g)) m.g += '、' + r.g; } else { seen.set(k, r); merged.push(r); } });
-  merged.sort((a, b) => a.d0.localeCompare(b.d0));
   const T = { rain: '雨', hot: '高溫', cold: '低溫', wind: '強風' };
   const msg = r => r.tag === 'rain' ? `降雨機率最高 ${Math.max(...r.vs)}%${r.v2 >= 1 ? `，${r.d0 === r.d1 ? '' : '累計'}雨量約 ${r0(r.v2)} mm` : ''}`
     : r.tag === 'hot' ? `最高 ${r0(Math.max(...r.vs))}°C` : r.tag === 'cold' ? `最低 ${r0(Math.min(...r.vs))}°C${r.snow ? '，可能下雪' : ''}` : `陣風最高 ${r0(Math.max(...r.vs))} km/h`;
-  const shown = merged.slice(0, 7);
-  $('alerts').innerHTML = shown.length
-    ? shown.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${esc(r.s.label)}（${esc(r.g)}）：${esc(msg(r))}</button></li>`).join('') + (merged.length > 7 ? `<li class="muted">另有 ${merged.length - 7} 項，請看下方矩陣。</li>` : '')
-    : `<li class="muted">${pending ? '天氣資料載入中…' : '預報期間內沒有大雨、高溫、低溫或強風。'}</li>`;
+  const byGroup = proj.groups.map(g => ({ g, list: runs.filter(r => r.s.groupId === g.id).sort((a, b) => a.d0.localeCompare(b.d0) || a.tag.localeCompare(b.tag)) }));
+  const total = runs.length;
+  sum.innerHTML = pending && !total ? '天氣資料載入中…'
+    : byGroup.map(({ g, list }) => `<span class="al-chip${list.length ? '' : ' zero'}"><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)} <b>${list.length}</b></span>`).join('') + (total ? '' : '<span>預報期間內沒有大雨、高溫、低溫或強風</span>');
+  body.innerHTML = byGroup.map(({ g, list }) => `<div class="al-grp"><h3><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)}</h3><ul class="alert-list">${list.length
+    ? list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${esc(r.s.label)}：${esc(msg(r))}</button></li>`).join('')
+    : `<li class="muted">${pending ? '載入中…' : '預報期間內沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
 }
 
 let tripMap = null, tripLayer = null;
@@ -1084,7 +1101,7 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
   $('lkAdd').addEventListener('click', () => {
     if (!draft || !lkLoc) return;
     const s = $('lkStart').value, en = $('lkEnd').value;
-    draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: s, end: en < s ? s : en, note: '' });
+    draft.segments.push({ id: uid(), groupId: $('lkGroup').value, label: lkLoc.label, place: [lkLoc.label, lkLoc.admin1, lkLoc.country].filter(Boolean).join(', '), country: lkLoc.country, countryCode: lkLoc.countryCode, lat: lkLoc.lat, lon: lkLoc.lon, timezone: lkLoc.timezone, start: s, end: en < s ? s : en, note: '' });
     saveDraft(); $('lkAddMsg').textContent = `已加入：${lkLoc.label}（${md(s)}–${md(en)}）。記得到「編輯」頁按「儲存並發布」。`; $('lkAddMsg').className = 'ed-msg ok';
   });
 })();
@@ -1192,7 +1209,7 @@ function renderEdSegs() {
         : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
     }
     const n = diffDays(s.start, s.end) + 1, on = s.id === selSeg;
-    html += `<button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : '<span class="warn">未填城市</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null && s.label ? '<span class="warn">尚未從選單選定位置</span>' : esc(s.note || '　')}</span></span></button>`;
+    html += `<button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button>`;
   });
   box.innerHTML = html;
   box.querySelectorAll('[data-ssel]').forEach(b => b.addEventListener('click', () => { selSeg = b.dataset.ssel; renderEdSegs(); renderEdForm(); if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
@@ -1212,18 +1229,18 @@ function renderEdForm() {
   box.innerHTML = `<h3 class="ed-h">編輯這一段<span class="del-wrap"><button class="btn sm danger" type="button" id="sDel">刪除這一段</button></span></h3>
   <div class="ed-pad">
     <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
-    <div class="ac"><label class="f" for="sCity">城市</label><input type="text" id="sCity" value="${esc(s.label)}" placeholder="輸入城市，再從選單點選" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
+    <div class="ac"><label class="f" for="sCity">搜尋地點</label><input type="search" id="sCity" value="${esc(s.place || '')}" placeholder="建議用英文搜尋，例如 Florence" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
+    <label class="f" for="sLabel">顯示名稱<input type="text" id="sLabel" value="${esc(s.label)}" maxlength="20" placeholder="例如：佛羅倫斯"></label>
+    <p class="hint" style="margin-top:-4px">總覽上顯示的城市名稱。可改成繁體中文，不影響座標。</p>
     <div class="f" style="display:grid;gap:6px"><span>抵達與離開日期</span><div id="sCal"></div></div>
-    <label class="f" for="sNote">備註（會公開顯示）<input type="text" id="sNote" value="${esc(s.note)}" maxlength="40" placeholder="例如：場勘"></label>
   </div>`;
-  const geo = () => { const el = $('sGeo'); el.className = 'geo' + (s.lat == null ? ' bad' : ''); el.textContent = s.lat == null ? (s.label ? '尚未選定位置，請從選單點選' : '輸入城市後從選單點選，才會帶入正確座標') : `${[s.country, s.timezone !== 'auto' ? s.timezone : ''].filter(Boolean).join('・')}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`; };
+  const geo = () => { const el = $('sGeo'); el.className = 'geo' + (s.lat == null ? ' bad' : ''); el.textContent = s.lat == null ? '尚未選定地點：輸入後請從選單點選，才會帶入正確座標' : `已選定：${s.place || s.label}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`; };
   geo();
   $('sGroup').addEventListener('change', e => { s.groupId = e.target.value; selGroup = s.groupId; saveDraft(); renderEditor(); });
   const ci = $('sCity');
-  attachAC(ci, $('sCityAc'), (r, label) => { Object.assign(s, { label, lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
-  ci.addEventListener('input', () => { s.label = ci.value; if (s.lat != null) { s.lat = null; s.lon = null; s.country = ''; s.countryCode = ''; delete s.climate; } saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
+  attachAC(ci, $('sCityAc'), r => { const q = ci.value; Object.assign(s, { label: suggestLabel(q, r), place: placeName(r), lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = s.place; $('sLabel').value = s.label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
+  $('sLabel').addEventListener('input', e => { s.label = e.target.value; saveDraft(); renderEdSegs(); if (s.lat != null) $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`; });
   calState = { month: s.start.slice(0, 7), phase: 'start' }; renderCal(s);
-  $('sNote').addEventListener('input', e => { s.note = e.target.value; saveDraft(); renderEdSegs(); });
   $('sDel').addEventListener('click', e => {
     const wrap = e.target.closest('.del-wrap');
     wrap.innerHTML = `<span class="inline-confirm">確定刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
@@ -1296,7 +1313,7 @@ async function prepareForPublish() {
   const out = JSON.parse(JSON.stringify(draft));
   out.updatedAt = new Date().toISOString();
   out.groups = out.groups.map(g => ({ id: g.id, name: g.name.trim() || '未命名' }));
-  out.segments.forEach(s => delete s._lane);
+  out.segments.forEach(s => { delete s._lane; if (!s.label.trim()) s.label = (s.place || '').split(',')[0] || '未命名'; });
   return { out, missing };
 }
 function b64utf8(str) { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); }
