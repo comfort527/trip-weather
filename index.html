@@ -1258,9 +1258,7 @@ function renderEdSegs() {
   }));
 }
 $('addSeg').addEventListener('click', () => {
-  const segs = groupSegs(selGroup), last = segs.at(-1);
-  const start = last?.end || addDays(localISO(), 7);
-  const s = { id: uid(), groupId: selGroup, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start, end: addDays(start, 2), note: '' };
+  const s = { id: uid(), groupId: selGroup, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start: '', end: '', note: '' };
   draft.segments.push(s); selSeg = s.id; saveDraft(); renderEditor(); $('sCity')?.focus();
 });
 
@@ -1282,7 +1280,7 @@ function renderEdForm() {
   const ci = $('sCity');
   attachAC(ci, $('sCityAc'), r => { const q = ci.value; Object.assign(s, { label: suggestLabel(q, r), place: placeName(r), lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = s.place; $('sLabel').value = s.label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
   $('sLabel').addEventListener('input', e => { s.label = e.target.value; saveDraft(); renderEdSegs(); if (s.lat != null && s.start) $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`; });
-  calState = { month: (s.start || localISO()).slice(0, 7), phase: 'start' }; renderCal(s);
+  calState = { month: (s.start || localISO()).slice(0, 7), phase: s.start ? 'auto' : 'start' }; renderCal(s);
   schedulePreview(0);
 }
 let calState = { month: null, phase: 'start' };
@@ -1302,14 +1300,19 @@ function renderCal(s) {
   const dl = v => v ? `<b>${md(v)}</b>（${wd(v)}）` : '<b class="muted">未選</b>';
   box.innerHTML = `<div class="cal-pick"><button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button></div>
   <div class="cal"><div class="cal-h"><button type="button" class="cal-nav" data-nav="-1" aria-label="上個月">‹</button><b>${Y} 年 ${M} 月</b><button type="button" class="cal-nav" data-nav="1" aria-label="下個月">›</button></div><div class="cal-g">${cells}</div></div>
-  <div class="cal-hint"><span>${ph === 'start' ? '點日曆選抵達日' : '再點一下選離開日'}${n ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
+  <div class="cal-hint"><span>${ph === 'start' ? '點日曆選抵達日' : ph === 'end' ? '點日曆選離開日' : '點日期調整；要指定改哪一天，先點上方抵達或離開'}${n ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
   box.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { const d = parseISO(calState.month + '-01'); d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.nav)); calState.month = toISO(d).slice(0, 7); renderCal(s); }));
-  box.querySelectorAll('[data-phase]').forEach(b => b.addEventListener('click', () => { calState.phase = b.dataset.phase; calState.month = ((b.dataset.phase === 'start' ? s.start : s.end) || calState.month).slice(0, 7); renderCal(s); }));
+  box.querySelectorAll('[data-phase]').forEach(b => b.addEventListener('click', () => { calState.phase = calState.phase === b.dataset.phase && s.start ? 'auto' : b.dataset.phase; calState.month = ((b.dataset.phase === 'start' ? s.start : s.end) || calState.month).slice(0, 7); renderCal(s); }));
   box.querySelectorAll('[data-cal]').forEach(b => b.addEventListener('click', () => {
     const d = b.dataset.cal;
-    if (calState.phase === 'start' || !s.start) { s.start = d; if (!s.end || s.end < d) s.end = d; calState.phase = 'end'; }
-    else if (d < s.start) { s.start = d; }
-    else { s.end = d; calState.phase = 'start'; }
+    const ph = calState.phase;
+    if (!s.start) { s.start = d; s.end = d; calState.phase = 'end'; }                       // 新段落：先選抵達，再選離開
+    else if (ph === 'start') { s.start = d; if (s.end < d) s.end = d; calState.phase = s.end === d ? 'end' : 'auto'; }
+    else if (ph === 'end') { if (d < s.start) s.start = d; else s.end = d; calState.phase = 'auto'; }
+    else if (d < s.start) s.start = d;                                                        // 早於抵達 → 改抵達
+    else if (d > s.end) s.end = d;                                                            // 晚於離開 → 改離開
+    else if (diffDays(s.start, d) < diffDays(d, s.end)) s.start = d;                          // 落在期間內 → 改較近的一端
+    else s.end = d;
     delete s.climate; saveDraft(); renderEdSegs(); renderCal(s); schedulePreview();
   }));
 }
