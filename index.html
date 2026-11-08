@@ -270,6 +270,12 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .seg-card .city small{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
 .seg-card .meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .seg-card .warn{color:var(--bad);font-weight:700}
+.seg-item{position:relative}
+.seg-item .seg-card{padding-right:52px}
+.seg-del-wrap{position:absolute;top:50%;right:10px;transform:translateY(-50%)}
+.seg-del-wrap.ask{background:var(--surface);border-radius:10px;padding:4px 0 4px 8px}
+.seg-x{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:17px;line-height:1;padding:0}
+.seg-x:hover{color:var(--bad);border-color:var(--bad)}
 .seg-gap{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:3px 0 3px 46px;min-height:22px}
 .seg-gap.over{color:var(--warn);font-weight:700}
 .seg-gap.tight{min-height:10px;padding:0}
@@ -1230,10 +1236,23 @@ function renderEdSegs() {
         : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
     }
     const n = diffDays(s.start, s.end) + 1, on = s.id === selSeg;
-    html += `<button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button>`;
+    html += `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small></span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="刪除這一段" title="刪除這一段">×</button></span></div>`;
   });
   box.innerHTML = html;
   box.querySelectorAll('[data-ssel]').forEach(b => b.addEventListener('click', () => { selSeg = b.dataset.ssel; renderEdSegs(); renderEdForm(); if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  box.querySelectorAll('[data-sdel]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.dataset.sdel, wrap = b.closest('.seg-del-wrap');
+    wrap.classList.add('ask');
+    wrap.innerHTML = `<span class="inline-confirm">刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
+    wrap.querySelector('[data-yes]').addEventListener('click', () => {
+      const segs = groupSegs(selGroup), k = segs.findIndex(x => x.id === id);
+      draft.segments = draft.segments.filter(x => x.id !== id);
+      if (selSeg === id) { const rest = groupSegs(selGroup); selSeg = (rest[k] || rest[k - 1])?.id || null; }
+      saveDraft(); renderEditor();
+    });
+    wrap.querySelector('[data-no]').addEventListener('click', renderEdSegs);
+  }));
 }
 $('addSeg').addEventListener('click', () => {
   const segs = groupSegs(selGroup), last = segs.at(-1);
@@ -1247,7 +1266,7 @@ function renderEdForm() {
   const box = $('segForm'), s = draft.segments.find(x => x.id === selSeg);
   if (!s) { box.innerHTML = `<h3 class="ed-h">編輯這一段</h3><div class="ed-empty">從中間選一段行程來編輯，<br>或按「＋ 新增一段」。</div>`; $('edWx').innerHTML = ''; $('edWxNote').textContent = ''; $('edWxCard').hidden = true; return; }
   $('edWxCard').hidden = false;
-  box.innerHTML = `<h3 class="ed-h">編輯這一段<span class="del-wrap"><button class="btn sm danger" type="button" id="sDel">刪除這一段</button></span></h3>
+  box.innerHTML = `<h3 class="ed-h">編輯這一段</h3>
   <div class="ed-pad">
     <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
     <div class="ac"><label class="f" for="sCity">搜尋地點</label><input type="search" id="sCity" value="${esc(s.place || '')}" placeholder="建議用英文搜尋，例如 Florence" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
@@ -1261,12 +1280,6 @@ function renderEdForm() {
   attachAC(ci, $('sCityAc'), r => { const q = ci.value; Object.assign(s, { label: suggestLabel(q, r), place: placeName(r), lat: r.latitude, lon: r.longitude, country: r.country || '', countryCode: r.country_code || '', timezone: r.timezone || 'auto' }); delete s.climate; ci.value = s.place; $('sLabel').value = s.label; saveDraft(); geo(); renderEdSegs(); schedulePreview(0); });
   $('sLabel').addEventListener('input', e => { s.label = e.target.value; saveDraft(); renderEdSegs(); if (s.lat != null) $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`; });
   calState = { month: s.start.slice(0, 7), phase: 'start' }; renderCal(s);
-  $('sDel').addEventListener('click', e => {
-    const wrap = e.target.closest('.del-wrap');
-    wrap.innerHTML = `<span class="inline-confirm">確定刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
-    wrap.querySelector('[data-yes]').addEventListener('click', () => { const segs = groupSegs(selGroup); const i = segs.findIndex(x => x.id === s.id); draft.segments = draft.segments.filter(x => x.id !== s.id); const rest = groupSegs(selGroup); selSeg = (rest[i] || rest[i - 1])?.id || null; saveDraft(); renderEditor(); });
-    wrap.querySelector('[data-no]').addEventListener('click', renderEdForm);
-  });
   schedulePreview(0);
 }
 let calState = { month: null, phase: 'start' };
