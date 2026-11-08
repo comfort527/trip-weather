@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "title": "歐洲行程（示範資料）",
-  "subtitle": "此為示範行程，正式使用前請進入編輯模式修改",
-  "updatedAt": "2026-11-08T14:00:00+08:00",
+  "title": "義大利行程",
+  "subtitle": "",
+  "updatedAt": "2026-11-08T11:29:35.788Z",
   "groups": [
     {
       "id": "g1",
@@ -13,136 +13,587 @@
       "name": "先遣A"
     },
     {
-      "id": "g3",
+      "id": "9a7b5a40",
       "name": "先遣B"
+    },
+    {
+      "id": "6114eacd",
+      "name": "先遣C"
     }
   ],
   "segments": [
     {
-      "id": "s1",
+      "id": "5d6a37be",
+      "groupId": "g1",
+      "label": "科莫",
+      "country": "Italy",
+      "countryCode": "IT",
+      "lat": 45.80819,
+      "lon": 9.0832,
+      "timezone": "Europe/Rome",
+      "start": "2026-06-21",
+      "end": "2026-06-25",
+      "kind": "stay",
+      "place": "Como, Lombardy, Italy",
+      "note": "",
+      "climate": {
+        "key": "45.808,9.083|2026-06-21|2026-06-25|2016-10-3",
+        "days": {
+          "2026-06-21": {
+            "tmax": 27.7,
+            "tmin": 18.3,
+            "rain": 33,
+            "psum": 2.3,
+            "n": 70
+          },
+          "2026-06-22": {
+            "tmax": 27.7,
+            "tmin": 18.4,
+            "rain": 34,
+            "psum": 3,
+            "n": 70
+          },
+          "2026-06-23": {
+            "tmax": 27.8,
+            "tmin": 18.6,
+            "rain": 39,
+            "psum": 3.4,
+            "n": 70
+          },
+          "2026-06-24": {
+            "tmax": 27.9,
+            "tmin": 18.6,
+            "rain": 40,
+            "psum": 3.8,
+            "n": 70
+          },
+          "2026-06-25": {
+            "tmax": 28,
+            "tmin": 18.7,
+            "rain": 41,
+            "psum": 4.4,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "b249de3e",
       "groupId": "g2",
+      "label": "科莫",
+      "country": "Italy",
+      "countryCode": "IT",
+      "lat": 45.80819,
+      "lon": 9.0832,
+      "timezone": "Europe/Rome",
+      "start": "2026-06-19",
+      "end": "2026-06-25",
+      "kind": "stay",
+      "place": "Como, Lombardy, Italy",
+      "note": "",
+      "climate": {
+        "key": "45.808,9.083|2026-06-19|2026-06-25|2016-10-3",
+        "days": {
+          "2026-06-19": {
+            "tmax": 27.5,
+            "tmin": 18.1,
+            "rain": 31,
+            "psum": 2.1,
+            "n": 70
+          },
+          "2026-06-20": {
+            "tmax": 27.6,
+            "tmin": 18.1,
+            "rain": 34,
+            "psum": 2.1,
+            "n": 70
+          },
+          "2026-06-21": {
+            "tmax": 27.7,
+            "tmin": 18.3,
+            "rain": 33,
+            "psum": 2.3,
+            "n": 70
+          },
+          "2026-06-22": {
+            "tmax": 27.7,
+            "tmin": 18.4,
+            "rain": 34,
+            "psum": 3,
+            "n": 70
+          },
+          "2026-06-23": {
+            "tmax": 27.8,
+            "tmin": 18.6,
+            "rain": 39,
+            "psum": 3.4,
+            "n": 70
+          },
+          "2026-06-24": {
+            "tmax": 27.9,
+            "tmin": 18.6,
+            "rain": 40,
+            "psum": 3.8,
+            "n": 70
+          },
+          "2026-06-25": {
+            "tmax": 28,
+            "tmin": 18.7,
+            "rain": 41,
+            "psum": 4.4,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "a580b17a",
+      "groupId": "g2",
+      "label": "米蘭",
+      "country": "Italy",
+      "countryCode": "IT",
+      "lat": 42.78235,
+      "lon": 12.59836,
+      "timezone": "Europe/Rome",
+      "start": "2026-06-25",
+      "end": "2026-06-26",
+      "kind": "stay",
+      "place": "Milan, Umbria, Italy",
+      "note": "",
+      "climate": {
+        "key": "42.782,12.598|2026-06-25|2026-06-26|2016-10-3",
+        "days": {
+          "2026-06-25": {
+            "tmax": 28.6,
+            "tmin": 14.8,
+            "rain": 14,
+            "psum": 1.1,
+            "n": 70
+          },
+          "2026-06-26": {
+            "tmax": 28.7,
+            "tmin": 14.9,
+            "rain": 13,
+            "psum": 1,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "bfa6042c",
+      "groupId": "9a7b5a40",
+      "label": "米蘭",
+      "country": "Italy",
+      "countryCode": "IT",
+      "lat": 42.78235,
+      "lon": 12.59836,
+      "timezone": "Europe/Rome",
+      "start": "2026-06-19",
+      "end": "2026-06-21",
+      "kind": "stay",
+      "place": "Milan, Umbria, Italy",
+      "note": "",
+      "climate": {
+        "key": "42.782,12.598|2026-06-19|2026-06-21|2016-10-3",
+        "days": {
+          "2026-06-19": {
+            "tmax": 27.4,
+            "tmin": 13.8,
+            "rain": 17,
+            "psum": 1,
+            "n": 70
+          },
+          "2026-06-20": {
+            "tmax": 27.5,
+            "tmin": 13.9,
+            "rain": 17,
+            "psum": 1.1,
+            "n": 70
+          },
+          "2026-06-21": {
+            "tmax": 27.8,
+            "tmin": 14.1,
+            "rain": 16,
+            "psum": 1.2,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "4582e097",
+      "groupId": "g1",
       "label": "羅馬",
       "country": "Italy",
       "countryCode": "IT",
       "lat": 41.89193,
       "lon": 12.51133,
       "timezone": "Europe/Rome",
-      "start": "2026-11-12",
-      "end": "2026-11-15",
+      "start": "2026-06-25",
+      "end": "2026-06-26",
+      "kind": "stay",
+      "place": "羅馬, Lazio, Italy",
       "note": "",
-      "place": "Rome, Lazio, Italy"
+      "climate": {
+        "key": "41.892,12.511|2026-06-25|2026-06-26|2016-10-3",
+        "days": {
+          "2026-06-25": {
+            "tmax": 32.3,
+            "tmin": 19.6,
+            "rain": 10,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-26": {
+            "tmax": 32.4,
+            "tmin": 19.7,
+            "rain": 11,
+            "psum": 0.4,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s2",
-      "groupId": "g2",
-      "label": "佛羅倫斯",
-      "country": "Italy",
-      "countryCode": "IT",
-      "lat": 43.77925,
-      "lon": 11.24626,
-      "timezone": "Europe/Rome",
-      "start": "2026-11-16",
-      "end": "2026-11-19",
-      "note": "",
-      "place": "Florence, Tuscany, Italy"
-    },
-    {
-      "id": "s3",
-      "groupId": "g2",
-      "label": "米蘭",
-      "country": "Italy",
-      "countryCode": "IT",
-      "lat": 45.46427,
-      "lon": 9.18951,
-      "timezone": "Europe/Rome",
-      "start": "2026-11-20",
-      "end": "2026-11-22",
-      "note": "",
-      "place": "Milan, Lombardy, Italy"
-    },
-    {
-      "id": "s4",
-      "groupId": "g1",
+      "id": "5df57fe6",
+      "groupId": "9a7b5a40",
       "label": "羅馬",
       "country": "Italy",
       "countryCode": "IT",
       "lat": 41.89193,
       "lon": 12.51133,
       "timezone": "Europe/Rome",
-      "start": "2026-11-16",
-      "end": "2026-11-19",
+      "start": "2026-06-21",
+      "end": "2026-06-26",
+      "kind": "stay",
+      "place": "羅馬, Lazio, Italy",
       "note": "",
-      "place": "Rome, Lazio, Italy"
+      "climate": {
+        "key": "41.892,12.511|2026-06-21|2026-06-26|2016-10-3",
+        "days": {
+          "2026-06-21": {
+            "tmax": 31.1,
+            "tmin": 18.7,
+            "rain": 6,
+            "psum": 0.2,
+            "n": 70
+          },
+          "2026-06-22": {
+            "tmax": 31.4,
+            "tmin": 19,
+            "rain": 9,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-23": {
+            "tmax": 31.7,
+            "tmin": 19.2,
+            "rain": 7,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-24": {
+            "tmax": 32,
+            "tmin": 19.4,
+            "rain": 7,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-25": {
+            "tmax": 32.3,
+            "tmin": 19.6,
+            "rain": 10,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-26": {
+            "tmax": 32.4,
+            "tmin": 19.7,
+            "rain": 11,
+            "psum": 0.4,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s5",
-      "groupId": "g1",
-      "label": "佛羅倫斯",
+      "id": "cd7537f8",
+      "groupId": "6114eacd",
+      "label": "羅馬",
       "country": "Italy",
       "countryCode": "IT",
-      "lat": 43.77925,
-      "lon": 11.24626,
+      "lat": 41.89193,
+      "lon": 12.51133,
       "timezone": "Europe/Rome",
-      "start": "2026-11-20",
-      "end": "2026-11-22",
+      "start": "2026-06-21",
+      "end": "2026-06-26",
+      "kind": "stay",
+      "place": "羅馬, Lazio, Italy",
       "note": "",
-      "place": "Florence, Tuscany, Italy"
+      "climate": {
+        "key": "41.892,12.511|2026-06-21|2026-06-26|2016-10-3",
+        "days": {
+          "2026-06-21": {
+            "tmax": 31.1,
+            "tmin": 18.7,
+            "rain": 6,
+            "psum": 0.2,
+            "n": 70
+          },
+          "2026-06-22": {
+            "tmax": 31.4,
+            "tmin": 19,
+            "rain": 9,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-23": {
+            "tmax": 31.7,
+            "tmin": 19.2,
+            "rain": 7,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-24": {
+            "tmax": 32,
+            "tmin": 19.4,
+            "rain": 7,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-25": {
+            "tmax": 32.3,
+            "tmin": 19.6,
+            "rain": 10,
+            "psum": 0.3,
+            "n": 70
+          },
+          "2026-06-26": {
+            "tmax": 32.4,
+            "tmin": 19.7,
+            "rain": 11,
+            "psum": 0.4,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s6",
+      "id": "ea6a815c",
       "groupId": "g1",
-      "label": "米蘭",
-      "country": "Italy",
-      "countryCode": "IT",
-      "lat": 45.46427,
-      "lon": 9.18951,
-      "timezone": "Europe/Rome",
-      "start": "2026-11-23",
-      "end": "2026-11-25",
+      "kind": "depart",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-20",
+      "end": "2026-06-20",
       "note": "",
-      "place": "Milan, Lombardy, Italy"
+      "climate": {
+        "key": "25.048,121.532|2026-06-20|2026-06-20|2016-10-3",
+        "days": {
+          "2026-06-20": {
+            "tmax": 31.8,
+            "tmin": 24.5,
+            "rain": 64,
+            "psum": 5.9,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s7",
+      "id": "29897907",
       "groupId": "g1",
-      "label": "維也納",
-      "country": "Austria",
-      "countryCode": "AT",
-      "lat": 48.20849,
-      "lon": 16.37208,
-      "timezone": "Europe/Vienna",
-      "start": "2026-11-26",
-      "end": "2026-11-29",
+      "kind": "return",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-27",
+      "end": "2026-06-27",
       "note": "",
-      "place": "Vienna, Austria"
+      "climate": {
+        "key": "25.048,121.532|2026-06-27|2026-06-27|2016-10-3",
+        "days": {
+          "2026-06-27": {
+            "tmax": 32.4,
+            "tmin": 24.8,
+            "rain": 64,
+            "psum": 3.6,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s8",
-      "groupId": "g3",
-      "label": "維也納",
-      "country": "Austria",
-      "countryCode": "AT",
-      "lat": 48.20849,
-      "lon": 16.37208,
-      "timezone": "Europe/Vienna",
-      "start": "2026-11-20",
-      "end": "2026-11-25",
+      "id": "a65d8355",
+      "groupId": "g2",
+      "kind": "depart",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-18",
+      "end": "2026-06-18",
       "note": "",
-      "place": "Vienna, Austria"
+      "climate": {
+        "key": "25.048,121.532|2026-06-18|2026-06-18|2016-10-3",
+        "days": {
+          "2026-06-18": {
+            "tmax": 31.3,
+            "tmin": 24.2,
+            "rain": 59,
+            "psum": 5.5,
+            "n": 70
+          }
+        }
+      }
     },
     {
-      "id": "s9",
-      "groupId": "g3",
-      "label": "布拉格",
-      "country": "Czechia",
-      "countryCode": "CZ",
-      "lat": 50.08804,
-      "lon": 14.42076,
-      "timezone": "Europe/Prague",
-      "start": "2026-11-26",
-      "end": "2026-11-28",
+      "id": "ac0c2cfe",
+      "groupId": "g2",
+      "kind": "return",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-27",
+      "end": "2026-06-27",
       "note": "",
-      "place": "Prague, Czechia"
+      "climate": {
+        "key": "25.048,121.532|2026-06-27|2026-06-27|2016-10-3",
+        "days": {
+          "2026-06-27": {
+            "tmax": 32.4,
+            "tmin": 24.8,
+            "rain": 64,
+            "psum": 3.6,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "deb2b324",
+      "groupId": "9a7b5a40",
+      "kind": "depart",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-18",
+      "end": "2026-06-18",
+      "note": "",
+      "climate": {
+        "key": "25.048,121.532|2026-06-18|2026-06-18|2016-10-3",
+        "days": {
+          "2026-06-18": {
+            "tmax": 31.3,
+            "tmin": 24.2,
+            "rain": 59,
+            "psum": 5.5,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "ba670214",
+      "groupId": "9a7b5a40",
+      "kind": "return",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-27",
+      "end": "2026-06-27",
+      "note": "",
+      "climate": {
+        "key": "25.048,121.532|2026-06-27|2026-06-27|2016-10-3",
+        "days": {
+          "2026-06-27": {
+            "tmax": 32.4,
+            "tmin": 24.8,
+            "rain": 64,
+            "psum": 3.6,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "9fbbf65f",
+      "groupId": "6114eacd",
+      "kind": "depart",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-20",
+      "end": "2026-06-20",
+      "note": "",
+      "climate": {
+        "key": "25.048,121.532|2026-06-20|2026-06-20|2016-10-3",
+        "days": {
+          "2026-06-20": {
+            "tmax": 31.8,
+            "tmin": 24.5,
+            "rain": 64,
+            "psum": 5.9,
+            "n": 70
+          }
+        }
+      }
+    },
+    {
+      "id": "e4608999",
+      "groupId": "6114eacd",
+      "kind": "return",
+      "label": "台北",
+      "place": "Taipei, Taiwan",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "lat": 25.04776,
+      "lon": 121.53185,
+      "timezone": "Asia/Taipei",
+      "start": "2026-06-27",
+      "end": "2026-06-27",
+      "note": "",
+      "climate": {
+        "key": "25.048,121.532|2026-06-27|2026-06-27|2016-10-3",
+        "days": {
+          "2026-06-27": {
+            "tmax": 32.4,
+            "tmin": 24.8,
+            "rain": 64,
+            "psum": 3.6,
+            "n": 70
+          }
+        }
+      }
     }
   ]
 }
