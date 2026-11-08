@@ -295,7 +295,7 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .pv-row .d small{font-family:var(--f-body);font-weight:400;color:var(--muted);margin-left:3px}
 .pv-row .t{font-family:var(--f-num);font-weight:600;white-space:nowrap}
 .ed-foot-hint{margin:12px 2px 0}
-@media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar #draftState,#downloadBtn{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
+@media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar #draftState,#downloadBtn,#importBtn{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
 @media (max-width:1120px){.ed-cols{grid-template-columns:minmax(210px,230px) minmax(0,1fr) minmax(280px,330px)}}
 @media (max-width:900px){.ed-cols{grid-template-columns:minmax(0,1fr)}.ed-col.left{display:contents}.ed-col.mid{order:1}.ed-col.right{order:2;position:static;max-height:none;overflow:visible}#ghSet{order:3}}
 
@@ -545,6 +545,7 @@ footer a{color:var(--muted)}
       <span class="ed-msg" id="draftState"></span>
       <span class="sp"></span>
       <button class="btn sm" type="button" id="previewBtn">預覽總覽</button>
+      <button class="btn sm" type="button" id="importBtn">匯入 data.json</button><input type="file" id="importFile" accept=".json,application/json" hidden>
       <button class="btn sm" type="button" id="downloadBtn">下載 data.json</button>
       <button class="btn sm danger" type="button" id="discardBtn">放棄修改</button>
       <button class="btn sm primary" type="button" id="publishBtn">儲存並發布</button>
@@ -1484,6 +1485,24 @@ $('publishBtn').addEventListener('click', async () => {
   finally { $('publishBtn').disabled = false; }
 });
 $('previewBtn').addEventListener('click', () => { location.hash = '#edit-preview'; });
+$('importBtn').addEventListener('click', () => { $('importFile').value = ''; $('importFile').click(); });
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files?.[0]; if (!f) return;
+  let incoming;
+  try {
+    const raw = JSON.parse(await f.text());
+    if (!raw || !Array.isArray(raw.groups) || !Array.isArray(raw.segments)) throw new Error();
+    incoming = normalize(raw, true);
+  } catch { edMsg('這個檔案不是有效的行程檔（data.json），請確認是從這裡下載的檔案。', 'err'); return; }
+  const stays = incoming.segments.filter(isStay).length;
+  const box = $('edMsg'); box.className = 'ed-msg';
+  box.innerHTML = `匯入「${esc(incoming.title)}」（${incoming.groups.length} 組・${stays} 段行程）會取代目前編輯中的內容，確定嗎？ <button class="btn sm danger" type="button" id="impYes">匯入</button> <button class="btn sm" type="button" id="impNo">取消</button>`;
+  $('impYes').addEventListener('click', () => {
+    draft = incoming; selGroup = draft.groups[0].id; selSeg = null; saveDraft(); startEdit(); renderHeader(draft);
+    edMsg(`已匯入「${incoming.title}」。確認無誤後按「儲存並發布」，同仁才會看到。`, 'ok');
+  });
+  $('impNo').addEventListener('click', () => edMsg(''));
+});
 $('downloadBtn').addEventListener('click', async () => {
   const err = validateDraft(); if (err) { edMsg(err, 'err'); return; }
   const { out } = await prepareForPublish();
