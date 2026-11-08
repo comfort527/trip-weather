@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "title": "歐洲行程（示範資料）",
+  "subtitle": "此為示範行程，正式使用前請進入編輯模式修改",
+  "updatedAt": "2026-11-08T14:00:00+08:00",
+  "groups": [
+    { "id": "g1", "name": "本隊" },
+    { "id": "g2", "name": "先遣 A" },
+    { "id": "g3", "name": "先遣 B" }
+  ],
+  "segments": [
+    { "id": "s1", "groupId": "g2", "label": "羅馬", "country": "Italy", "countryCode": "IT", "lat": 41.89193, "lon": 12.51133, "timezone": "Europe/Rome", "start": "2026-11-12", "end": "2026-11-15", "note": "場勘" },
+    { "id": "s2", "groupId": "g2", "label": "佛羅倫斯", "country": "Italy", "countryCode": "IT", "lat": 43.77925, "lon": 11.24626, "timezone": "Europe/Rome", "start": "2026-11-16", "end": "2026-11-19", "note": "" },
+    { "id": "s3", "groupId": "g2", "label": "米蘭", "country": "Italy", "countryCode": "IT", "lat": 45.46427, "lon": 9.18951, "timezone": "Europe/Rome", "start": "2026-11-20", "end": "2026-11-22", "note": "" },
+    { "id": "s4", "groupId": "g1", "label": "羅馬", "country": "Italy", "countryCode": "IT", "lat": 41.89193, "lon": 12.51133, "timezone": "Europe/Rome", "start": "2026-11-16", "end": "2026-11-19", "note": "" },
+    { "id": "s5", "groupId": "g1", "label": "佛羅倫斯", "country": "Italy", "countryCode": "IT", "lat": 43.77925, "lon": 11.24626, "timezone": "Europe/Rome", "start": "2026-11-20", "end": "2026-11-22", "note": "" },
+    { "id": "s6", "groupId": "g1", "label": "米蘭", "country": "Italy", "countryCode": "IT", "lat": 45.46427, "lon": 9.18951, "timezone": "Europe/Rome", "start": "2026-11-23", "end": "2026-11-25", "note": "" },
+    { "id": "s7", "groupId": "g1", "label": "維也納", "country": "Austria", "countryCode": "AT", "lat": 48.20849, "lon": 16.37208, "timezone": "Europe/Vienna", "start": "2026-11-26", "end": "2026-11-29", "note": "" },
+    { "id": "s8", "groupId": "g3", "label": "維也納", "country": "Austria", "countryCode": "AT", "lat": 48.20849, "lon": 16.37208, "timezone": "Europe/Vienna", "start": "2026-11-20", "end": "2026-11-25", "note": "場勘" },
+    { "id": "s9", "groupId": "g3", "label": "布拉格", "country": "Czechia", "countryCode": "CZ", "lat": 50.08804, "lon": 14.42076, "timezone": "Europe/Prague", "start": "2026-11-26", "end": "2026-11-28", "note": "" }
+  ]
+}
