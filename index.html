@@ -287,6 +287,7 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 
 
 /* Overview (vertical): dates down the side, groups across; city as a vertical bar beside each group's day cells */
+:root{--vc-date:minmax(96px,112px);--vc-bar:28px;--vc-cell:176px}
 .vh{padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .vh small{font-weight:400;color:var(--muted);font-size:11px}
 .vh .gdot{width:10px;height:10px;border-radius:3px;flex:none}
@@ -315,6 +316,8 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .hx .r{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
 .hx .rbar{width:34px}
 .hx .hc{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.2}
+.vtag .sh{display:none}
+.hx{position:relative}
 .hx-dim{font-size:12px;color:var(--muted);padding:4px 8px}
 
 /* Editor: group tabs + calendar */
@@ -326,7 +329,7 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .g-tab .c{font-size:11px;font-weight:600;color:var(--muted);font-family:var(--f-num)}
 .g-x{border:0;border-left:1px solid var(--line);background:transparent;color:var(--muted);width:30px;font-size:16px;line-height:1}
 .g-x:hover{color:var(--bad)}
-.g-add{border:1px dashed color-mix(in srgb,var(--accent) 50%,var(--line));border-radius:999px;background:transparent;padding:6px 12px;font-weight:700;font-size:13px;color:var(--accent)}
+.g-add{border:1px dashed color-mix(in srgb,var(--accent) 50%,var(--line));border-radius:999px;background:transparent;width:36px;height:36px;padding:0;font-weight:700;font-size:18px;line-height:1;color:var(--accent)}
 .g-hint{margin:0;padding:0 14px 12px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .cal-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cal-box{border:1px solid var(--line);border-radius:10px;padding:7px 10px;text-align:left;background:var(--surface);color:var(--ink)}
@@ -364,11 +367,35 @@ footer a{color:var(--muted)}
   .form-row .btn{grid-column:1/-1}
 }
 @media (max-width:760px){
-  .board{display:none}
-  .daylist{display:grid}
   .ed-grid2{grid-template-columns:minmax(0,1fr)}
   #tripMap,#lookupMap{height:260px}
   .drawer{top:auto;left:0;width:100%;max-height:88vh;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px))}
+}
+
+@media (max-width:760px){
+  :root{--vc-date:46px;--vc-bar:18px;--vc-cell:74px}
+  .vcorner{font-size:11px;padding:8px 4px;justify-content:center}
+  .vh{padding:8px 4px;font-size:12px;gap:5px;justify-content:center}
+  .vh small{display:none}
+  .vh .gdot{width:8px;height:8px}
+  .vd{padding:4px 3px;align-items:center;text-align:center}
+  .vd .d{font-size:13px;letter-spacing:-.04em}
+  .vd .w{font-size:10px}
+  .vd .lg,.vtag .lg{display:none}
+  .vtag .sh{display:inline}
+  .vtag{font-size:9px;padding:0 4px;line-height:14px;margin-top:2px}
+  .vcell{padding:2px 2px;min-height:50px}
+  .vbar{font-size:11px;letter-spacing:.12em;margin:3px 2px;padding:6px 0;border-radius:5px}
+  .hx{grid-template-columns:20px minmax(0,1fr);gap:1px 3px;padding:3px 2px 3px 3px;border-radius:6px}
+  .hx svg.ic{width:20px;height:20px}
+  .hx .t{font-size:12px;letter-spacing:-.04em}
+  .hx .r{grid-column:1/-1;font-size:10px;gap:3px}
+  .hx .rbar{width:16px;height:3px}
+  .hx .dot{position:absolute;top:4px;right:3px;width:6px;height:6px}
+  .hx > span:empty:not(.dot){display:none}
+  .hx .hc{font-size:10px}
+  .hx-dim{font-size:10px;padding:2px}
+  .board-foot{font-size:11px;padding:8px 10px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -893,16 +920,16 @@ function renderGrid(proj) {
   if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。管理者可從頁尾「編輯行程」新增第一段。</div>`; return; }
   const dates = rangeDates(sp.a, sp.b), today = localISO(), hz = forecastHorizon();
   const kinds = dates.map(d => d < today ? 'past' : d <= hz ? 'fc' : 'cl');
-  const cols = ['minmax(96px,112px)'], G = [];
+  const cols = ['var(--vc-date)'], G = [];
   let c = 2;
-  proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = lanesFor(segs); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('28px'); cols.push('minmax(176px,1fr)'); c += lanes + 1; });
+  proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = lanesFor(segs); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
   grid.style.gridTemplateColumns = cols.join(' ');
   let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
   G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.length} 段</small></div>`; });
   dates.forEach((d, i) => {
     const row = i + 2, k = kinds[i], firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc');
     const rc = `${k === 'cl' ? ' cl' : ''}${d === today ? ' today' : ''}${firstCl ? ' first-cl' : ''}`;
-    html += `<div class="vd${rc}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${row};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '今天・週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag">以下為歷年平均</span>' : firstFc ? '<span class="vtag fc">預報</span>' : ''}</div>`;
+    html += `<div class="vd${rc}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${row};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '<span class="lg">今天・</span>週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag"><span class="lg">以下為歷年平均</span><span class="sh">平均</span></span>' : firstFc ? '<span class="vtag fc">預報</span>' : ''}</div>`;
     G.forEach(({ segs, lanes, c0 }) => {
       for (let l = 0; l < lanes; l++) html += `<div class="vlane${rc}${l === 0 ? ' gsep' : ''}" style="grid-row:${row};grid-column:${c0 + l}"></div>`;
       const act = segs.filter(s => s.start <= d && s.end >= d);
@@ -1129,9 +1156,9 @@ function renderEdGroups() {
   box.innerHTML = draft.groups.map((g, i) => {
     const n = draft.segments.filter(s => s.groupId === g.id).length, on = g.id === selGroup;
     return `<span class="g-tab-wrap${on ? ' on' : ''}"><button type="button" class="g-tab" role="tab" aria-selected="${on}" data-gsel="${esc(g.id)}"><span class="gdot" style="background:${gColor(draft, g.id)}"></span>${esc(g.name)}<span class="c">${n}</span></button>${i > 0 && adv > 1 ? `<button type="button" class="g-x" data-gdel="${esc(g.id)}" aria-label="刪除${esc(g.name)}">×</button>` : ''}</span>`;
-  }).join('') + (adv < MAX_ADV ? `<button type="button" class="g-add" id="addGroup">＋ 新增先遣組</button>` : '');
+  }).join('') + (adv < MAX_ADV ? `<button type="button" class="g-add" id="addGroup" aria-label="新增先遣組" title="新增先遣組">＋</button>` : '');
   const hint = $('gHint');
-  hint.textContent = adv === 1 ? '本隊與先遣固定存在。新增先遣組後，原本的「先遣」會自動改為「先遣A」。' : `目前有 ${adv} 組先遣，名稱依順序自動編為 A、B…`;
+  hint.textContent = '本隊與先遣固定存在；按「＋」增加先遣組，名稱會自動編為先遣A、B…';
   box.querySelectorAll('[data-gsel]').forEach(b => b.addEventListener('click', () => { if (selGroup === b.dataset.gsel) return; selGroup = b.dataset.gsel; selSeg = groupSegs(selGroup)[0]?.id || null; renderEditor(); }));
   box.querySelectorAll('[data-gdel]').forEach(b => b.addEventListener('click', () => {
     const g = draft.groups.find(x => x.id === b.dataset.gdel); if (!g) return;
@@ -1147,7 +1174,6 @@ function renderEdGroups() {
   $('addGroup')?.addEventListener('click', () => {
     const g = { id: uid(), name: '' }; draft.groups.push(g); fixGroups(draft.groups);
     selGroup = g.id; selSeg = null; saveDraft(); renderEditor(); renderHeader(draft);
-    edMsg(draft.groups.length === 3 ? `已新增${g.name}，原本的「先遣」已改為「先遣A」。` : `已新增${g.name}。`, 'ok');
   });
 }
 
