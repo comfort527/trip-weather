@@ -276,6 +276,9 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .seg-del-wrap.ask{background:var(--surface);border-radius:10px;padding:4px 0 4px 8px}
 .seg-x{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:17px;line-height:1;padding:0}
 .seg-x:hover{color:var(--bad);border-color:var(--bad)}
+.seg-card.fixed{background:var(--surface-2)}
+.seg-card.fixed.ph{border-style:dashed}
+.seg-card.fixed.on{background:var(--surface)}
 .seg-gap{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:3px 0 3px 46px;min-height:22px}
 .seg-gap.over{color:var(--warn);font-weight:700}
 .seg-gap.tight{min-height:10px;padding:0}
@@ -860,6 +863,9 @@ async function loadData() {
   }
 }
 const MAX_ADV = 5;
+const TAIPEI = { label: '台北', place: 'Taipei, Taiwan', country: 'Taiwan', countryCode: 'TW', lat: 25.04776, lon: 121.53185, timezone: 'Asia/Taipei' };
+const KIND_TXT = { depart: '台北出發', return: '返抵台北' };
+const isStay = s => !s.kind || s.kind === 'stay';
 // 組別固定：第一組為「本隊」；其餘為先遣。只有一組先遣時叫「先遣」，兩組以上依序為先遣A、先遣B…
 function advName(i, n) { return n === 1 ? '先遣' : '先遣' + String.fromCharCode(65 + i); }
 function fixGroups(groups) {
@@ -878,7 +884,7 @@ function normalize(p, keepUndated = false) {
   const segments = (Array.isArray(p.segments) ? p.segments : []).filter(s => s && (keepUndated || (s.start && s.end))).map(s => ({
     id: String(s.id || uid()), groupId: ids.has(s.groupId) ? s.groupId : groups[0].id, label: String(s.label || s.city || ''), country: String(s.country || ''), countryCode: String(s.countryCode || ''),
     lat: Number.isFinite(+s.lat) && s.lat !== null && s.lat !== '' ? +s.lat : null, lon: Number.isFinite(+s.lon) && s.lon !== null && s.lon !== '' ? +s.lon : null, timezone: String(s.timezone || 'auto'),
-    start: String(s.start || ''), end: String(!s.end || s.end < s.start ? (s.start || '') : s.end), place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
+    start: String(s.start || ''), end: String(!s.end || s.end < s.start ? (s.start || '') : s.end), kind: ['depart', 'return'].includes(s.kind) ? s.kind : 'stay', place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
   }));
   return { version: 1, title: String(p.title || '行程天氣'), subtitle: String(p.subtitle || ''), updatedAt: p.updatedAt || null, groups, segments };
 }
@@ -934,7 +940,7 @@ function renderHeader(proj) {
   const sp = tripSpan({ segments: mainSegs.length ? mainSegs : proj.segments });
   const bits = [];
   if (sp) bits.push(`${mainSegs.length ? '本隊 ' : ''}${sp.a.replace(/-/g, '/')} – ${md(sp.b)}（${diffDays(sp.a, sp.b) + 1} 天）`);
-  bits.push(`${proj.groups.length} 組・${proj.segments.length} 段行程`);
+  bits.push(`${proj.groups.length} 組・${proj.segments.filter(isStay).length} 段行程`);
   if (proj.subtitle) bits.push(proj.subtitle);
   $('subtitle').textContent = bits.join('　·　');
 }
@@ -946,7 +952,7 @@ function renderSpan(proj) {
 function hxButton(seg, date, showCity) {
   const cd = cellData(seg, date);
   const attrs = `data-seg="${esc(seg.id)}" data-date="${date}"`;
-  const city = showCity ? `<span class="hc">${esc(seg.label)}</span>` : '';
+  const city = !isStay(seg) ? `<span class="hc">✈ ${KIND_TXT[seg.kind]}</span>` : showCity ? `<span class="hc">${esc(seg.label)}</span>` : '';
   if (cd.kind === 'fc') {
     const d = cd.day, w = wxInfo(d.code), pop = d.pop ?? 0;
     return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} ${w.text} 高溫${r0(d.tmax)}度 低溫${r0(d.tmin)}度 降雨機率${pop}% ${CONF_TXT[d.conf.level]}">${city}${icon(d.code == null ? 'cloud' : w.icon)}<span class="t num"><span class="hi">${r0(d.tmax)}°</span>/<span class="lo">${r0(d.tmin)}°</span></span><span class="r num"><span class="rbar"><i style="width:${Math.min(100, pop)}%"></i></span>${d.pop == null ? '—' : pop + '%'}</span><span class="dot ${d.conf.level}" title="${CONF_TXT[d.conf.level]}"></span></button>`;
@@ -956,7 +962,7 @@ function hxButton(seg, date, showCity) {
     return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} 歷年同期平均 高溫${r0(c.tmax)}度 低溫${r0(c.tmin)}度 雨日比例${c.rain}%">${city}${icon('avg')}<span class="t num"><span class="hi">${r0(c.tmax)}°</span>/<span class="lo">${r0(c.tmin)}°</span></span><span class="r num">雨日 ${c.rain}%</span><span></span></button>`;
   }
   const txt = cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : (cd.msg || '無資料');
-  return `<div class="hx-dim">${showCity ? esc(seg.label) + '・' : ''}${esc(txt)}</div>`;
+  return `<div class="hx-dim">${!isStay(seg) ? '✈ ' + KIND_TXT[seg.kind] + '・' : showCity ? esc(seg.label) + '・' : ''}${esc(txt)}</div>`;
 }
 function renderGrid(proj) {
   const grid = $('grid'), sp = tripSpan(proj);
@@ -968,7 +974,7 @@ function renderGrid(proj) {
   proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = lanesFor(segs); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
   grid.style.gridTemplateColumns = cols.join(' ');
   let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
-  G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.length} 段</small></div>`; });
+  G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
   dates.forEach((d, i) => {
     const row = i + 2, k = kinds[i], firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc');
     const rc = `${k === 'cl' ? ' cl' : ''}${d === today ? ' today' : ''}${firstCl ? ' first-cl' : ''}`;
@@ -1038,7 +1044,7 @@ function renderAlerts(proj) {
   const sel = byGroup.find(x => x.g.id === alertGroup);
   body.hidden = !sel;
   body.innerHTML = !sel ? '' : `<ul class="alert-list">${sel.list.length
-    ? sel.list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${esc(r.s.label)}：${esc(msg(r))}</button></li>`).join('')
+    ? sel.list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${isStay(r.s) ? esc(r.s.label) : KIND_TXT[r.s.kind]}：${esc(msg(r))}</button></li>`).join('')
     : `<li class="muted">${pending ? '載入中…' : `${esc(sel.g.name)}在預報期間內沒有大雨、高溫、低溫或強風。`}</li>`}</ul>`;
 }
 
@@ -1050,7 +1056,7 @@ function renderMap(proj) {
   tripLayer = L.layerGroup().addTo(tripMap);
   const pts = [];
   proj.groups.forEach((g, gi) => {
-    const segs = proj.segments.filter(s => s.groupId === g.id && s.lat != null).sort((a, b) => a.start.localeCompare(b.start));
+    const segs = proj.segments.filter(s => s.groupId === g.id && s.lat != null && isStay(s)).sort((a, b) => a.start.localeCompare(b.start));
     const color = getComputedStyle(document.documentElement).getPropertyValue(GROUP_COLORS[gi % GROUP_COLORS.length]).trim() || '#3a4fc2';
     const off = (gi - (proj.groups.length - 1) / 2) * 0.04; // 同城多組時略微錯開
     const ll = segs.map(s => [s.lat + off * 0.5, s.lon + off]);
@@ -1107,7 +1113,7 @@ function openDrawer(segId, date) {
   const q = encodeURIComponent(`${s.label} ${s.country}`), la = (+s.lat).toFixed(3), lo = (+s.lon).toFixed(3);
   body += `<div class="dr-sec"><h4>交叉核對</h4><div class="links"><a href="https://www.windy.com/${la}/${lo}?${la},${lo},9" target="_blank" rel="noopener">Windy ↗</a><a href="https://www.meteoblue.com/en/weather/search/search?query=${encodeURIComponent(s.label === s.country ? s.label : (s.country ? s.label + ' ' + s.country : s.label))}" target="_blank" rel="noopener">meteoblue ↗</a><a href="https://weather.com/weather/tenday/l/${la},${lo}" target="_blank" rel="noopener">Weather.com ↗</a><a href="https://www.accuweather.com/en/search-locations?query=${q}" target="_blank" rel="noopener">AccuWeather ↗</a><a href="https://severeweather.wmo.int/" target="_blank" rel="noopener">WMO 警報 ↗</a></div></div>`;
   const dr = $('drawer');
-  dr.innerHTML = `<div class="dr-h"><div><h3 id="drTitle">${esc(s.label)}</h3><p>${esc(g?.name || '')}・<span class="num">${md(date)}</span>（週${wd(date)}）・停留 ${md(s.start)}–${md(s.end)}${s.country ? '・' + esc(s.country) : ''}</p></div><button class="x" type="button" id="drClose" aria-label="關閉">×</button></div>${hero}${body}`;
+  dr.innerHTML = `<div class="dr-h"><div><h3 id="drTitle">${isStay(s) ? esc(s.label) : '✈ ' + KIND_TXT[s.kind]}</h3><p>${esc(g?.name || '')}・<span class="num">${md(date)}</span>（週${wd(date)}）・停留 ${md(s.start)}–${md(s.end)}${s.country ? '・' + esc(s.country) : ''}</p></div><button class="x" type="button" id="drClose" aria-label="關閉">×</button></div>${hero}${body}`;
   dr.hidden = false; $('scrim').hidden = false;
   $('drClose').focus();
   $('drClose').addEventListener('click', closeDrawer);
@@ -1182,7 +1188,7 @@ $('lkEnd').addEventListener('change', () => { if (lkLoc) runLookup(); });
 const DRAFT_KEY = 'tripWeather.draft', GH_KEY = 'tripWeather.github';
 let selGroup = null, selSeg = null, pvTok = 0, pvTimer = null;
 function ghCfg() { return { ...CONFIG.github, ...(sget(GH_KEY) || {}) }; }
-function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; }
+function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; if (location.hash === '#edit') renderHeader(draft); }
 function startEdit() {
   if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved, true) : normalize(JSON.parse(JSON.stringify(data)), true); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
   $('edTitle').value = draft.title; $('edSub').value = draft.subtitle;
@@ -1201,7 +1207,7 @@ function groupSegs(gid) { return draft.segments.filter(s => s.groupId === gid).s
 function renderEdGroups() {
   const box = $('grpTabs'), adv = draft.groups.length - 1;
   box.innerHTML = draft.groups.map((g, i) => {
-    const n = draft.segments.filter(s => s.groupId === g.id).length, on = g.id === selGroup;
+    const n = draft.segments.filter(s => s.groupId === g.id && isStay(s)).length, on = g.id === selGroup;
     return `<span class="g-tab-wrap${on ? ' on' : ''}"><button type="button" class="g-tab" role="tab" aria-selected="${on}" data-gsel="${esc(g.id)}"><span class="gdot" style="background:${gColor(draft, g.id)}"></span>${esc(g.name)}<span class="c">${n}</span></button>${i > 0 && adv > 1 ? `<button type="button" class="g-x" data-gdel="${esc(g.id)}" aria-label="刪除${esc(g.name)}">×</button>` : ''}</span>`;
   }).join('') + (adv < MAX_ADV ? `<button type="button" class="g-add" id="addGroup" aria-label="新增先遣組" title="新增先遣組">＋</button>` : '');
   const hint = $('gHint');
@@ -1225,40 +1231,57 @@ function renderEdGroups() {
 }
 
 /* 中：該組行程段落 */
+function segCardHTML(s) {
+  const on = s.id === selSeg, fixed = !isStay(s);
+  const n = s.start ? diffDays(s.start, s.end) + 1 : 0;
+  const dates = s.start ? (fixed ? `${md(s.start)}<small>週${wd(s.start)}</small>` : `${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small>`) : `<span class="warn">尚未設定日期</span><small>點選後在右側日曆選擇</small>`;
+  const city = fixed ? `✈ ${KIND_TXT[s.kind]}` : (s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>') + (s.country ? `<small>${esc(s.country)}</small>` : '');
+  const meta = fixed ? 'Taipei, Taiwan' : (s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　'));
+  return `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}${fixed ? ' fixed' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${dates}</span><span style="min-width:0"><span class="city" style="display:block">${city}</span><span class="meta" style="display:block">${meta}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="${fixed ? '清除日期' : '刪除這一段'}" title="${fixed ? '清除日期' : '刪除這一段'}">×</button></span></div>`;
+}
+function fixedPlaceholder(kind) {
+  return `<div class="seg-item"><button type="button" class="seg-card fixed ph" data-sfix="${kind}"><span class="dates"><span class="muted">未設定</span><small>點選後選日期</small></span><span style="min-width:0"><span class="city" style="display:block">✈ ${KIND_TXT[kind]}</span><span class="meta" style="display:block">Taipei, Taiwan</span></span></button></div>`;
+}
+function gapHTML(prev, s) {
+  if (!prev || !prev.start || !s.start) return '';
+  const gap = diffDays(prev.end, s.start) - 1;
+  return gap > 0 ? `<div class="seg-gap">↕ 中間空 ${gap} 天（${md(addDays(prev.end, 1))}${gap > 1 ? '–' + md(addDays(s.start, -1)) : ''}）</div>`
+    : gap === -1 ? `<div class="seg-gap">↕ ${md(s.start)} 移動日（兩段同一天）</div>`
+    : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
+}
 function renderEdSegs() {
   const g = draft.groups.find(x => x.id === selGroup);
   $('midTitle').textContent = `${g?.name || '未命名'} 的行程`;
-  const segs = groupSegs(selGroup), box = $('segList');
-  if (!segs.length) { box.innerHTML = `<div class="ed-empty">這一組還沒有行程。<br>按右上「＋ 新增一段」開始。</div>`; return; }
-  let html = '';
-  segs.forEach((s, i) => {
-    if (i > 0 && segs[i - 1].start && s.start) {
-      const prev = segs[i - 1], gap = diffDays(prev.end, s.start) - 1;
-      html += gap > 0 ? `<div class="seg-gap">↕ 中間空 ${gap} 天（${md(addDays(prev.end, 1))}${gap > 1 ? '–' + md(addDays(s.start, -1)) : ''}）</div>`
-        : gap === -1 ? `<div class="seg-gap">↕ ${md(s.start)} 移動日（兩段同一天）</div>`
-        : gap < -1 ? `<div class="seg-gap over">⚠ 與上一段重疊 ${-gap} 天，請確認日期</div>` : `<div class="seg-gap tight"></div>`;
-    }
-    const n = s.start ? diffDays(s.start, s.end) + 1 : 0, on = s.id === selSeg;
-    html += `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${s.start ? `${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small>` : '<span class="warn">尚未設定日期</span><small>點選後在右側日曆選擇</small>'}</span><span style="min-width:0"><span class="city" style="display:block">${s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>'}${s.country ? `<small>${esc(s.country)}</small>` : ''}</span><span class="meta" style="display:block">${s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　')}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="刪除這一段" title="刪除這一段">×</button></span></div>`;
-  });
+  const all = groupSegs(selGroup), box = $('segList');
+  const dep = all.find(s => s.kind === 'depart'), ret = all.find(s => s.kind === 'return'), stays = all.filter(isStay);
+  let html = dep ? segCardHTML(dep) : fixedPlaceholder('depart');
+  let prev = dep;
+  if (!stays.length) html += `<div class="ed-empty" style="padding:18px 12px">這一組還沒有停留城市。<br>按右上「＋ 新增一段」，或從「地點查詢」加入。</div>`;
+  stays.forEach(s => { html += (gapHTML(prev, s) || '<div class="seg-gap tight"></div>') + segCardHTML(s); if (s.start) prev = s; });
+  html += (ret ? gapHTML(prev, ret) || '<div class="seg-gap tight"></div>' : '<div class="seg-gap tight"></div>') + (ret ? segCardHTML(ret) : fixedPlaceholder('return'));
   box.innerHTML = html;
   box.querySelectorAll('[data-ssel]').forEach(b => b.addEventListener('click', () => { selSeg = b.dataset.ssel; renderEdSegs(); renderEdForm(); if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  box.querySelectorAll('[data-sfix]').forEach(b => b.addEventListener('click', () => {
+    const s = { id: uid(), groupId: selGroup, kind: b.dataset.sfix, ...TAIPEI, start: '', end: '', note: '' };
+    draft.segments.push(s); selSeg = s.id; saveDraft(); renderEditor();
+    if (window.matchMedia('(max-width:900px)').matches) $('segForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
   box.querySelectorAll('[data-sdel]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    const id = b.dataset.sdel, wrap = b.closest('.seg-del-wrap');
+    const id = b.dataset.sdel, wrap = b.closest('.seg-del-wrap'), seg = draft.segments.find(x => x.id === id);
     wrap.classList.add('ask');
-    wrap.innerHTML = `<span class="inline-confirm">刪除？<button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button></span>`;
+    wrap.innerHTML = `<span class="inline-confirm">${seg && !isStay(seg) ? '清除日期？' : '刪除？'}<button class="btn sm danger" type="button" data-yes>${seg && !isStay(seg) ? '清除' : '刪除'}</button><button class="btn sm" type="button" data-no>取消</button></span>`;
     wrap.querySelector('[data-yes]').addEventListener('click', () => {
       const segs = groupSegs(selGroup), k = segs.findIndex(x => x.id === id);
       draft.segments = draft.segments.filter(x => x.id !== id);
-      if (selSeg === id) { const rest = groupSegs(selGroup); selSeg = (rest[k] || rest[k - 1])?.id || null; }
+      if (selSeg === id) { const rest = groupSegs(selGroup).filter(isStay); selSeg = (rest[k] || rest[k - 1] || rest[0])?.id || null; }
       saveDraft(); renderEditor();
     });
     wrap.querySelector('[data-no]').addEventListener('click', renderEdSegs);
   }));
 }
 $('addSeg').addEventListener('click', () => {
-  const s = { id: uid(), groupId: selGroup, label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start: '', end: '', note: '' };
+  const s = { id: uid(), groupId: selGroup, kind: 'stay', label: '', country: '', countryCode: '', lat: null, lon: null, timezone: 'auto', start: '', end: '', note: '' };
   draft.segments.push(s); selSeg = s.id; saveDraft(); renderEditor(); $('sCity')?.focus();
 });
 
@@ -1267,6 +1290,11 @@ function renderEdForm() {
   const box = $('segForm'), s = draft.segments.find(x => x.id === selSeg);
   if (!s) { box.innerHTML = `<h3 class="ed-h">編輯這一段</h3><div class="ed-empty">從中間選一段行程來編輯，<br>或按「＋ 新增一段」。</div>`; $('edWx').innerHTML = ''; $('edWxNote').textContent = ''; $('edWxCard').hidden = true; return; }
   $('edWxCard').hidden = false;
+  if (!isStay(s)) {
+    box.innerHTML = `<h3 class="ed-h">✈ ${KIND_TXT[s.kind]}</h3><div class="ed-pad"><div class="f" style="display:grid;gap:6px"><span>${s.kind === 'depart' ? '從台北出發的日期' : '回到台北的日期'}</span><div id="sCal"></div></div></div>`;
+    calState = { month: (s.start || localISO()).slice(0, 7), phase: 'single' }; renderCal(s);
+    schedulePreview(0); return;
+  }
   box.innerHTML = `<h3 class="ed-h">編輯這一段</h3>
   <div class="ed-pad">
     <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
@@ -1289,7 +1317,7 @@ function renderCal(s) {
   const [Y, M] = calState.month.split('-').map(Number);
   const startDow = parseISO(`${calState.month}-01`).getUTCDay(), dim = new Date(Date.UTC(Y, M, 0)).getUTCDate(), today = localISO();
   const occ = new Map();
-  draft.segments.filter(x => x.groupId === s.groupId && x.id !== s.id && x.start && x.end).forEach(x => rangeDates(x.start, x.end).forEach(d => { if (!occ.has(d)) occ.set(d, x.label || '未填城市'); }));
+  draft.segments.filter(x => x.groupId === s.groupId && x.id !== s.id && x.start && x.end).forEach(x => rangeDates(x.start, x.end).forEach(d => { if (!occ.has(d)) occ.set(d, isStay(x) ? (x.label || '未填城市') : KIND_TXT[x.kind]); }));
   let cells = WD.map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(startDow);
   for (let day = 1; day <= dim; day++) {
     const d = `${calState.month}-${pad(day)}`;
@@ -1298,15 +1326,17 @@ function renderCal(s) {
   }
   const n = s.start ? diffDays(s.start, s.end) + 1 : 0, ph = calState.phase;
   const dl = v => v ? `<b>${md(v)}</b>（${wd(v)}）` : '<b class="muted">未選</b>';
-  box.innerHTML = `<div class="cal-pick"><button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button></div>
+  const single = !isStay(s);
+  box.innerHTML = `<div class="cal-pick"${single ? ' style="grid-template-columns:1fr"' : ''}>${single ? `<div class="cal-box on"><small>${KIND_TXT[s.kind]}</small>${dl(s.start)}</div>` : `<button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button>`}</div>
   <div class="cal"><div class="cal-h"><button type="button" class="cal-nav" data-nav="-1" aria-label="上個月">‹</button><b>${Y} 年 ${M} 月</b><button type="button" class="cal-nav" data-nav="1" aria-label="下個月">›</button></div><div class="cal-g">${cells}</div></div>
-  <div class="cal-hint"><span>${ph === 'start' ? '點日曆選抵達日' : ph === 'end' ? '點日曆選離開日' : '點日期調整；要指定改哪一天，先點上方抵達或離開'}${n ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
+  <div class="cal-hint"><span>${single ? '點日曆選一天' : ph === 'start' ? '點日曆選抵達日' : ph === 'end' ? '點日曆選離開日' : '點日期調整；要指定改哪一天，先點上方抵達或離開'}${n && !single ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
   box.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { const d = parseISO(calState.month + '-01'); d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.nav)); calState.month = toISO(d).slice(0, 7); renderCal(s); }));
   box.querySelectorAll('[data-phase]').forEach(b => b.addEventListener('click', () => { calState.phase = calState.phase === b.dataset.phase && s.start ? 'auto' : b.dataset.phase; calState.month = ((b.dataset.phase === 'start' ? s.start : s.end) || calState.month).slice(0, 7); renderCal(s); }));
   box.querySelectorAll('[data-cal]').forEach(b => b.addEventListener('click', () => {
     const d = b.dataset.cal;
     const ph = calState.phase;
-    if (!s.start) { s.start = d; s.end = d; calState.phase = 'end'; }                       // 新段落：先選抵達，再選離開
+    if (!isStay(s)) { s.start = d; s.end = d; }
+    else if (!s.start) { s.start = d; s.end = d; calState.phase = 'end'; }                       // 新段落：先選抵達，再選離開
     else if (ph === 'start') { s.start = d; if (s.end < d) s.end = d; calState.phase = s.end === d ? 'end' : 'auto'; }
     else if (ph === 'end') { if (d < s.start) s.start = d; else s.end = d; calState.phase = 'auto'; }
     else if (d < s.start) s.start = d;                                                        // 早於抵達 → 改抵達
@@ -1323,7 +1353,7 @@ async function renderPreview() {
   if (s.lat == null) { box.innerHTML = '<p class="hint">選定城市後，這裡會顯示這段期間的天氣。</p>'; $('edWxNote').textContent = ''; return; }
   if (!s.start) { box.innerHTML = '<p class="hint">選好日期後，這裡會顯示這段期間的天氣。</p>'; $('edWxNote').textContent = s.label; return; }
   const dates = rangeDates(s.start, s.end).slice(0, 31);
-  $('edWxNote').textContent = `${s.label}・${md(s.start)}–${md(s.end)}`;
+  $('edWxNote').textContent = isStay(s) ? `${s.label}・${md(s.start)}–${md(s.end)}` : `台北・${md(s.start)}`;
   box.innerHTML = '<p class="hint">天氣資料載入中…</p>';
   const k = locKey(s.lat, s.lon);
   try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(k, 'err'); }
@@ -1342,7 +1372,7 @@ async function renderPreview() {
 function edMsg(t, kind) { $('edMsg').textContent = t; $('edMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
 function validateDraft() {
   if (!draft.title.trim()) return '請填行程名稱。';
-  const nod = draft.segments.find(s => !s.start || !s.end);
+  const nod = draft.segments.find(s => isStay(s) && (!s.start || !s.end));
   if (nod) { selGroup = nod.groupId; selSeg = nod.id; renderEditor(); return `「${nod.label || '未命名'}」還沒設定日期（已在右側打開）。`; }
   const bad = draft.segments.find(s => s.lat == null);
   if (bad) { selGroup = bad.groupId; selSeg = bad.id; renderEditor(); return `「${bad.label || '未填城市'}」還沒有從選單選定位置（已在右側打開）。`; }
@@ -1356,6 +1386,7 @@ async function prepareForPublish() {
   const out = JSON.parse(JSON.stringify(draft));
   out.updatedAt = new Date().toISOString();
   out.groups = out.groups.map(g => ({ id: g.id, name: g.name.trim() || '未命名' }));
+  out.segments = out.segments.filter(s => s.start && s.end);
   out.segments.forEach(s => { delete s._lane; if (!s.label.trim()) s.label = (s.place || '').split(',')[0] || '未命名'; });
   return { out, missing };
 }
