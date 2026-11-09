@@ -307,7 +307,9 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 
 
 /* Overview (vertical): dates down the side, groups across; city as a vertical bar beside each group's day cells */
-:root{--vc-date:minmax(96px,112px);--vc-bar:28px;--vc-cell:176px}
+:root{--vc-date:minmax(96px,112px);--vc-date-w:112px;--vc-bar:28px;--vc-cell:176px}
+.board-scroll{scroll-snap-type:x proximity;scroll-padding-left:var(--vc-date-w)}
+.vh.gsep{scroll-snap-align:start}
 .vh{padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .vh small{font-weight:400;color:var(--muted);font-size:11px}
 .vh .gdot{width:10px;height:10px;border-radius:3px;flex:none}
@@ -325,10 +327,14 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .sw.obs{background:color-mix(in srgb,var(--ink) 8%,var(--surface))}
 .vtag.fc{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 .vlane,.vcell{border-bottom:1px solid var(--line-2)}
+.gsep{border-left-color:var(--line)}
 .vcell{padding:3px 8px 3px 4px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:54px;min-width:0}
 .vcell.cl,.vlane.cl{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
 .vcell.today,.vlane.today{background:color-mix(in srgb,var(--today) 7%,var(--surface))}
-.first-cl{border-top:2px dashed color-mix(in srgb,var(--muted) 55%,transparent)}
+.sect{border-top:2px solid color-mix(in srgb,var(--muted) 60%,transparent)}
+.vcell.half-a{border-bottom:0}
+.vcell.half-b{border-top:1px dashed var(--line)}
+.vcell > .hx + .hx,.vcell > .hx + .hx-dim,.vcell > .hx-dim + .hx{border-top:1px dashed var(--line);border-radius:0;margin-top:2px;padding-top:6px}
 .gsep{border-left:1px solid var(--line)}
 .vbar{writing-mode:vertical-rl;margin:4px 3px;border-radius:7px;color:#fff;font:700 13px/1 var(--f-body);letter-spacing:.25em;display:flex;align-items:center;justify-content:flex-start;padding:10px 0;overflow:hidden;white-space:nowrap;border:0;z-index:1}
 .hx{display:grid;grid-template-columns:30px auto minmax(0,1fr) 10px;align-items:center;gap:2px 10px;width:100%;border:1px solid transparent;border-radius:8px;padding:4px 8px;background:transparent;text-align:left;color:var(--ink)}
@@ -425,7 +431,8 @@ footer a{color:var(--muted)}
 }
 
 @media (max-width:760px){
-  :root{--vc-date:46px;--vc-bar:18px;--vc-cell:74px}
+  :root{--vc-date:46px;--vc-date-w:46px;--vc-bar:18px;--vc-cell:max(74px,calc((100vw - 2px - max(16px,env(safe-area-inset-left,0px)) - max(16px,env(safe-area-inset-right,0px)) - 46px) / 3 - 18px))}
+  .board-scroll{scroll-snap-type:x mandatory}
   .vcorner{font-size:11px;padding:8px 4px;justify-content:center}
   .vh{padding:8px 4px;font-size:12px;gap:5px;justify-content:center}
   .vh small{display:none}
@@ -1037,6 +1044,16 @@ function hxButton(seg, date, showCity) {
   const txt = cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : (cd.msg || '無資料');
   return `<div class="hx-dim">${!isStay(seg) ? '✈ ' + KIND_TXT[seg.kind] + '・' : showCity ? esc(seg.label) + '・' : ''}${esc(txt)}</div>`;
 }
+// 每天分成上下兩個半格：移動日上半格是離開的城市、下半格是抵達的城市，色條在中間接續
+function halfSlots(segs, a) {
+  const sorted = [...segs].sort((x, y) => x.start.localeCompare(y.start) || x.end.localeCompare(y.end));
+  sorted.forEach(s => { s._h0 = 0; s._h1 = 1; });
+  for (let k = 1; k < sorted.length; k++) { const p = sorted[k - 1], q = sorted[k]; if (p.end === q.start && p.start < q.start) { p._h1 = 0; q._h0 = 1; } }
+  sorted.forEach(s => { s._s0 = diffDays(a, s.start) * 2 + s._h0; s._s1 = diffDays(a, s.end) * 2 + s._h1; });
+  const lanes = [];
+  sorted.forEach(s => { let l = lanes.findIndex(end => end < s._s0); if (l < 0) { l = lanes.length; lanes.push(s._s1); } else lanes[l] = s._s1; s._lane = l; });
+  return Math.max(1, lanes.length);
+}
 function renderGrid(proj) {
   const grid = $('grid'), sp = tripSpan(proj);
   if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。按右上「編輯」新增第一段。</div>`; return; }
@@ -1044,23 +1061,32 @@ function renderGrid(proj) {
   const kinds = dates.map(d => d < today ? 'past' : d <= hz ? 'fc' : 'cl');
   const cols = ['var(--vc-date)'], G = [];
   let c = 2;
-  proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = lanesFor(segs); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
+  proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = halfSlots(segs, sp.a); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
   grid.style.gridTemplateColumns = cols.join(' ');
   let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
   G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
   dates.forEach((d, i) => {
-    const row = i + 2, k = kinds[i], firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc'), firstOb = k === 'past' && i === 0;
-    const rc = `${k === 'cl' ? ' cl' : ''}${k === 'past' ? ' ob' : ''}${d === today ? ' today' : ''}${firstCl ? ' first-cl' : ''}`;
-    html += `<div class="vd${rc}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${row};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '<span class="lg">今天・</span>週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag"><span class="lg">以下為歷年平均</span><span class="sh">平均</span></span>' : firstFc ? '<span class="vtag fc">預報</span>' : firstOb ? '<span class="vtag ob"><span class="lg">已過・</span>實際</span>' : ''}</div>`;
+    const r = 2 + i * 2, k = kinds[i];
+    const firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc'), firstOb = k === 'past' && i === 0;
+    const sect = i > 0 && kinds[i - 1] !== k ? ' sect' : '';   // 資料類型切換處：粗線
+    const rc = `${k === 'cl' ? ' cl' : ''}${k === 'past' ? ' ob' : ''}${d === today ? ' today' : ''}`;
+    html += `<div class="vd${rc}${sect}${isWeekend(d) ? ' wkend' : ''}" style="grid-row:${r}/${r + 2};grid-column:1"><span class="d">${md(d)}</span><span class="w">${d === today ? '<span class="lg">今天・</span>週' + wd(d) : '週' + wd(d)}</span>${firstCl ? '<span class="vtag"><span class="lg">以下為歷年平均</span><span class="sh">平均</span></span>' : firstFc ? '<span class="vtag fc">預報</span>' : firstOb ? '<span class="vtag ob"><span class="lg">已過・</span>實際</span>' : ''}</div>`;
     G.forEach(({ segs, lanes, c0 }) => {
-      for (let l = 0; l < lanes; l++) html += `<div class="vlane${rc}${l === 0 ? ' gsep' : ''}" style="grid-row:${row};grid-column:${c0 + l}"></div>`;
-      const act = segs.filter(s => s.start <= d && s.end >= d);
-      html += `<div class="vcell${rc}" style="grid-row:${row};grid-column:${c0 + lanes}">${act.map(s => hxButton(s, d, act.length > 1)).join('')}</div>`;
+      for (let l = 0; l < lanes; l++) html += `<div class="vlane${rc}${sect}${l === 0 ? ' gsep' : ''}" style="grid-row:${r}/${r + 2};grid-column:${c0 + l}"></div>`;
+      const act = segs.filter(s => s.start <= d && s.end >= d).sort((x, y) => x.start.localeCompare(y.start));
+      const col = c0 + lanes;
+      const leaving = act.find(s => s.end === d && s._h1 === 0), arriving = act.find(s => s.start === d && s._h0 === 1);
+      if (act.length === 2 && leaving && arriving) {
+        html += `<div class="vcell half-a${rc}${sect}" style="grid-row:${r};grid-column:${col}">${hxButton(leaving, d, true)}</div>`;
+        html += `<div class="vcell half-b${rc}" style="grid-row:${r + 1};grid-column:${col}">${hxButton(arriving, d, true)}</div>`;
+      } else {
+        html += `<div class="vcell${rc}${sect}" style="grid-row:${r}/${r + 2};grid-column:${col}">${act.map(s => hxButton(s, d, act.length > 1)).join('')}</div>`;
+      }
     });
   });
   G.forEach(({ segs, c0, color }) => segs.forEach(s => {
-    const r0i = Math.max(0, diffDays(sp.a, s.start)), r1i = Math.min(dates.length - 1, diffDays(sp.a, s.end)); if (r1i < 0 || r0i > dates.length - 1) return;
-    html += `<button type="button" class="vbar" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${r0i + 2}/${r1i + 3};grid-column:${c0 + s._lane};background:${color}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}${s.note ? '・' + esc(s.note) : ''}">${esc(s.label || '未填城市')}</button>`;
+    const last = dates.length * 2 - 1, s0 = Math.max(0, s._s0), s1 = Math.min(last, s._s1); if (s1 < 0 || s0 > last) return;
+    html += `<button type="button" class="vbar" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${s0 + 2}/${s1 + 3};grid-column:${c0 + s._lane};background:${color}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}">${esc(s.label || '未填城市')}</button>`;
   }));
   grid.innerHTML = html;
 }
