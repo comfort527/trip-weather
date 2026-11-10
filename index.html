@@ -421,6 +421,8 @@ details.alerts summary::-webkit-details-marker{display:none}
 @media (max-width:480px){.gate-row{grid-template-columns:minmax(0,1fr)}}
 footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--muted)}
+.foot-login{white-space:nowrap;text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:3px 10px}
+.foot-login:hover{color:var(--accent);border-color:var(--accent)}
 
 @media (max-width:860px){
   .summary{grid-template-columns:minmax(0,1fr)}
@@ -632,6 +634,7 @@ footer a{color:var(--muted)}
 
   <footer>
     <span>天氣資料：Open-Meteo（ECMWF、NOAA GFS、DWD ICON 等國家級模型）。歷年平均：ERA5 再分析資料。重要行程請另查當地官方警報。</span>
+    <a href="#edit" id="loginLink" class="foot-login">管理者登入</a>
   </footer>
 </div>
 
@@ -1253,7 +1256,7 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
   });
 })();
 function isEditor() { return !!ghCfg().token; }
-function syncEditTab() { $('editTab').hidden = !isEditor(); }
+function syncEditTab() { const ed = isEditor(); $('editTab').hidden = !ed; $('loginLink').hidden = ed; }
 function lkStatus(msg, err) { const el = $('lkStatus'); el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
 async function runLookup() {
   const a = $('lkStart').value, b = $('lkEnd').value; if (!lkLoc || !a || !b) return;
