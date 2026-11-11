@@ -351,6 +351,7 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .vtag .sh{display:none}
 .hx{position:relative}
 .vbar.alt{color:var(--bar-ink-alt)}
+.vbar.tint{color:#17212b}
 .hx-dim{font-size:12px;color:var(--muted);padding:4px 8px}
 
 /* Editor: group tabs + calendar */
@@ -1091,11 +1092,16 @@ function renderGrid(proj) {
       }
     });
   });
-  G.forEach(({ segs, c0, color }) => [...segs].sort((x, y) => x._s0 - y._s0).forEach((s, k) => {
-    const shade = k % 2 ? `color-mix(in srgb, ${color} 64%, #000)` : color;
+  // 同一組裡，同一個地點固定同一個深淺（台北出發與返抵視為同一地點）；不同地點依出現順序換色階
+  const SHADES = [c => c, c => `color-mix(in srgb, ${c} 62%, #000)`, c => `color-mix(in srgb, ${c} 55%, #fff)`, c => `color-mix(in srgb, ${c} 42%, #000)`, c => `color-mix(in srgb, ${c} 32%, #fff)`];
+  const SHADE_CLS = ['', ' alt', ' tint', ' alt', ' tint'];
+  G.forEach(({ segs, c0, color }) => { const placeIdx = new Map(); [...segs].sort((x, y) => x._s0 - y._s0).forEach(s => {
+    const key = isStay(s) ? locKey(s.lat, s.lon) : 'TPE';
+    if (!placeIdx.has(key)) placeIdx.set(key, placeIdx.size);
+    const k = placeIdx.get(key) % SHADES.length, shade = SHADES[k](color);
     const last = dates.length * 2 - 1, s0 = Math.max(0, s._s0), s1 = Math.min(last, s._s1); if (s1 < 0 || s0 > last) return;
-    html += `<button type="button" class="vbar${k % 2 ? ' alt' : ''}" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${s0 + 2}/${s1 + 3};grid-column:${c0 + s._lane};background:${shade}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}">${esc(s.label || '未填城市')}</button>`;
-  }));
+    html += `<button type="button" class="vbar${SHADE_CLS[k]}" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${s0 + 2}/${s1 + 3};grid-column:${c0 + s._lane};background:${shade}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}">${esc(s.label || '未填城市')}</button>`;
+  }); });
   grid.innerHTML = html;
 }
 function renderDayList(proj) {
