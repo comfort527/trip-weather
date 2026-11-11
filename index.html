@@ -24,6 +24,7 @@
   --ok:#2c8a55;--warn:#c58610;--bad:#c13f2b;--today:#e0951a;
   --g1:#3a4fc2;--g2:#0e857e;--g3:#bd6f24;--g4:#b0386a;--g5:#6a53b6;--g6:#4b7a27;
   --rule-day:#c9d2db;--rule-group:#9aa8b6;--bar-ink:#fff;--bar-ink-alt:#fff;
+  --p0:#6b7a89;--p1:#3a4fc2;--p2:#0e857e;--p3:#bd6f24;--p4:#b0386a;--p5:#6a53b6;--p6:#4b7a27;--p7:#1f7fa8;--p8:#8a5a2b;
   --shadow:0 1px 2px rgba(23,33,43,.06),0 8px 24px rgba(23,33,43,.06);
   --f-display:"Noto Serif TC","Songti TC",serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
@@ -37,6 +38,7 @@
   --ok:#4fc38c;--warn:#e3b544;--bad:#ff7b64;--today:#f1b44a;
   --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
   --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
+  --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1319;--surface:#151c24;--surface-2:#1a232d;--ink:#e5ecf2;--muted:#93a1af;--line:#2a3542;--line-2:#222c37;
@@ -45,6 +47,7 @@
   --ok:#4fc38c;--warn:#e3b544;--bad:#ff7b64;--today:#f1b44a;
   --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
   --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
+  --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -1062,6 +1065,18 @@ function halfSlots(segs, a) {
   sorted.forEach(s => { let l = lanes.findIndex(end => end < s._s0); if (l < 0) { l = lanes.length; lanes.push(s._s1); } else lanes[l] = s._s1; s._lane = l; });
   return Math.max(1, lanes.length);
 }
+const PLACE_COLORS = ['--p1', '--p2', '--p3', '--p4', '--p5', '--p6', '--p7', '--p8'];
+function placeKey(s) { return isStay(s) ? (s.label || s.place || locKey(s.lat, s.lon)).trim().toLowerCase() : '台北'; }
+function placeColor(proj, s) {
+  const key = placeKey(s); if (key === '台北') return 'var(--p0)';
+  if (!proj._placeIdx) {   // 依日期先後，替每個城市分配一個顏色
+    const m = new Map();
+    [...proj.segments].filter(x => isStay(x) && placeKey(x) !== '台北').sort((a, b) => a.start.localeCompare(b.start)).forEach(x => { const k = placeKey(x); if (!m.has(k)) m.set(k, m.size); });
+    Object.defineProperty(proj, '_placeIdx', { value: m, enumerable: false });
+  }
+  const i = proj._placeIdx.get(key) ?? 0;
+  return `var(${PLACE_COLORS[i % PLACE_COLORS.length]})`;
+}
 function renderGrid(proj) {
   const grid = $('grid'), sp = tripSpan(proj);
   if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。按右上「編輯」新增第一段。</div>`; return; }
@@ -1072,7 +1087,7 @@ function renderGrid(proj) {
   proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = halfSlots(segs, sp.a); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
   grid.style.gridTemplateColumns = cols.join(' ');
   let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
-  G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}"><span class="gdot" style="background:${color}"></span>${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
+  G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}">${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
   dates.forEach((d, i) => {
     const r = 2 + i * 2, k = kinds[i];
     const firstCl = k === 'cl' && (i === 0 || kinds[i - 1] !== 'cl'), firstFc = k === 'fc' && (i === 0 || kinds[i - 1] !== 'fc'), firstOb = k === 'past' && i === 0;
@@ -1092,15 +1107,11 @@ function renderGrid(proj) {
       }
     });
   });
-  // 同一組裡，同一個地點固定同一個深淺（台北出發與返抵視為同一地點）；不同地點依出現順序換色階
-  const SHADES = [c => c, c => `color-mix(in srgb, ${c} 62%, #000)`, c => `color-mix(in srgb, ${c} 55%, #fff)`, c => `color-mix(in srgb, ${c} 42%, #000)`, c => `color-mix(in srgb, ${c} 32%, #fff)`];
-  const SHADE_CLS = ['', ' alt', ' tint', ' alt', ' tint'];
-  G.forEach(({ segs, c0, color }) => { const placeIdx = new Map(); [...segs].sort((x, y) => x._s0 - y._s0).forEach(s => {
-    const key = isStay(s) ? locKey(s.lat, s.lon) : 'TPE';
-    if (!placeIdx.has(key)) placeIdx.set(key, placeIdx.size);
-    const k = placeIdx.get(key) % SHADES.length, shade = SHADES[k](color);
+  // 色條顏色依「地點」決定：同一個城市在每一組都是同一個顏色；台北固定用中性色
+  G.forEach(({ segs, c0 }) => { [...segs].sort((x, y) => x._s0 - y._s0).forEach(s => {
+    const shade = placeColor(proj, s), k = 0;
     const last = dates.length * 2 - 1, s0 = Math.max(0, s._s0), s1 = Math.min(last, s._s1); if (s1 < 0 || s0 > last) return;
-    html += `<button type="button" class="vbar${SHADE_CLS[k]}" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${s0 + 2}/${s1 + 3};grid-column:${c0 + s._lane};background:${shade}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}">${esc(s.label || '未填城市')}</button>`;
+    html += `<button type="button" class="vbar" data-seg="${esc(s.id)}" data-date="${s.start < today ? today : s.start}" style="grid-row:${s0 + 2}/${s1 + 3};grid-column:${c0 + s._lane};background:${shade}" title="${esc(s.label)} ${md(s.start)}–${md(s.end)}">${esc(s.label || '未填城市')}</button>`;
   }); });
   grid.innerHTML = html;
 }
