@@ -167,7 +167,7 @@ h1{font-family:var(--f-display);font-size:clamp(24px,3.2vw,34px);line-height:1.2
 .mapcard{margin-top:16px;overflow:hidden}
 .mapcard h2,.sect-h{margin:0;font-size:14px;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}
 .mapcard h2 span{font-weight:400;font-size:12px;color:var(--muted)}
-#tripMap,#lookupMap{height:340px;background:var(--surface-2)}
+#tripMap,#lookupMap{height:340px;background:var(--surface-2);position:relative;z-index:0}
 .leaflet-container{font-family:var(--f-body)}
 
 /* Drawer */
@@ -466,6 +466,52 @@ footer a{color:var(--muted)}
   .hx-dim{font-size:10px;padding:2px}
   .board-foot{font-size:11px;padding:8px 10px}
 }
+/* 手機版：組別頁籤＋行程清單＋底部選單 */
+.mlist,.tabbar{display:none}
+.gtabs{display:flex;gap:6px;padding:10px 0;overflow-x:auto;scrollbar-width:none}
+.gtabs::-webkit-scrollbar{display:none}
+.gtab{flex:none;padding:7px 15px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;color:var(--ink)}
+.gtab[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.blist{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.brow{display:grid;grid-template-columns:58px 6px minmax(0,1fr);border-bottom:1px solid var(--rule-day)}
+.brow:last-child{border-bottom:0}
+.brow.ob{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
+.brow.cl{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
+.brow.today{background:color-mix(in srgb,var(--today) 9%,var(--surface))}
+.bdate{padding:10px 0 10px 12px;line-height:1.2}
+.bdate b{font-family:var(--f-num);font-size:16px;display:block}
+.bdate small{font-size:11px;color:var(--muted)}
+.bdate small.wk{color:var(--hot)}
+.bdate .tt{display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#1b1300;background:var(--today);border-radius:999px;padding:0 6px}
+.bitem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:9px 14px 9px 12px;width:100%;border:0;background:transparent;text-align:left;color:var(--ink)}
+.bitem + .bitem{border-top:1px dashed var(--line)}
+.bpill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-weight:700;font-size:14px;color:var(--bar-ink);width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bwx{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0}
+.bwx svg.ic{width:24px;height:24px;flex:none}
+.bwx span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btemp{grid-row:1/3;grid-column:2;text-align:right;font-weight:600;font-size:18px;line-height:1.2;white-space:nowrap}
+.btemp .hi{color:var(--hot)}.btemp .lo{color:var(--cold)}
+.btemp small{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+.bsect{padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border-bottom:1px solid var(--rule-day)}
+.bsect.cl{background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,var(--hatch) 6px 7px)}
+.bempty{padding:24px 16px;color:var(--muted);text-align:center;font-size:13px}
+.malerts{display:grid;gap:12px;margin-top:16px}
+.malerts .al-grp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px max(4px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+.tabbar .ti{flex:1;display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);text-decoration:none;position:relative;padding:2px 0}
+.tabbar .ti svg{width:24px;height:24px}
+.tabbar .ti[aria-current="page"]{color:var(--accent)}
+.tabbar .badge{position:absolute;top:-3px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px var(--f-body);text-align:center;padding:0 4px;border:2px solid var(--surface)}
+@media (max-width:760px){
+  .tabbar{display:flex}
+  .top-actions{display:none}
+  .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  #view-overview .summary,#view-overview .board{display:none}
+  .mlist{display:block;margin-top:6px}
+  .gtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .drawer{bottom:0;z-index:1201}
+  .scrim{z-index:1200}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -528,11 +574,20 @@ footer a{color:var(--muted)}
       <div class="board-foot"><span>點任一天可看詳細資料、各模型比較與其他天氣網站連結。</span><span id="fetchedAt"></span></div>
     </section>
     <section class="daylist" id="daylist" aria-label="每日天氣"></section>
+    <section class="mlist" aria-label="各組行程天氣">
+      <div class="gtabs" id="mGroupTabs" role="tablist" aria-label="組別"></div>
+      <div id="mList"></div>
+    </section>
 
     <section class="card mapcard">
       <h2>行程地圖<span>各組停留城市</span></h2>
       <div id="tripMap" role="img" aria-label="行程城市地圖"></div>
     </section>
+  </main>
+
+  <!-- 需要留意（手機） -->
+  <main id="view-alerts" hidden>
+    <section class="malerts" id="mAlerts" aria-label="需要留意"></section>
   </main>
 
   <!-- Lookup -->
@@ -642,6 +697,12 @@ footer a{color:var(--muted)}
   </footer>
 </div>
 
+<nav class="tabbar" id="tabbar" aria-label="主選單">
+  <a class="ti" href="#overview" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>行程</a>
+  <a class="ti" href="#alerts" data-view="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span class="badge" id="alertBadge" hidden></span>需要留意</a>
+  <a class="ti" href="#lookup" data-view="lookup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>地點查詢</a>
+  <a class="ti" href="#edit" data-view="edit" id="tabEdit" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>編輯</a>
+</nav>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="drTitle"></aside>
 
@@ -1150,9 +1211,8 @@ function renderDayList(proj) {
   }).join('');
 }
 let alertGroup = null;
-function renderAlerts(proj) {
-  const today = localISO(), sum = $('alertSum'), body = $('alerts');
-  if (!proj.segments.length) { sum.textContent = '尚無行程'; body.innerHTML = ''; return; }
+function computeAlerts(proj) {
+  const today = localISO();
   let pending = false; const hits = [];
   proj.segments.forEach(s => rangeDates(s.start, s.end).forEach(d => {
     if (d < today) return;
@@ -1172,6 +1232,14 @@ function renderAlerts(proj) {
   const msg = r => r.tag === 'rain' ? `降雨機率最高 ${Math.max(...r.vs)}%${r.v2 >= 1 ? `，${r.d0 === r.d1 ? '' : '累計'}雨量約 ${r0(r.v2)} mm` : ''}`
     : r.tag === 'hot' ? `最高 ${r0(Math.max(...r.vs))}°C` : r.tag === 'cold' ? `最低 ${r0(Math.min(...r.vs))}°C${r.snow ? '，可能下雪' : ''}` : `陣風最高 ${r0(Math.max(...r.vs))} km/h`;
   const byGroup = proj.groups.map(g => ({ g, list: runs.filter(r => r.s.groupId === g.id).sort((a, b) => a.d0.localeCompare(b.d0) || a.tag.localeCompare(b.tag)) }));
+  return { byGroup, runs, pending, T, msg };
+}
+const alertItem = (r, T, msg) => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${isStay(r.s) ? esc(r.s.label) : KIND_TXT[r.s.kind]}：${esc(msg(r))}</button></li>`;
+function renderAlerts(proj) {
+  const sum = $('alertSum'), body = $('alerts');
+  if (!proj.segments.length) { sum.textContent = '尚無行程'; body.innerHTML = ''; renderMobileAlerts(proj, null); return; }
+  const A = computeAlerts(proj), { byGroup, runs, pending, T, msg } = A;
+  renderMobileAlerts(proj, A);
   if (!byGroup.some(x => x.g.id === alertGroup)) alertGroup = null;
   sum.innerHTML = pending && !runs.length ? '天氣資料載入中…'
     : byGroup.map(({ g, list }) => `<button type="button" class="al-chip${list.length ? '' : ' zero'}" data-alg="${esc(g.id)}" aria-pressed="${g.id === alertGroup}" aria-controls="alerts"><span class="gdot" style="background:${gColor(proj, g.id)}"></span>${esc(g.name)} <b>${list.length}</b></button>`).join('');
@@ -1179,7 +1247,7 @@ function renderAlerts(proj) {
   const sel = byGroup.find(x => x.g.id === alertGroup);
   body.hidden = !sel;
   body.innerHTML = !sel ? '' : `<ul class="alert-list">${sel.list.length
-    ? sel.list.map(r => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${isStay(r.s) ? esc(r.s.label) : KIND_TXT[r.s.kind]}：${esc(msg(r))}</button></li>`).join('')
+    ? sel.list.map(r => alertItem(r, T, msg)).join('')
     : `<li class="muted">${pending ? '載入中…' : `${esc(sel.g.name)}在預報期間內沒有大雨、高溫、低溫或強風。`}</li>`}</ul>`;
 }
 
@@ -1202,9 +1270,51 @@ function renderMap(proj) {
   setTimeout(() => tripMap.invalidateSize(), 50);
 }
 
+const MG_KEY = 'tripWeather.group';
+let mGroup = sget(MG_KEY);
+function renderMobileAlerts(proj, A) {
+  const box = $('mAlerts'), badge = $('alertBadge');
+  if (!A) { box.innerHTML = '<div class="bempty">尚無行程。</div>'; badge.hidden = true; return; }
+  const total = A.runs.length;
+  badge.hidden = !total; badge.textContent = total > 99 ? '99+' : total;
+  const today = localISO(), hz = forecastHorizon();
+  box.innerHTML = `<p class="hint" style="margin:0">只檢查預報期間（今天到 ${md(hz)}）：降雨機率 60% 以上或雨量 10 mm 以上、高溫 33°C 以上、低溫 0°C 以下、陣風 55 km/h 以上。</p>` +
+    A.byGroup.map(({ g, list }) => `<div class="al-grp"><h3>${esc(g.name)}<span class="muted" style="font-weight:400;font-size:12px;margin-left:6px">${list.length} 項</span></h3><ul class="alert-list">${list.length ? list.map(r => alertItem(r, A.T, A.msg)).join('') : `<li class="muted">${A.pending ? '載入中…' : '沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
+}
+function renderMobileList(proj) {
+  const tabs = $('mGroupTabs'), box = $('mList');
+  if (!proj.groups.some(g => g.id === mGroup)) mGroup = proj.groups[0]?.id;
+  tabs.innerHTML = proj.groups.map(g => `<button type="button" class="gtab" role="tab" data-mg="${esc(g.id)}" aria-selected="${g.id === mGroup}">${esc(g.name)}</button>`).join('');
+  tabs.querySelectorAll('[data-mg]').forEach(b => b.addEventListener('click', () => { mGroup = b.dataset.mg; sset(MG_KEY, mGroup); renderMobileList(view()); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+  const segs = proj.segments.filter(s => s.groupId === mGroup);
+  const sp = tripSpan({ segments: segs });
+  if (!sp) { box.innerHTML = `<div class="blist"><div class="bempty">這一組還沒有行程。</div></div>`; return; }
+  halfSlots(segs, sp.a);
+  const today = localISO(), hz = forecastHorizon();
+  const SECT = { past: '已過・實際天氣', fc: '預報', cl: '以下為歷年同期平均（非預報）' };
+  let prevKind = null, html = '';
+  rangeDates(sp.a, sp.b).forEach(d => {
+    const kind = d < today ? 'past' : d <= hz ? 'fc' : 'cl';
+    if (kind !== prevKind) { html += `<div class="bsect${kind === 'cl' ? ' cl' : ''}">${SECT[kind]}</div>`; prevKind = kind; }
+    const act = segs.filter(s => s.start <= d && s.end >= d).sort((a, b) => a.start.localeCompare(b.start));
+    const colors = act.map(s => placeColor(proj, s));
+    const line = !act.length ? 'transparent' : act.length > 1 ? `linear-gradient(${colors[0]} 50%, ${colors[1]} 50%)` : colors[0];
+    const items = act.length ? act.map((s, k) => {
+      const cd = cellData(s, d), name = isStay(s) ? esc(s.label || '未填城市') : '✈ ' + KIND_TXT[s.kind];
+      let wx = '', temp = '';
+      if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); wx = `${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text}・降雨 ${x.pop ?? '—'}%</span>`; temp = `<span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span><small><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</small>`; }
+      else if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); wx = `${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}・雨量 ${r1(o.psum)} mm</span>`; temp = `<span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span><small>實際</small>`; }
+      else if (cd.kind === 'cl') { wx = `${icon('avg')}<span>歷年平均・雨日 ${cd.c.rain}%</span>`; temp = `<span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span><small>平均</small>`; }
+      else wx = `<span>${cd.kind === 'loading' ? '載入中…' : cd.kind === 'past' ? '已過' : esc(cd.msg || '無資料')}</span>`;
+      return `<button type="button" class="bitem" data-seg="${esc(s.id)}" data-date="${d}"><span class="bpill" style="background:${colors[k]}">${name}</span><span class="bwx">${wx}</span><span class="btemp num">${temp}</span></button>`;
+    }).join('') : `<div class="bitem"><span class="muted" style="font-size:13px">這天沒有安排</span></div>`;
+    html += `<div class="brow${kind === 'past' ? ' ob' : ''}${kind === 'cl' ? ' cl' : ''}${d === today ? ' today' : ''}"><div class="bdate"><b>${md(d)}</b><small class="${isWeekend(d) ? 'wk' : ''}">週${wd(d)}</small>${d === today ? '<span class="tt">今天</span>' : ''}</div><div style="background:${line}"></div><div>${items}</div></div>`;
+  });
+  box.innerHTML = `<div class="blist">${html}</div>`;
+}
 function renderOverview() {
   const proj = view(); if (!proj) return;
-  renderHeader(proj); renderSpan(proj); renderGrid(proj); renderDayList(proj); renderAlerts(proj);
+  renderHeader(proj); renderSpan(proj); renderGrid(proj); renderMobileList(proj); renderAlerts(proj);
 }
 let loadToken = 0;
 async function loadWeather(proj) {
@@ -1284,7 +1394,7 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
   });
 })();
 function isEditor() { return !!ghCfg().token; }
-function syncEditTab() { const ed = isEditor(); $('editTab').hidden = !ed; $('loginLink').hidden = ed; }
+function syncEditTab() { const ed = isEditor(); $('editTab').hidden = !ed; $('tabEdit').hidden = !ed; $('loginLink').hidden = ed; }
 function lkStatus(msg, err) { const el = $('lkStatus'); el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
 async function runLookup() {
   const a = $('lkStart').value, b = $('lkEnd').value; if (!lkLoc || !a || !b) return;
@@ -1633,16 +1743,19 @@ $('ghTest').addEventListener('click', async () => {
 /* ========= 路由 ========= */
 function route() {
   const h = location.hash;
-  let v = h === '#lookup' ? 'lookup' : (h === '#edit') ? 'edit' : 'overview';
+  const mobile = window.matchMedia('(max-width:760px)').matches;
+  let v = h === '#lookup' ? 'lookup' : h === '#edit' ? 'edit' : (h === '#alerts' && mobile) ? 'alerts' : 'overview';
   if (v === 'edit' && !isEditor()) v = 'gate';
   syncEditTab();
-  ['overview', 'lookup', 'edit', 'gate'].forEach(k => { $('view-' + k).hidden = k !== v; });
+  ['overview', 'lookup', 'edit', 'gate', 'alerts'].forEach(k => { $('view-' + k).hidden = k !== v; });
+  document.querySelectorAll('.tabbar .ti').forEach(t => t.setAttribute('aria-current', t.dataset.view === (v === 'gate' ? 'edit' : v) ? 'page' : 'false'));
   document.querySelectorAll('.tab, .tab-edit').forEach(t => t.setAttribute('aria-current', t.dataset.view === v || (v === 'overview' && h === '#edit-preview' && t.dataset.view === 'overview') ? 'page' : 'false'));
   closeDrawer();
   if (v === 'edit') startEdit();
   const proj = view();
   if (proj) renderHeader(v === 'edit' && draft ? draft : proj);
   if (v === 'gate') { $('banner').hidden = true; $('gateMsg').textContent = ''; setTimeout(() => $('gateToken').focus(), 50); }
+  if (v === 'alerts' && proj) { $('banner').hidden = true; renderOverview(); loadWeather(proj); }
   if (v === 'overview' && proj) {
     const b = $('banner');
     if (h === '#edit-preview' && draft) { b.hidden = false; b.className = 'banner'; b.innerHTML = '這是<b>編輯中尚未發布</b>的預覽，同仁還看不到。<a href="#edit">回到編輯</a>'; }
