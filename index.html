@@ -746,8 +746,8 @@ function uid() { return (crypto.randomUUID ? crypto.randomUUID() : Date.now().to
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function store(kind) { try { return kind === 's' ? sessionStorage : localStorage; } catch { return null; } }
 function sget(k, kind) { try { const v = store(kind)?.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
-function sset(k, v, kind) { try { store(kind)?.setItem(k, JSON.stringify(v)); } catch {} }
-function sdel(k, kind) { try { store(kind)?.removeItem(k); } catch {} }
+function sset(k, v, kind) { try { store(kind)?.setItem(k, JSON.stringify(v)); } catch (e) { console.error('瀏覽器儲存失敗：', k, e); } }
+function sdel(k, kind) { try { store(kind)?.removeItem(k); } catch (e) { console.error('瀏覽器儲存刪除失敗：', k, e); } }
 
 async function getJSON(url, tries = 3) {
   let last;
@@ -862,7 +862,7 @@ function fetchForecast(lat, lon) {
     const base = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=${CONFIG.forecastDays}`;
     const [main, models] = await Promise.all([
       getJSON(`${base}&daily=${DAILY}`),
-      getJSON(`${base}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&models=${CONFIG.models.map(m => m.key).join(',')}`).catch(() => null)
+      getJSON(`${base}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&models=${CONFIG.models.map(m => m.key).join(',')}`).catch(e => { console.error('多模型比較資料取得失敗：', e); return null; })
     ]);
     const d = { main, models, at: Date.now() };
     sset(k, { t: Date.now(), d }, 's');
@@ -880,7 +880,7 @@ function fixLocalTime(iso, off, tz) {
     if (!tzFmt.has(tz)) tzFmt.set(tz, new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }));
     const ms = Date.parse(iso + ':00Z') - off * 1000; if (Number.isNaN(ms)) return iso;
     return iso.slice(0, 11) + tzFmt.get(tz).format(ms);
-  } catch { return iso; }
+  } catch (e) { console.error('日出日落時間換算失敗：', iso, tz, e); return iso; }
 }
 /* 已過日期：近 90 天用氣象模型分析資料（可到昨天），更早用 ERA5 歷史資料 */
 const PAST_DAILY = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset';
@@ -908,7 +908,7 @@ async function ensurePast(segs) {
     const have = pastMem.get(k); const need = [...dates].filter(d => !have || !(d in have));
     if (!need.length) return;
     try { const got = await fetchPast(s.lat, s.lon, need); pastMem.set(k, { ...(pastMem.get(k) || {}), ...got, ...Object.fromEntries(need.filter(d => !got[d]).map(d => [d, null])) }); }
-    catch { pastMem.set(k, { ...(pastMem.get(k) || {}), ...Object.fromEntries(need.map(d => [d, null])) }); }
+    catch (e) { console.error('已過日期實際天氣取得失敗：', k, e); pastMem.set(k, { ...(pastMem.get(k) || {}), ...Object.fromEntries(need.map(d => [d, null])) }); }
   });
 }
 function fcDay(fc, date) {
@@ -986,7 +986,7 @@ async function ensureClimate(segs) {
     try {
       const res = await computeClimate(list[0].lat, list[0].lon, dates);
       for (const s of list) { const days = {}; rangeDates(s.start, s.end).forEach(d => { if (res[d]) days[d] = res[d]; }); const c = { key: climKey(s), days }; climMem.set(s.id, c); sset('cl:' + c.key, c); }
-    } catch (e) { list.forEach(s => climMem.set(s.id, { error: e.message || '無法取得歷年資料' })); }
+    } catch (e) { console.error('歷年同期平均取得失敗：', e); list.forEach(s => climMem.set(s.id, { error: e.message || '無法取得歷年資料' })); }
   });
 }
 function climFor(seg) { if (seg.climate && seg.climate.key === climKey(seg)) return seg.climate; const c = climMem.get(seg.id); return c && (c.error || c.key === climKey(seg)) ? c : null; }
@@ -1005,7 +1005,8 @@ async function loadData() {
     const r = await fetch(`${CONFIG.dataUrl}?t=${Date.now()}`, { cache: 'no-store' });
     if (!r.ok) throw new Error(r.status);
     data = normalize(await r.json());
-  } catch {
+  } catch (e) {
+    console.error('行程檔（data.json）讀取失敗，改用空白範本：', e);
     data = normalize(JSON.parse($('seed').textContent));
     isDemoFallback = true;
   }
@@ -1324,7 +1325,7 @@ async function loadWeather(proj) {
   const hz = forecastHorizon();
   const climNeeded = segs.filter(s => s.end > hz || true); // 全部計算：預報日也可對照歷年平均
   const tasks = [
-    pool(locs, 3, async s => { try { fcByLoc.set(locKey(s.lat, s.lon), await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(locKey(s.lat, s.lon), 'err'); } if (my === loadToken) renderOverview(); }),
+    pool(locs, 3, async s => { try { fcByLoc.set(locKey(s.lat, s.lon), await fetchForecast(s.lat, s.lon)); } catch (e) { console.error('預報取得失敗：', s.label, e); fcByLoc.set(locKey(s.lat, s.lon), 'err'); } if (my === loadToken) renderOverview(); }),
     ensureClimate(climNeeded).then(() => { if (my === loadToken) renderOverview(); }),
     ensurePast(segs).then(() => { if (my === loadToken) renderOverview(); })
   ];
@@ -1402,12 +1403,12 @@ async function runLookup() {
   if (diffDays(a, b) > 60) { lkStatus('查詢區間最多 60 天。', true); return; }
   const my = ++lkReq; lkStatus('取得天氣中…'); $('lkBtn').disabled = true;
   try {
-    const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(() => null);
+    const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(e => { console.error('地點查詢：預報取得失敗：', e); return null; });
     const dates = rangeDates(a, b), today = localISO();
     const needCl = dates.filter(d => d >= today && !fcDay(fc, d));
     const pastDates = dates.filter(d => d < today); let ob = {};
-    if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(() => ({})); }
-    let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(() => ({})); }
+    if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(e => { console.error('地點查詢：實際天氣取得失敗：', e); return {}; }); }
+    let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(e => { console.error('地點查詢：歷年同期平均取得失敗：', e); return {}; }); }
     if (my !== lkReq) return;
     $('lkTitle').textContent = lkLoc.label;
     $('lkMeta').textContent = `${[lkLoc.admin1, lkLoc.country].filter(Boolean).join('，')}・${(+lkLoc.lat).toFixed(3)}, ${(+lkLoc.lon).toFixed(3)}`;
@@ -1423,7 +1424,7 @@ async function runLookup() {
     $('lkResult').hidden = false; $('lkMapBox').hidden = false; lkStatus('');
     if ($('lkMapBox').open) renderLookupMap();
     if (isEditor()) { const groups = (draft || data).groups; $('lkAddBox').hidden = false; $('lkGroup').innerHTML = groups.map(g => `<option value="${esc(g.id)}">${esc(g.name)}</option>`).join(''); $('lkAddMsg').textContent = ''; }
-  } catch (e) { lkStatus(e.message || '查詢失敗，請稍後再試。', true); }
+  } catch (e) { console.error('地點查詢失敗：', e); lkStatus(e.message || '查詢失敗，請稍後再試。', true); }
   finally { if (my === lkReq) $('lkBtn').disabled = false; }
 }
 function renderLookupMap() {
@@ -1613,7 +1614,7 @@ async function renderPreview() {
   $('edWxNote').textContent = isStay(s) ? `${s.label}・${md(s.start)}–${md(s.end)}` : `台北・${md(s.start)}`;
   box.innerHTML = '<p class="hint">天氣資料載入中…</p>';
   const k = locKey(s.lat, s.lon);
-  try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch { fcByLoc.set(k, 'err'); }
+  try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch (e) { console.error('編輯頁天氣預覽：預報取得失敗：', e); fcByLoc.set(k, 'err'); }
   if (my !== pvTok) return;
   const today = localISO();
   if (dates.some(d => d < today)) { await ensurePast([s]); if (my !== pvTok) return; }
@@ -1678,7 +1679,7 @@ $('publishBtn').addEventListener('click', async () => {
     data = normalize(out); draft = null; sdel(DRAFT_KEY);
     startEdit(); loadWeather(data);
     edMsg(`已發布。約 1 分鐘後同仁重新整理即可看到。${missing.length ? `（${missing.join('、')} 的歷年平均暫時無法取得，同仁開啟時會自動補算）` : ''}`, 'ok');
-  } catch (e) { edMsg(e.message || '發布失敗。', 'err'); }
+  } catch (e) { console.error('發布失敗：', e); edMsg(e.message || '發布失敗。', 'err'); }
   finally { $('publishBtn').disabled = false; }
 });
 $('previewBtn').addEventListener('click', () => { location.hash = '#edit-preview'; });
@@ -1725,7 +1726,7 @@ $('gateForm').addEventListener('submit', async e => {
     if (!r.ok) throw new Error(ghError(r, j));
     if (!j.permissions || j.permissions.push !== true) throw new Error('這個權杖沒有寫入權限，無法編輯行程。');
     sset(GH_KEY, c); $('gateToken').value = ''; route();
-  } catch (err) { msg.className = 'ed-msg err'; msg.textContent = err.message || '驗證失敗。'; }
+  } catch (err) { console.error('管理者登入驗證失敗：', err); msg.className = 'ed-msg err'; msg.textContent = err.message || '驗證失敗。'; }
   finally { $('gateBtn').disabled = false; }
 });
 $('ghTest').addEventListener('click', async () => {
@@ -1737,7 +1738,7 @@ $('ghTest').addEventListener('click', async () => {
     if (!rr.ok) throw new Error(ghError(rr, rj));
     if (rj.permissions && rj.permissions.push === false) { ghMsg('連得到，但這個權杖沒有寫入權限。', 'err'); return; }
     sset(GH_KEY, c); ghMsg('連線成功，設定已儲存。', 'ok');
-  } catch (e) { ghMsg(e.message || '連線失敗。', 'err'); }
+  } catch (e) { console.error('GitHub 測試連線失敗：', e); ghMsg(e.message || '連線失敗。', 'err'); }
 });
 
 /* ========= 路由 ========= */

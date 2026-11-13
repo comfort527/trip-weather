@@ -15,7 +15,8 @@
 
 ## 一、穩定與資安
 
-- [ ] #1【風險：低】空的 catch 與靜默吞掉錯誤
+- [x] #1【風險：低】空的 catch 與靜默吞掉錯誤
+  - 完成：2026-11-13。16 處 catch 補上 `console.error`（含多模型資料、歷年平均、地點查詢、發布、登入、測試連線），畫面與流程不變；保留 4 處 `r.json().catch(() => ({}))`（讀取錯誤回應內容的備援，之後仍依狀態碼顯示錯誤）。驗證：重新截圖與 baseline 比對無版面差異，模擬 API 斷線時 Console 出現中文錯誤說明、頁面正常。
   - 檔案：index.html
   - 問題：`sset()`（第 749 行）、`sdel()`（第 750 行）為空的 `catch {}`；`fixLocalTime()`（883）、`ensurePast()`（911）、`loadWeather()`（1327）、`renderPreview()`（1616）、`runLookup()`（1405、1409、1410 的 `.catch(() => null / ({}))`）、`loadData()`（1008）在錯誤時只改狀態，沒有 `console.error`。
   - 做法：在上述 catch 內加上 `console.error`（附簡短說明），不改變畫面行為；瀏覽器儲存空間的錯誤只記錄、不打擾使用者。
