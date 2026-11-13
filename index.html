@@ -15,41 +15,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="css/tokens.css">
 <style>
 /* Layout: a departure-board matrix — groups down the side, trip days across, forecast vs. climate split by a labelled band. */
-:root{
-  --bg:#eef1f4;--surface:#ffffff;--surface-2:#f5f7f9;--ink:#17212b;--muted:#5b6977;--line:#d8dfe6;--line-2:#e7ecf0;
-  --accent:#1d4f91;--accent-soft:#e3ecf8;--accent-ink:#ffffff;
-  --hot:#c2452a;--cold:#2867b0;--rain:#2f7fc1;--sun:#e0951a;--cloud:#8593a3;--hatch:#dfe4ea;
-  --ok:#2c8a55;--warn:#c58610;--bad:#c13f2b;--today:#e0951a;
-  --g1:#3a4fc2;--g2:#0e857e;--g3:#bd6f24;--g4:#b0386a;--g5:#6a53b6;--g6:#4b7a27;
-  --rule-day:#c9d2db;--rule-group:#9aa8b6;--bar-ink:#fff;--bar-ink-alt:#fff;
-  --p0:#6b7a89;--p1:#3a4fc2;--p2:#0e857e;--p3:#bd6f24;--p4:#b0386a;--p5:#6a53b6;--p6:#4b7a27;--p7:#1f7fa8;--p8:#8a5a2b;
-  --shadow:0 1px 2px rgba(23,33,43,.06),0 8px 24px rgba(23,33,43,.06);
-  --f-display:"Noto Serif TC","Songti TC",serif;
-  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0e1319;--surface:#151c24;--surface-2:#1a232d;--ink:#e5ecf2;--muted:#93a1af;--line:#2a3542;--line-2:#222c37;
-  --accent:#86adf5;--accent-soft:#1d2b40;--accent-ink:#0e1319;
-  --hot:#ff8d6e;--cold:#79b2ff;--rain:#6db4ff;--sun:#f1b44a;--cloud:#9aa7b5;--hatch:#26313d;
-  --ok:#4fc38c;--warn:#e3b544;--bad:#ff7b64;--today:#f1b44a;
-  --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
-  --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
-  --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0e1319;--surface:#151c24;--surface-2:#1a232d;--ink:#e5ecf2;--muted:#93a1af;--line:#2a3542;--line-2:#222c37;
-  --accent:#86adf5;--accent-soft:#1d2b40;--accent-ink:#0e1319;
-  --hot:#ff8d6e;--cold:#79b2ff;--rain:#6db4ff;--sun:#f1b44a;--cloud:#9aa7b5;--hatch:#26313d;
-  --ok:#4fc38c;--warn:#e3b544;--bad:#ff7b64;--today:#f1b44a;
-  --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
-  --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
-  --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}
-
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}

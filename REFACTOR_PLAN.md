@@ -38,7 +38,8 @@
 
 ## 二、抽出設計變數（tokens.css）
 
-- [ ] #4【風險：低】建立 css/tokens.css
+- [x] #4【風險：低】建立 css/tokens.css
+  - 完成：2026-11-13。淺色、跟隨系統深色、手動深色三組變數（原第 20–51 行）原樣搬到 `css/tokens.css`，index.html 在 `<style>` 前以 `<link>` 引用；總覽矩陣的 `--vc-*` 欄寬屬版面設定，留在原處。驗證：淺色 7 張截圖與 baseline 完全相同；深色模式修改前後比對 4 張（電腦／手機 × 總覽／地點查詢）僅 60 個像素字體反鋸齒差異。
   - 檔案：index.html、新增 css/tokens.css
   - 問題：色彩與字型變數寫在 index.html 的 `:root`（含深色模式三組區塊）。
   - 做法：把 `:root`、`@media (prefers-color-scheme:dark)`、`:root[data-theme="dark"]` 三組變數原樣搬到 `css/tokens.css`，index.html 以 `<link>` 引用；內容不變。
