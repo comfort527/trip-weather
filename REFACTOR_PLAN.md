@@ -73,7 +73,8 @@
   - 做法：**請你決定**是否列為允許的例外；若允許，在 CLAUDE.md 註記，不改程式。
   - 驗證：無（文件項目）。
 
-- [ ] #8【風險：低】`#id` 選擇器改為 class
+- [x] #8【風險：低】`#id` 選擇器改為 class
+  - 完成：2026-11-13。7 條 `#id` 樣式改用 class（計畫建立後新增的 `.ed-bar #edMsg` 兩條一併處理）：地圖容器 `.map-box`、編輯頁訊息列 `.ed-bar__msg`、手機版隱藏項目 `.ed-bar__optional`、發布設定 `.gh-set`、總覽容器 `.overview`；id 保留給 JS。另修正 `edMsg()` 與匯入確認以 `className` 整個覆蓋 class 的問題，改用 `classList` 只切換 ok／err。驗證：7 張 baseline 完全相同；編輯頁（含訊息列）電腦／手機修改前後截圖完全相同；地圖高度 340／260px 與矩陣顯示狀態不變。
   - 檔案：index.html
   - 問題：第 170、439 行 `#tripMap,#lookupMap`；第 310 行 `.ed-bar #draftState,#downloadBtn,#importBtn`；第 312 行 `#ghSet`；第 509 行 `#view-overview .summary/.board`。
   - 做法：在對應元素加 class（如 `map-box`、`ed-bar__optional`），CSS 改用 class。

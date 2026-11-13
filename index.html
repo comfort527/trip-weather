@@ -80,7 +80,7 @@ h1{font-family:var(--f-display);font-size:clamp(24px,3.2vw,34px);line-height:1.2
 .mapcard{margin-top:16px;overflow:hidden}
 .mapcard h2,.sect-h{margin:0;font-size:14px;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}
 .mapcard h2 span{font-weight:400;font-size:12px;color:var(--muted)}
-#tripMap,#lookupMap{height:340px;background:var(--surface-2);position:relative;z-index:0}
+.map-box{height:340px;background:var(--surface-2);position:relative;z-index:0}
 .leaflet-container{font-family:var(--f-body)}
 
 /* Drawer */
@@ -157,8 +157,8 @@ details.gh-set summary{cursor:pointer;font-weight:700;font-size:14px;padding:12p
 .ed-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:10px 14px;margin-top:18px}
 .ed-bar h2{margin:0;font-size:16px}
 .ed-bar .sp{flex:1}
-.ed-bar #edMsg{flex-basis:100%}
-.ed-bar #edMsg:empty{display:none}
+.ed-bar__msg{flex-basis:100%}
+.ed-bar__msg:empty{display:none}
 .ed-cols{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr) minmax(300px,380px);gap:16px;margin-top:16px;align-items:start}
 .ed-col{display:grid;gap:16px;min-width:0}
 .ed-col.right{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 92px);overflow-y:auto;border-radius:14px}
@@ -198,9 +198,9 @@ details.gh-set summary{cursor:pointer;font-weight:700;font-size:14px;padding:12p
 .pv-row .d small{font-family:var(--f-body);font-weight:400;color:var(--muted);margin-left:3px}
 .pv-row .t{font-family:var(--f-num);font-weight:600;white-space:nowrap}
 .ed-foot-hint{margin:12px 2px 0}
-@media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar #draftState,#downloadBtn,#importBtn{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
+@media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar .ed-bar__optional{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
 @media (max-width:1120px){.ed-cols{grid-template-columns:minmax(210px,230px) minmax(0,1fr) minmax(280px,330px)}}
-@media (max-width:900px){.ed-cols{grid-template-columns:minmax(0,1fr)}.ed-col.left{display:contents}.ed-col.mid{order:1}.ed-col.right{order:2;position:static;max-height:none;overflow:visible}#ghSet{order:3}}
+@media (max-width:900px){.ed-cols{grid-template-columns:minmax(0,1fr)}.ed-col.left{display:contents}.ed-col.mid{order:1}.ed-col.right{order:2;position:static;max-height:none;overflow:visible}.gh-set{order:3}}
 
 /* Overview (vertical): dates down the side, groups across; city as a vertical bar beside each group's day cells */
 :root{--vc-date:minmax(96px,112px);--vc-date-w:112px;--vc-bar:28px;--vc-cell:176px}
@@ -325,7 +325,7 @@ footer a{color:var(--muted)}
   .form-row .btn{grid-column:1/-1}
 }
 @media (max-width:760px){
-  #tripMap,#lookupMap{height:260px}
+  .map-box{height:260px}
   .drawer{top:auto;left:0;width:100%;max-height:88vh;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px))}
 }
 
@@ -395,7 +395,7 @@ footer a{color:var(--muted)}
   .tabbar{display:flex}
   .top-actions{display:none}
   .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  #view-overview .summary,#view-overview .board{display:none}
+  .overview .summary,.overview .board{display:none}
   .mlist{display:block;margin-top:6px}
   .gtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .drawer{bottom:0;z-index:1201}
@@ -444,7 +444,7 @@ footer a{color:var(--muted)}
   <div id="banner" class="banner" hidden></div>
 
   <!-- Overview -->
-  <main id="view-overview">
+  <main id="view-overview" class="overview">
     <section class="summary">
       <div class="card span-info">
         <div class="span-row" id="spanRow"></div>
@@ -475,7 +475,7 @@ footer a{color:var(--muted)}
 
     <section class="card mapcard">
       <h2>行程地圖<span>各組停留城市</span></h2>
-      <div id="tripMap" role="img" aria-label="行程城市地圖"></div>
+      <div id="tripMap" class="map-box" role="img" aria-label="行程城市地圖"></div>
     </section>
   </main>
 
@@ -506,7 +506,7 @@ footer a{color:var(--muted)}
       </div>
       <details class="card mapcard" id="lkMapBox" hidden>
         <summary><span class="al-title">位置</span><span class="muted" style="font-weight:400;font-size:12px">點地圖或拖曳圖標可改查該處</span></summary>
-        <div id="lookupMap"></div>
+        <div id="lookupMap" class="map-box"></div>
       </details>
       <div id="lkResult" class="card" hidden>
         <h2 class="sect-h"><span id="lkTitle"></span><span class="muted" id="lkMeta" style="font-weight:400;font-size:12px"></span></h2>
@@ -533,14 +533,14 @@ footer a{color:var(--muted)}
   <main id="view-edit" hidden>
     <div class="card ed-bar">
       <h2>編輯行程</h2>
-      <span class="ed-msg" id="draftState"></span>
+      <span class="ed-msg ed-bar__optional" id="draftState"></span>
       <span class="sp"></span>
       <button class="btn sm" type="button" id="previewBtn">預覽總覽</button>
-      <button class="btn sm" type="button" id="importBtn">匯入 data.json</button><input type="file" id="importFile" accept=".json,application/json" hidden>
-      <button class="btn sm" type="button" id="downloadBtn">下載 data.json</button>
+      <button class="btn sm ed-bar__optional" type="button" id="importBtn">匯入 data.json</button><input type="file" id="importFile" accept=".json,application/json" hidden>
+      <button class="btn sm ed-bar__optional" type="button" id="downloadBtn">下載 data.json</button>
       <button class="btn sm danger" type="button" id="discardBtn">放棄修改</button>
       <button class="btn sm primary" type="button" id="publishBtn">儲存並發布</button>
-      <div class="ed-msg" id="edMsg"></div>
+      <div class="ed-msg ed-bar__msg" id="edMsg"></div>
     </div>
     <div class="ed-cols">
       <div class="ed-col left">
@@ -1516,7 +1516,12 @@ async function renderPreview() {
 }
 
 /* 發布 */
-function edMsg(t, kind) { $('edMsg').textContent = t; $('edMsg').className = 'ed-msg' + (kind ? ' ' + kind : ''); }
+function edMsg(t, kind) {
+  const el = $('edMsg');
+  el.textContent = t;
+  el.classList.remove('ok', 'err');   // 只切換狀態，保留 ed-bar__msg 等版面 class
+  if (kind) el.classList.add(kind);
+}
 function validateDraft() {
   if (!draft.title.trim()) return '請填行程名稱。';
   const nod = draft.segments.find(s => isStay(s) && (!s.start || !s.end));
@@ -1580,7 +1585,7 @@ $('importFile').addEventListener('change', async e => {
     incoming = normalize(raw, true);
   } catch { edMsg('這個檔案不是有效的行程檔（data.json），請確認是從這裡下載的檔案。', 'err'); return; }
   const stays = incoming.segments.filter(isStay).length;
-  const box = $('edMsg'); box.className = 'ed-msg';
+  const box = $('edMsg'); box.classList.remove('ok', 'err');
   box.innerHTML = `匯入「${esc(incoming.title)}」（${incoming.groups.length} 組・${stays} 段行程）會取代目前編輯中的內容，確定嗎？ <button class="btn sm danger" type="button" id="impYes">匯入</button> <button class="btn sm" type="button" id="impNo">取消</button>`;
   $('impYes').addEventListener('click', () => {
     draft = incoming; selGroup = draft.groups[0].id; selSeg = null; saveDraft(); startEdit(); renderHeader(draft);
