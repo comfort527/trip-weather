@@ -512,6 +512,11 @@ footer a{color:var(--muted)}
   .drawer{bottom:0;z-index:1201}
   .scrim{z-index:1200}
 }
+/* 天氣載入失敗：重試 */
+.retry-button{min-height:34px;border:1px solid var(--bad);border-radius:8px;background:var(--surface);color:var(--bad);font-weight:700;font-size:13px;padding:0 12px;white-space:nowrap}
+.retry-button:hover{background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.retry-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--bad) 35%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--bad) 6%,var(--surface));font-size:13px;color:var(--ink)}
+.retry-bar--inset{margin:0 16px 14px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -571,11 +576,12 @@ footer a{color:var(--muted)}
 
     <section class="card board" aria-label="行程天氣矩陣">
       <div class="board-scroll"><div class="grid" id="grid"></div></div>
-      <div class="board-foot"><span>點任一天可看詳細資料、各模型比較與其他天氣網站連結。</span><span id="fetchedAt"></span></div>
+      <div class="board-foot"><span>點任一天可看詳細資料、各模型比較與其他天氣網站連結。</span><button type="button" class="retry-button" data-js="weather-retry" hidden>重新載入天氣</button><span id="fetchedAt"></span></div>
     </section>
     <section class="daylist" id="daylist" aria-label="每日天氣"></section>
     <section class="mlist" aria-label="各組行程天氣">
       <div class="gtabs" id="mGroupTabs" role="tablist" aria-label="組別"></div>
+      <div class="retry-bar" data-js="weather-retry-bar" hidden><span class="retry-bar__text">部分天氣資料載入失敗。</span><button type="button" class="retry-button" data-js="weather-retry">重新載入天氣</button></div>
       <div id="mList"></div>
     </section>
 
@@ -605,6 +611,7 @@ footer a{color:var(--muted)}
           <button class="btn primary" type="submit" id="lkBtn">查詢</button>
         </form>
         <div id="lkStatus" class="status" hidden></div>
+        <div class="retry-bar retry-bar--inset" data-js="lookup-retry-bar" hidden><span class="retry-bar__text">部分天氣資料載入失敗。</span><button type="button" class="retry-button" data-js="lookup-retry">重新載入天氣</button></div>
       </div>
       <div id="lkAddBox" class="card" hidden>
         <div class="ed-pad"><div class="ed-actions"><label class="f" for="lkGroup" style="min-width:160px">加入行程的組別<select id="lkGroup"></select></label><button class="btn primary" type="button" id="lkAdd" style="align-self:end">加入行程</button><span class="ed-msg" id="lkAddMsg"></span></div></div>
@@ -901,14 +908,16 @@ async function fetchPast(lat, lon, dates) {
   }
   return out;
 }
+const STATUS = Object.freeze({ IDLE: 'idle', LOADING: 'loading', SUCCESS: 'success', ERROR: 'error' });
+const pastFailed = new Set();   // 實際天氣取得失敗的地點（locKey）
 async function ensurePast(segs) {
   const today = localISO(), byLoc = new Map();
   segs.filter(s => s.lat != null && s.start && s.start < today).forEach(s => { const k = locKey(s.lat, s.lon); if (!byLoc.has(k)) byLoc.set(k, { s, dates: new Set() }); rangeDates(s.start, s.end < today ? s.end : addDays(today, -1)).forEach(d => byLoc.get(k).dates.add(d)); });
   await pool([...byLoc.entries()], 2, async ([k, { s, dates }]) => {
     const have = pastMem.get(k); const need = [...dates].filter(d => !have || !(d in have));
     if (!need.length) return;
-    try { const got = await fetchPast(s.lat, s.lon, need); pastMem.set(k, { ...(pastMem.get(k) || {}), ...got, ...Object.fromEntries(need.filter(d => !got[d]).map(d => [d, null])) }); }
-    catch (e) { console.error('已過日期實際天氣取得失敗：', k, e); pastMem.set(k, { ...(pastMem.get(k) || {}), ...Object.fromEntries(need.map(d => [d, null])) }); }
+    try { const got = await fetchPast(s.lat, s.lon, need); pastFailed.delete(k); pastMem.set(k, { ...(pastMem.get(k) || {}), ...got, ...Object.fromEntries(need.filter(d => !got[d]).map(d => [d, null])) }); }
+    catch (e) { console.error('已過日期實際天氣取得失敗：', k, e); pastFailed.add(k); pastMem.set(k, { ...(pastMem.get(k) || {}), ...Object.fromEntries(need.map(d => [d, null])) }); }
   });
 }
 function fcDay(fc, date) {
@@ -1318,6 +1327,26 @@ function renderOverview() {
   renderHeader(proj); renderSpan(proj); renderGrid(proj); renderMobileList(proj); renderAlerts(proj);
 }
 let loadToken = 0;
+function hasWeatherError() {
+  return [...fcByLoc.values()].includes('err') || [...climMem.values()].some(c => c?.error) || pastFailed.size > 0;
+}
+function syncWeatherRetry() {
+  const show = hasWeatherError();
+  document.querySelectorAll('[data-js="weather-retry"]').forEach(b => { b.hidden = !show; });
+  document.querySelector('[data-js="weather-retry-bar"]').hidden = !show;
+}
+function retryWeather() {
+  fcByLoc.forEach((v, k) => { if (v === 'err') fcByLoc.delete(k); });
+  climMem.forEach((v, k) => { if (v?.error) climMem.delete(k); });
+  pastFailed.forEach(k => pastMem.delete(k));
+  pastFailed.clear();
+  syncWeatherRetry();
+  const proj = view();
+  if (!proj) return;
+  renderOverview();
+  loadWeather(proj);
+}
+document.querySelectorAll('[data-js="weather-retry"]').forEach(b => b.addEventListener('click', retryWeather));
 async function loadWeather(proj) {
   const my = ++loadToken;
   const segs = proj.segments.filter(s => s.lat != null);
@@ -1330,6 +1359,7 @@ async function loadWeather(proj) {
     ensurePast(segs).then(() => { if (my === loadToken) renderOverview(); })
   ];
   await Promise.all(tasks);
+  if (my === loadToken) syncWeatherRetry();
   if (my === loadToken) { $('fetchedAt').textContent = `天氣資料取得時間：${new Date().toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`; renderOverview(); }
 }
 
@@ -1397,18 +1427,22 @@ let lkLoc = null, lkMap = null, lkMarker = null, lkReq = 0;
 function isEditor() { return !!ghCfg().token; }
 function syncEditTab() { const ed = isEditor(); $('editTab').hidden = !ed; $('tabEdit').hidden = !ed; $('loginLink').hidden = ed; }
 function lkStatus(msg, err) { const el = $('lkStatus'); el.hidden = !msg; el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
+function setLookupRetry(show) { document.querySelector('[data-js="lookup-retry-bar"]').hidden = !show; }
+document.querySelector('[data-js="lookup-retry"]').addEventListener('click', () => runLookup());
 async function runLookup() {
   const a = $('lkStart').value, b = $('lkEnd').value; if (!lkLoc || !a || !b) return;
   if (b < a) { lkStatus('結束日期不可早於起始日期。', true); return; }
   if (diffDays(a, b) > 60) { lkStatus('查詢區間最多 60 天。', true); return; }
   const my = ++lkReq; lkStatus('取得天氣中…'); $('lkBtn').disabled = true;
+  let status = STATUS.LOADING;
+  setLookupRetry(false);
   try {
-    const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(e => { console.error('地點查詢：預報取得失敗：', e); return null; });
+    const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(e => { console.error('地點查詢：預報取得失敗：', e); status = STATUS.ERROR; return null; });
     const dates = rangeDates(a, b), today = localISO();
     const needCl = dates.filter(d => d >= today && !fcDay(fc, d));
     const pastDates = dates.filter(d => d < today); let ob = {};
-    if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(e => { console.error('地點查詢：實際天氣取得失敗：', e); return {}; }); }
-    let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(e => { console.error('地點查詢：歷年同期平均取得失敗：', e); return {}; }); }
+    if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(e => { console.error('地點查詢：實際天氣取得失敗：', e); status = STATUS.ERROR; return {}; }); }
+    let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(e => { console.error('地點查詢：歷年同期平均取得失敗：', e); status = STATUS.ERROR; return {}; }); }
     if (my !== lkReq) return;
     $('lkTitle').textContent = lkLoc.label;
     $('lkMeta').textContent = `${[lkLoc.admin1, lkLoc.country].filter(Boolean).join('，')}・${(+lkLoc.lat).toFixed(3)}, ${(+lkLoc.lon).toFixed(3)}`;
@@ -1424,8 +1458,8 @@ async function runLookup() {
     $('lkResult').hidden = false; $('lkMapBox').hidden = false; lkStatus('');
     if ($('lkMapBox').open) renderLookupMap();
     if (isEditor()) { const groups = (draft || data).groups; $('lkAddBox').hidden = false; $('lkGroup').innerHTML = groups.map(g => `<option value="${esc(g.id)}">${esc(g.name)}</option>`).join(''); $('lkAddMsg').textContent = ''; }
-  } catch (e) { console.error('地點查詢失敗：', e); lkStatus(e.message || '查詢失敗，請稍後再試。', true); }
-  finally { if (my === lkReq) $('lkBtn').disabled = false; }
+  } catch (e) { console.error('地點查詢失敗：', e); status = STATUS.ERROR; lkStatus(e.message || '查詢失敗，請稍後再試。', true); }
+  finally { if (my === lkReq) { $('lkBtn').disabled = false; setLookupRetry(status === STATUS.ERROR); } }
 }
 function renderLookupMap() {
   if (typeof L === 'undefined') return;
