@@ -734,9 +734,15 @@ const CONFIG = {
 
 /* ========= 小工具 ========= */
 const $ = id => document.getElementById(id);
+// 轉義 HTML 特殊字元。凡是使用者輸入（行程名稱、組名、城市名…）或 API 回傳的文字要放進 innerHTML／屬性，一律先經過 esc()。
+// 純文字顯示請直接用 textContent；數字與時間則在資料進來時由 toNum()／toTime() 清理。
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const WD = ['日','一','二','三','四','五','六'];
 const pad = n => String(n).padStart(2, '0');
+// 清理 API 數值：非有限數字一律視為沒有資料（null）
+const toNum = v => { const n = Number(v); return v == null || v === '' || !Number.isFinite(n) ? null : n; };
+// 清理 API 時間：只接受「YYYY-MM-DDTHH:MM」格式
+const toTime = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) ? v : null;
 function localISO(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function parseISO(s) { const [y,m,d] = s.split('-').map(Number); return new Date(Date.UTC(y, m-1, d)); }
 function toISO(dt) { return dt.toISOString().slice(0, 10); }
@@ -904,7 +910,7 @@ async function fetchPast(lat, lon, dates) {
     const j = cached || await getJSON(url);
     if (!cached) sset(ck, j, url.includes('archive') ? undefined : 's');
     const D = j.daily;
-    D.time.forEach((t, i) => { if (D.temperature_2m_max[i] != null) out[t] = { date: t, code: D.weather_code?.[i], tmax: D.temperature_2m_max[i], tmin: D.temperature_2m_min[i], psum: D.precipitation_sum?.[i], wind: D.wind_speed_10m_max?.[i], gust: D.wind_gusts_10m_max?.[i], sunrise: fixLocalTime(D.sunrise?.[i], j.utc_offset_seconds, j.timezone), sunset: fixLocalTime(D.sunset?.[i], j.utc_offset_seconds, j.timezone), src: url.includes('archive') ? 'era5' : 'analysis' }; });
+    D.time.forEach((t, i) => { if (D.temperature_2m_max[i] != null) out[t] = { date: t, code: toNum(D.weather_code?.[i]), tmax: toNum(D.temperature_2m_max[i]), tmin: toNum(D.temperature_2m_min[i]), psum: toNum(D.precipitation_sum?.[i]), wind: toNum(D.wind_speed_10m_max?.[i]), gust: toNum(D.wind_gusts_10m_max?.[i]), sunrise: toTime(fixLocalTime(D.sunrise?.[i], j.utc_offset_seconds, j.timezone)), sunset: toTime(fixLocalTime(D.sunset?.[i], j.utc_offset_seconds, j.timezone)), src: url.includes('archive') ? 'era5' : 'analysis' }; });
   }
   return out;
 }
@@ -924,12 +930,13 @@ function fcDay(fc, date) {
   if (!fc) return null;
   const D = fc.main.daily, i = D.time.indexOf(date);
   if (i < 0 || D.temperature_2m_max[i] == null) return null;
-  const g = n => D[n] ? D[n][i] : null;
+  const g = n => toNum(D[n]?.[i]);
+  const gt = n => toTime(fixLocalTime(D[n]?.[i], fc.main.utc_offset_seconds, fc.main.timezone));
   const day = { date, code: g('weather_code'), tmax: g('temperature_2m_max'), tmin: g('temperature_2m_min'), amax: g('apparent_temperature_max'), amin: g('apparent_temperature_min'),
-    pop: g('precipitation_probability_max'), psum: g('precipitation_sum'), wind: g('wind_speed_10m_max'), gust: g('wind_gusts_10m_max'), uv: g('uv_index_max'), sunrise: fixLocalTime(g('sunrise'), fc.main.utc_offset_seconds, fc.main.timezone), sunset: fixLocalTime(g('sunset'), fc.main.utc_offset_seconds, fc.main.timezone), models: [] };
+    pop: g('precipitation_probability_max'), psum: g('precipitation_sum'), wind: g('wind_speed_10m_max'), gust: g('wind_gusts_10m_max'), uv: g('uv_index_max'), sunrise: gt('sunrise'), sunset: gt('sunset'), models: [] };
   if (fc.models?.daily) {
     const M = fc.models.daily, j = M.time.indexOf(date);
-    if (j >= 0) CONFIG.models.forEach(m => { const tx = M[`temperature_2m_max_${m.key}`]?.[j], tn = M[`temperature_2m_min_${m.key}`]?.[j], ps = M[`precipitation_sum_${m.key}`]?.[j]; if (tx != null) day.models.push({ ...m, tmax: tx, tmin: tn, psum: ps }); });
+    if (j >= 0) CONFIG.models.forEach(m => { const tx = M[`temperature_2m_max_${m.key}`]?.[j], tn = M[`temperature_2m_min_${m.key}`]?.[j], ps = M[`precipitation_sum_${m.key}`]?.[j]; if (toNum(tx) != null) day.models.push({ ...m, tmax: toNum(tx), tmin: toNum(tn), psum: toNum(ps) }); });
   }
   day.lead = diffDays(localISO(), date);
   day.conf = confidence(day);
