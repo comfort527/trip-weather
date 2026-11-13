@@ -54,7 +54,8 @@
 
 ## 三、刪除無用程式碼
 
-- [ ] #6【風險：中】刪除舊版矩陣與舊手機清單（**刪除大段程式碼，動手前需確認**）
+- [x] #6【風險：中】刪除舊版矩陣與舊手機清單（**刪除大段程式碼，動手前需確認**）
+  - 完成：2026-11-13（經使用者確認）。刪除 124 行：JS `lanesFor()`、`wxButton()`、`renderDayList()`；HTML `<section class="daylist">`；CSS 舊橫式矩陣（`.gh`、`.band`、`.dh`、`.gname`、`.segbar`、`.cell`、`.wx`、`.empty-cell`）、舊手機每日卡片（`.daylist`、`.day`、`.day-h`、`.pill`、`.drow`）、舊編輯頁（`.editor`、`.ed-sec`、`.ed-body`、`.ed-grid2`、`.grp-list`、`.grp-row`、`.seg-table`、`.g-item`、`.g-edit`、`details.gh-set .ed-body`）。保留 Leaflet 執行時使用的 `.leaflet-container`。驗證：7 張 baseline 完全相同；編輯頁與詳細面板（電腦／手機）修改前後截圖完全相同，無程式錯誤。
   - 檔案：index.html
   - 問題：未被呼叫的函式 `lanesFor()`（1046）、`wxButton()`（1067）、`renderDayList()`（1190）；`<section class="daylist">` 與其 CSS（`.daylist`、`.day`、`.day-h`、`.drow`…）；舊橫式矩陣的 CSS（`.band`、`.dh`、`.gname`、`.segbar`、`.cell`、`.wx`、`.empty-cell`）；舊編輯頁的 CSS（`.seg-table`、`.grp-list`、`.grp-row`、`.ed-sec`、`.ed-grid2`）。
   - 做法：先列出每段 CSS 選擇器並搜尋確認 HTML／JS 都沒有使用，再一次刪除。
@@ -145,6 +146,6 @@
 
 - [ ] #19【風險：低】刪除不再使用的色條樣式
   - 檔案：index.html、css/tokens.css
-  - 問題：改為「依城市上色」後，`.vbar.alt`、`.vbar.tint` 已無程式使用，tokens.css 的 `--bar-ink-alt` 也只剩 `.vbar.alt` 使用；`.pill`（含 `.pill.today`）只在不再呼叫的 `renderDayList()` 中使用。
-  - 做法：與 #6 一起確認後刪除（屬刪除程式碼，動手前需確認）。
+  - 問題：改為「依城市上色」後，`.vbar.alt`、`.vbar.tint` 已無程式使用，tokens.css 的 `--bar-ink-alt` 也只剩 `.vbar.alt` 使用。（原列的 `.pill` 已於 #6 一併刪除。）
+  - 做法：確認後刪除（屬刪除程式碼，動手前需確認）。
   - 驗證：T13、T14、T30、T5。

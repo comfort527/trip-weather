@@ -72,64 +72,9 @@ h1{font-family:var(--f-display);font-size:clamp(24px,3.2vw,34px);line-height:1.2
 .board{margin-top:16px;overflow:hidden}
 .board-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .grid{display:grid;min-width:max-content;position:relative}
-.gh{position:sticky;left:0;z-index:3;background:var(--surface);border-right:1px solid var(--line)}
-.band{font-size:11px;font-weight:700;letter-spacing:.08em;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-.band.fc{background:var(--accent-soft);color:var(--accent)}
-.band.cl{background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,var(--hatch) 6px 7px);color:var(--muted)}
-.band.past{background:var(--surface-2);color:var(--muted)}
-.dh{padding:8px 6px 6px;text-align:center;border-bottom:1px solid var(--line);border-left:1px solid var(--line-2);background:var(--surface)}
-.dh .d{font-family:var(--f-num);font-weight:600;font-size:14px}
-.dh .w{font-size:11px;color:var(--muted)}
-.dh.today{box-shadow:inset 0 3px 0 var(--today)}
-.dh.today .w{color:var(--today);font-weight:700}
-.dh.wkend .w{color:var(--hot)}
-.dh.cl{background:var(--surface-2)}
-.gname{padding:10px 12px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;border-bottom:1px solid var(--line)}
-.gname .gdot{width:10px;height:10px;border-radius:3px;flex:none}
-.gname small{display:block;font-weight:400;color:var(--muted);font-size:11px}
-.segbar{margin:8px 3px 4px;border-radius:7px;padding:3px 9px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;min-width:0;border:0;text-align:left}
-.segbar .cc{font-size:10px;font-weight:500;opacity:.85;letter-spacing:.05em}
-.segbar .nt{font-weight:400;font-size:11px;opacity:.9;overflow:hidden;text-overflow:ellipsis}
-.cell{border-left:1px solid var(--line-2);border-bottom:1px solid var(--line);padding:4px 3px 8px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.cell.cl{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
-.cell.today{background:color-mix(in srgb,var(--today) 7%,var(--surface))}
-.wx{border:1px solid transparent;background:transparent;border-radius:8px;padding:5px 4px 6px;display:grid;justify-items:center;gap:2px;width:100%;position:relative;color:var(--ink)}
-.wx:hover{border-color:var(--line);background:var(--surface)}
-.wx svg.ic{width:30px;height:30px}
-.wx .t{font-size:13px;font-weight:600;white-space:nowrap}
-.wx .t .hi{color:var(--hot)}.wx .t .lo{color:var(--cold)}
-.wx .r{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
 .rbar{width:26px;height:4px;border-radius:2px;background:var(--line);overflow:hidden;display:inline-block}
 .rbar i{display:block;height:100%;background:var(--rain)}
-.wx .conf{position:absolute;top:5px;right:5px}
-.wx .avg{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 6px;line-height:16px}
-.wx .city2{font-size:10px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wx.past{opacity:.55}
-.wx.loading .t{color:var(--muted)}
-.empty-cell{flex:1;min-height:60px}
 .board-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
-
-/* Day list (phone) */
-.daylist{display:none;margin-top:16px;gap:12px}
-.day{overflow:hidden}
-.day-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
-.day-h .d{font-family:var(--f-num);font-weight:600;font-size:16px}
-.day-h .w{color:var(--muted);font-size:13px;margin-left:6px}
-.pill{font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.pill.fc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-.pill.today{background:var(--today);color:#1b1300;border-color:transparent}
-.day.cl .day-h{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hatch) 6px 7px)}
-.drow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 14px;border:0;border-bottom:1px solid var(--line-2);width:100%;background:transparent;text-align:left;color:var(--ink)}
-.drow:last-child{border-bottom:0}
-.drow .gchip{font-size:12px;font-weight:700;color:#fff;border-radius:6px;padding:2px 8px;white-space:nowrap}
-.drow .city{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.drow .city small{display:block;font-weight:400;color:var(--muted);font-size:12px}
-.drow .wxs{display:flex;align-items:center;gap:8px}
-.drow svg.ic{width:28px;height:28px}
-.drow .t{font-size:14px;font-weight:600;text-align:right;white-space:nowrap}
-.drow .t .hi{color:var(--hot)}.drow .t .lo{color:var(--cold)}
-.drow .t small{display:block;font-size:11px;color:var(--muted);font-weight:500}
-.drow.none{color:var(--muted);font-size:13px}
 
 /* Map */
 .mapcard{margin-top:16px;overflow:hidden}
@@ -201,25 +146,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 .hi{color:var(--hot)}.lo{color:var(--cold)}
 
 /* Editor */
-.editor{margin-top:18px;display:grid;gap:16px}
-.ed-sec{padding:0 0 14px}
-.ed-body{padding:14px 16px;display:grid;gap:12px}
-.ed-grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-.grp-list{display:grid;gap:8px}
-.grp-row{display:grid;grid-template-columns:14px minmax(0,1fr) auto auto auto;gap:8px;align-items:center}
-.grp-row .gdot{width:14px;height:14px;border-radius:4px}
-.seg-table{width:100%;border-collapse:collapse;min-width:860px}
-.seg-table th{font-size:12px;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
-.seg-table td{padding:6px;border-bottom:1px solid var(--line-2);vertical-align:top}
-.seg-table td.city{min-width:220px}
-.seg-table .geo{font-size:11px;color:var(--muted);margin-top:3px}
-.seg-table .geo.bad{color:var(--bad)}
 .ed-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ed-msg{font-size:13px;color:var(--muted)}
 .ed-msg.err{color:var(--bad)}.ed-msg.ok{color:var(--ok)}
 .inline-confirm{display:inline-flex;gap:6px;align-items:center;font-size:12px}
 details.gh-set summary{cursor:pointer;font-weight:700;font-size:14px;padding:12px 16px}
-details.gh-set .ed-body{border-top:1px solid var(--line)}
 .hint{font-size:12px;color:var(--muted);margin:0}
 
 /* Editor — three columns: groups | segments of the selected group | form + weather preview */
@@ -233,14 +164,6 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 .ed-col.right{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 92px);overflow-y:auto;border-radius:14px}
 .ed-h{margin:0;font-size:13px;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:50px}
 .ed-pad{padding:12px 14px;display:grid;gap:10px}
-.g-item{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;border:1px solid transparent;border-radius:9px;padding:8px 10px;background:transparent;text-align:left;color:var(--ink)}
-.g-item:hover{background:var(--surface-2)}
-.g-item.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
-.g-item .gdot{width:12px;height:12px;border-radius:3px}
-.g-item .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.g-item .c{font-size:12px;color:var(--muted)}
-.g-edit{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin:2px 0 6px}
-.g-edit-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .seg-list{padding:12px 14px 16px}
 .seg-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:11px 12px;color:var(--ink)}
 .seg-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
@@ -278,7 +201,6 @@ details.gh-set .ed-body{border-top:1px solid var(--line)}
 @media (max-width:600px){.ed-bar{padding:8px 10px;gap:6px}.ed-bar h2,.ed-bar #draftState,#downloadBtn,#importBtn{display:none}.ed-bar .sp{display:none}.ed-bar .btn{flex:1}}
 @media (max-width:1120px){.ed-cols{grid-template-columns:minmax(210px,230px) minmax(0,1fr) minmax(280px,330px)}}
 @media (max-width:900px){.ed-cols{grid-template-columns:minmax(0,1fr)}.ed-col.left{display:contents}.ed-col.mid{order:1}.ed-col.right{order:2;position:static;max-height:none;overflow:visible}#ghSet{order:3}}
-
 
 /* Overview (vertical): dates down the side, groups across; city as a vertical bar beside each group's day cells */
 :root{--vc-date:minmax(96px,112px);--vc-date-w:112px;--vc-bar:28px;--vc-cell:176px}
@@ -403,7 +325,6 @@ footer a{color:var(--muted)}
   .form-row .btn{grid-column:1/-1}
 }
 @media (max-width:760px){
-  .ed-grid2{grid-template-columns:minmax(0,1fr)}
   #tripMap,#lookupMap{height:260px}
   .drawer{top:auto;left:0;width:100%;max-height:88vh;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px))}
 }
@@ -546,7 +467,6 @@ footer a{color:var(--muted)}
       <div class="board-scroll"><div class="grid" id="grid"></div></div>
       <div class="board-foot"><span>點任一天可看詳細資料、各模型比較與其他天氣網站連結。</span><button type="button" class="retry-button" data-js="weather-retry" hidden>重新載入天氣</button><span id="fetchedAt"></span></div>
     </section>
-    <section class="daylist" id="daylist" aria-label="每日天氣"></section>
     <section class="mlist" aria-label="各組行程天氣">
       <div class="gtabs" id="mGroupTabs" role="tablist" aria-label="組別"></div>
       <div class="retry-bar" data-js="weather-retry-bar" hidden><span class="retry-bar__text">部分天氣資料載入失敗。</span><button type="button" class="retry-button" data-js="weather-retry">重新載入天氣</button></div>
@@ -1028,11 +948,6 @@ function tripSpan(proj) {
   const a = segs.reduce((m, s) => s.start < m ? s.start : m, segs[0].start), b = segs.reduce((m, s) => s.end > m ? s.end : m, segs[0].end);
   return { a, b: diffDays(a, b) > 120 ? addDays(a, 120) : b };
 }
-function lanesFor(segs) {
-  const sorted = [...segs].sort((x, y) => x.start.localeCompare(y.start)); const lanes = [];
-  sorted.forEach(s => { let l = lanes.findIndex(end => end < s.start); if (l < 0) { l = lanes.length; lanes.push(s.end); } else lanes[l] = s.end; s._lane = l; });
-  return Math.max(1, lanes.length);
-}
 const fcByLoc = new Map(); // locKey -> forecast | 'err'
 function cellData(seg, date) {
   const today = localISO();
@@ -1049,22 +964,6 @@ function cellData(seg, date) {
 }
 function forecastHorizon() { return addDays(localISO(), CONFIG.forecastDays - 1); }
 
-function wxButton(seg, date, showCity) {
-  const cd = cellData(seg, date);
-  const attrs = `data-seg="${esc(seg.id)}" data-date="${date}"`;
-  const city = showCity ? `<span class="city2">${esc(seg.label)}</span>` : '';
-  if (cd.kind === 'fc') {
-    const d = cd.day, w = wxInfo(d.code), pop = d.pop ?? 0;
-    return `<button class="wx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} ${w.text} 高溫${r0(d.tmax)}度 低溫${r0(d.tmin)}度 降雨機率${pop}% ${CONF_TXT[d.conf.level]}">${city}<span class="dot ${d.conf.level} conf" title="${CONF_TXT[d.conf.level]}"></span>${icon(d.code == null ? 'cloud' : w.icon)}<span class="t num"><span class="hi">${r0(d.tmax)}°</span>/<span class="lo">${r0(d.tmin)}°</span></span><span class="r num"><span class="rbar"><i style="width:${Math.min(100, pop)}%"></i></span>${d.pop == null ? '—' : pop + '%'}</span></button>`;
-  }
-  if (cd.kind === 'cl') {
-    const c = cd.c;
-    return `<button class="wx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} 歷年同期平均 高溫${r0(c.tmax)}度 低溫${r0(c.tmin)}度 雨日比例${c.rain}%">${city}<span class="avg">歷年平均</span><span class="t num"><span class="hi">${r0(c.tmax)}°</span>/<span class="lo">${r0(c.tmin)}°</span></span><span class="r num">雨日 ${c.rain}%</span></button>`;
-  }
-  if (cd.kind === 'past') return `<div class="wx past">${city}<span class="t muted">已過</span></div>`;
-  if (cd.kind === 'loading') return `<div class="wx loading">${city}<span class="t">…</span></div>`;
-  return `<div class="wx">${city}<span class="r">${esc(cd.msg || '無資料')}</span></div>`;
-}
 
 function renderHeader(proj) {
   $('title').textContent = proj.title;
@@ -1171,29 +1070,6 @@ function renderGrid(proj) {
   }); });
   grid.innerHTML = html;
   requestAnimationFrame(fitBarLabels);
-}
-function renderDayList(proj) {
-  const box = $('daylist'), sp = tripSpan(proj);
-  if (!sp) { box.innerHTML = `<div class="card" style="padding:20px" class="muted">還沒有行程。</div>`; return; }
-  const today = localISO(), hz = forecastHorizon();
-  const start = sp.a < today && sp.b >= today ? today : sp.a;
-  box.innerHTML = rangeDates(start, sp.b).map(d => {
-    const kind = d < today ? 'past' : d <= hz ? 'fc' : 'cl';
-    const rows = proj.groups.map(g => {
-      const act = proj.segments.filter(s => s.groupId === g.id && s.start <= d && s.end >= d);
-      if (!act.length) return '';
-      return act.map(s => {
-        const cd = cellData(s, d); let right = '', ic = '';
-        if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); ic = icon(x.code == null ? 'cloud' : w.icon); right = `<span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span><small>降雨 ${x.pop ?? '—'}%・<span class="dot ${x.conf.level}"></span> ${CONF_TXT[x.conf.level].slice(3)}</small>`; }
-        else if (cd.kind === 'cl') { ic = icon('avg'); right = `<span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span><small>雨日 ${cd.c.rain}%</small>`; }
-        else if (cd.kind === 'loading') right = '<small>載入中…</small>'; else if (cd.kind === 'past') right = '<small>已過</small>'; else right = `<small>${esc(cd.msg || '無資料')}</small>`;
-        const sub = cd.kind === 'fc' ? wxInfo(cd.day.code).text : cd.kind === 'cl' ? '歷年同期平均' : '';
-        return `<button type="button" class="drow" data-seg="${esc(s.id)}" data-date="${d}"><span class="gchip" style="background:${gColor(proj, g.id)}">${esc(g.name)}</span><span class="city">${esc(s.label)}<small>${esc(sub)}${s.note ? '・' + esc(s.note) : ''}</small></span><span class="wxs">${ic}<span class="t num">${right}</span></span></button>`;
-      }).join('');
-    }).join('');
-    const pill = d === today ? '<span class="pill today">今天</span>' : kind === 'fc' ? '<span class="pill fc">預報</span>' : kind === 'cl' ? '<span class="pill">歷年平均・非預報</span>' : '<span class="pill">已過</span>';
-    return `<article class="card day${kind === 'cl' ? ' cl' : ''}"><div class="day-h"><span><span class="d">${md(d)}</span><span class="w">週${wd(d)}</span></span>${pill}</div>${rows || '<div class="drow none">這天沒有安排行程</div>'}</article>`;
-  }).join('');
 }
 let alertGroup = null;
 function computeAlerts(proj) {
