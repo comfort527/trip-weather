@@ -45,7 +45,8 @@
   - 做法：把 `:root`、`@media (prefers-color-scheme:dark)`、`:root[data-theme="dark"]` 三組變數原樣搬到 `css/tokens.css`，index.html 以 `<link>` 引用；內容不變。
   - 驗證：T5、T13、T30；淺色與深色模式畫面與搬移前一致。
 
-- [ ] #5【風險：低】CSS 中寫死的色碼改用變數（依賴 #4）
+- [x] #5【風險：低】CSS 中寫死的色碼改用變數（依賴 #4）
+  - 完成：2026-11-13。tokens.css 新增 `--on-today`、`--on-bad`、`--marker-ring`、`--scrim`、`--shadow-drawer`（數值與原本相同），`.scrim`、`.drawer`、`.bdate .tt`、`.tabbar .badge` 改用變數；地圖顏色改由 `cssVar()` 讀取 CSS 變數。剩餘寫死色碼只在無用樣式（`.segbar`、`.pill.today`、`.drow .gchip`、`.vbar.tint`，待 #6、#19 刪除）與 `<meta name="theme-color">`（HTML 規格無法使用 CSS 變數，列為例外）。驗證：7 張截圖與 baseline 完全相同；遮罩、詳細面板陰影、今天標籤、紅點的實際顏色修改前後一致（淺色與深色）。
   - 檔案：css/tokens.css、index.html
   - 問題：token 區塊外的寫死色碼：第 122 行 `.segbar` `#fff`、152 行 `.pill.today` `#1b1300`、156 行 `.drow .gchip` `#fff`、174 行 `.scrim` `rgba(10,16,22,.38)`、175 行 `.drawer` 陰影、485 行 `.bdate .tt` `#1b1300`、504 行 `.tabbar .badge` `#fff`；JS 第 1263、1267 行地圖預設色 `#3a4fc2`、`#fff`；`.vbar.tint` 的 `#17212b`；`placeColor`／`SHADES` 等 `color-mix(…#000/#fff)`。
   - 做法：新增 `--on-accent`、`--on-today`、`--scrim`、`--shadow-drawer` 等變數取代；JS 讀取 CSS 變數。122、156 行屬於 #6 要刪除的舊樣式，可略過。
@@ -141,3 +142,9 @@
   - 問題：`ensurePast()` 失敗時把日期記為 `null`，`cellData()` 因此回傳 `past`，電腦版與手機版都顯示「已過」，看不出是載入失敗（重試按鈕會出現，但格子內容誤導）。
   - 做法：失敗的地點（`pastFailed`）回傳錯誤狀態並顯示「實際天氣載入失敗」。
   - 驗證：T17、T23（模擬斷線）。
+
+- [ ] #19【風險：低】刪除不再使用的色條樣式
+  - 檔案：index.html、css/tokens.css
+  - 問題：改為「依城市上色」後，`.vbar.alt`、`.vbar.tint` 已無程式使用，tokens.css 的 `--bar-ink-alt` 也只剩 `.vbar.alt` 使用；`.pill`（含 `.pill.today`）只在不再呼叫的 `renderDayList()` 中使用。
+  - 做法：與 #6 一起確認後刪除（屬刪除程式碼，動手前需確認）。
+  - 驗證：T13、T14、T30、T5。

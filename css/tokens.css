@@ -9,6 +9,9 @@
   --rule-day:#c9d2db;--rule-group:#9aa8b6;--bar-ink:#fff;--bar-ink-alt:#fff;
   --p0:#6b7a89;--p1:#3a4fc2;--p2:#0e857e;--p3:#bd6f24;--p4:#b0386a;--p5:#6a53b6;--p6:#4b7a27;--p7:#1f7fa8;--p8:#8a5a2b;
   --shadow:0 1px 2px rgba(23,33,43,.06),0 8px 24px rgba(23,33,43,.06);
+  --shadow-drawer:-12px 0 40px rgba(0,0,0,.18);
+  --scrim:rgba(10,16,22,.38);
+  --on-today:#1b1300;--on-bad:#ffffff;--marker-ring:#ffffff;
   --f-display:"Noto Serif TC","Songti TC",serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;

@@ -139,8 +139,8 @@ h1{font-family:var(--f-display);font-size:clamp(24px,3.2vw,34px);line-height:1.2
 .leaflet-container{font-family:var(--f-body)}
 
 /* Drawer */
-.scrim{position:fixed;inset:0;background:rgba(10,16,22,.38);z-index:900}
-.drawer{position:fixed;z-index:901;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(0,0,0,.18);overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) 18px}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:900}
+.drawer{position:fixed;z-index:901;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow-drawer);overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) 18px}
 .dr-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .dr-h h3{margin:0;font-size:20px;font-family:var(--f-display)}
 .dr-h p{margin:2px 0 0;color:var(--muted);font-size:13px}
@@ -450,7 +450,7 @@ footer a{color:var(--muted)}
 .bdate b{font-family:var(--f-num);font-size:16px;display:block}
 .bdate small{font-size:11px;color:var(--muted)}
 .bdate small.wk{color:var(--hot)}
-.bdate .tt{display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#1b1300;background:var(--today);border-radius:999px;padding:0 6px}
+.bdate .tt{display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:var(--on-today);background:var(--today);border-radius:999px;padding:0 6px}
 .bitem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:9px 14px 9px 12px;width:100%;border:0;background:transparent;text-align:left;color:var(--ink)}
 .bitem + .bitem{border-top:1px dashed var(--line)}
 .bpill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-weight:700;font-size:14px;color:var(--bar-ink);width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -469,7 +469,7 @@ footer a{color:var(--muted)}
 .tabbar .ti{flex:1;display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);text-decoration:none;position:relative;padding:2px 0}
 .tabbar .ti svg{width:24px;height:24px}
 .tabbar .ti[aria-current="page"]{color:var(--accent)}
-.tabbar .badge{position:absolute;top:-3px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px var(--f-body);text-align:center;padding:0 4px;border:2px solid var(--surface)}
+.tabbar .badge{position:absolute;top:-3px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:var(--on-bad);font:700 11px/18px var(--f-body);text-align:center;padding:0 4px;border:2px solid var(--surface)}
 @media (max-width:760px){
   .tabbar{display:flex}
   .top-actions{display:none}
@@ -1236,6 +1236,8 @@ function renderAlerts(proj) {
     : `<li class="muted">${pending ? '載入中…' : `${esc(sel.g.name)}在預報期間內沒有大雨、高溫、低溫或強風。`}</li>`}</ul>`;
 }
 
+// 讀取 tokens.css 的設計變數（給 Leaflet 這類只能吃色碼字串的地方用）
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 let tripMap = null, tripLayer = null;
 function renderMap(proj) {
   if (typeof L === 'undefined') { $('tripMap').innerHTML = '<p class="muted" style="padding:16px">地圖元件無法載入。</p>'; return; }
@@ -1245,11 +1247,11 @@ function renderMap(proj) {
   const pts = [];
   proj.groups.forEach((g, gi) => {
     const segs = proj.segments.filter(s => s.groupId === g.id && s.lat != null && isStay(s)).sort((a, b) => a.start.localeCompare(b.start));
-    const color = getComputedStyle(document.documentElement).getPropertyValue(GROUP_COLORS[gi % GROUP_COLORS.length]).trim() || '#3a4fc2';
+    const color = cssVar(GROUP_COLORS[gi % GROUP_COLORS.length]) || cssVar('--accent');
     const off = (gi - (proj.groups.length - 1) / 2) * 0.04; // 同城多組時略微錯開
     const ll = segs.map(s => [s.lat + off * 0.5, s.lon + off]);
     if (ll.length > 1) L.polyline(ll, { color, weight: 3, opacity: .8, dashArray: '6 6' }).addTo(tripLayer);
-    segs.forEach((s, i) => { L.circleMarker(ll[i], { radius: 8, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).bindTooltip(`${esc(g.name)}・${esc(s.label)}<br>${md(s.start)}–${md(s.end)}`).addTo(tripLayer); pts.push(ll[i]); });
+    segs.forEach((s, i) => { L.circleMarker(ll[i], { radius: 8, color: cssVar('--marker-ring'), weight: 2, fillColor: color, fillOpacity: 1 }).bindTooltip(`${esc(g.name)}・${esc(s.label)}<br>${md(s.start)}–${md(s.end)}`).addTo(tripLayer); pts.push(ll[i]); });
   });
   if (pts.length) tripMap.fitBounds(pts, { padding: [36, 36], maxZoom: 9 }); else tripMap.setView([30, 10], 2);
   setTimeout(() => tripMap.invalidateSize(), 50);
