@@ -406,23 +406,60 @@ footer a{color:var(--muted)}
 .retry-button:hover{background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
 .retry-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--bad) 35%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--bad) 6%,var(--surface));font-size:13px;color:var(--ink)}
 .retry-bar--inset{margin:0 16px 14px}
+/* 原 inline style 改成的 class（#9） */
+.icon-sprite{position:absolute}
+.ic-sun{fill:var(--sun)}
+.ic-sun-ray{stroke:var(--sun)}
+.ic-cloud-front{fill:var(--surface);stroke:var(--cloud)}
+.ic-cloud-body{fill:color-mix(in srgb,var(--cloud) 22%,var(--surface));stroke:var(--cloud)}
+.ic-cloud-body--30{fill:color-mix(in srgb,var(--cloud) 30%,var(--surface))}
+.ic-cloud-body--35{fill:color-mix(in srgb,var(--cloud) 35%,var(--surface))}
+.ic-cloud-line{stroke:var(--cloud)}
+.ic-rain-line{stroke:var(--rain)}
+.ic-rain-drop{fill:var(--rain)}
+.ic-cold-line{stroke:var(--cold)}
+.ic-cold-drop{fill:var(--cold)}
+.ic-muted-line{stroke:var(--muted)}
+.vcorner{grid-row:1;grid-column:1}
+.sub-note{font-weight:400;font-size:12px}
+.al-grp__count{margin-left:6px}
+.lk-add__group{min-width:160px}
+.lk-add__button{align-self:end}
+.gh-set__body{border-top:1px solid var(--line)}
+.ed-pad--tight{gap:0}
+.board-empty{padding:28px 18px}
+.map-error{padding:16px}
+.bitem__none{font-size:13px}
+.dr-hero__note{font-size:12px}
+.dr-sec .dr-sec__why{margin-top:4px}
+.dr-sec .dr-sec__more{margin-top:6px}
+.mtable__org{font-size:11px}
+.vtag--inline{margin:0}
+.g-hint__ask{color:var(--bad);font-weight:700}
+.ed-empty--compact{padding:18px 12px}
+.cal-field{display:grid;gap:6px}
+.cal-pick--single{grid-template-columns:1fr}
+.pv-row__extra{font-size:12px}
+.pv-more{margin-top:8px}
+.seg-card__info{min-width:0}
+.seg-card .city,.seg-card .meta{display:block}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<svg width="0" height="0" class="icon-sprite" aria-hidden="true">
   <defs>
-    <symbol id="i-sun" viewBox="0 0 32 32"><circle style="fill:var(--sun)" cx="16" cy="16" r="6"/><g style="stroke:var(--sun)" stroke-width="2" stroke-linecap="round"><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M6.8 25.2l2.8-2.8M22.4 9.6l2.8-2.8"/></g></symbol>
+    <symbol id="i-sun" viewBox="0 0 32 32"><circle class="ic-sun" cx="16" cy="16" r="6"/><g class="ic-sun-ray" stroke-width="2" stroke-linecap="round"><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M6.8 25.2l2.8-2.8M22.4 9.6l2.8-2.8"/></g></symbol>
     <symbol id="i-cloud-shape" viewBox="0 0 32 32"><path d="M9.5 25h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 12.6 6.2 6.2 0 0 0 9.5 25Z"/></symbol>
-    <symbol id="i-partly" viewBox="0 0 32 32"><circle style="fill:var(--sun)" cx="11" cy="11" r="5"/><g style="stroke:var(--sun)" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5v2.5M2.5 11H5M4.9 4.9l1.8 1.8M17.1 4.9l-1.8 1.8M4.9 17.1l1.8-1.8"/></g><path style="fill:var(--surface);stroke:var(--cloud)" d="M12.5 27h11.2a4.6 4.6 0 0 0 .6-9.15 6.6 6.6 0 0 0-12.4-1.6 5.4 5.4 0 0 0 .6 10.75Z" stroke-width="1.8"/></symbol>
-    <symbol id="i-cloud" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 22%,var(--surface));stroke:var(--cloud)" d="M9.5 25h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 12.6 6.2 6.2 0 0 0 9.5 25Z" stroke-width="1.8"/></symbol>
-    <symbol id="i-fog" viewBox="0 0 32 32"><path style="stroke:var(--cloud)" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" fill="none" stroke-width="1.8"/><g style="stroke:var(--cloud)" stroke-width="1.8" stroke-linecap="round"><path d="M5 23h22M8 27h16"/></g></symbol>
-    <symbol id="i-drizzle" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 22%,var(--surface));stroke:var(--cloud)" d="M9.5 20h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 7.6 6.2 6.2 0 0 0 9.5 20Z" stroke-width="1.8"/><g style="fill:var(--rain)"><circle cx="11" cy="25" r="1.3"/><circle cx="16" cy="27" r="1.3"/><circle cx="21" cy="25" r="1.3"/></g></symbol>
-    <symbol id="i-rain" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 30%,var(--surface));stroke:var(--cloud)" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g style="stroke:var(--rain)" stroke-width="2" stroke-linecap="round"><path d="M11 22l-1.5 5M16.5 22 15 27M22 22l-1.5 5"/></g></symbol>
-    <symbol id="i-snow" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 22%,var(--surface));stroke:var(--cloud)" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g style="stroke:var(--cold)" stroke-width="1.6" stroke-linecap="round"><path d="M10 22v5M7.8 23.2l4.4 2.6M12.2 23.2l-4.4 2.6M22 22v5M19.8 23.2l4.4 2.6M24.2 23.2l-4.4 2.6"/></g></symbol>
-    <symbol id="i-sleet" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 22%,var(--surface));stroke:var(--cloud)" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g style="stroke:var(--rain)" stroke-width="2" stroke-linecap="round"><path d="M11 22l-1.5 5M21 22l-1.5 5"/></g><circle style="fill:var(--cold)" cx="16" cy="25" r="1.6"/></symbol>
-    <symbol id="i-thunder" viewBox="0 0 32 32"><path style="fill:color-mix(in srgb,var(--cloud) 35%,var(--surface));stroke:var(--cloud)" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><path style="fill:var(--sun)" d="M17 19.5l-4 6h3.5l-2 5 5.5-7h-3.6l2-4Z"/></symbol>
-    <symbol id="i-avg" viewBox="0 0 32 32"><g style="stroke:var(--muted)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M6 24h20"/><path d="M8 20c3-8 5-10 8-10s5 2 8 10"/></g></symbol>
+    <symbol id="i-partly" viewBox="0 0 32 32"><circle class="ic-sun" cx="11" cy="11" r="5"/><g class="ic-sun-ray" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5v2.5M2.5 11H5M4.9 4.9l1.8 1.8M17.1 4.9l-1.8 1.8M4.9 17.1l1.8-1.8"/></g><path class="ic-cloud-front" d="M12.5 27h11.2a4.6 4.6 0 0 0 .6-9.15 6.6 6.6 0 0 0-12.4-1.6 5.4 5.4 0 0 0 .6 10.75Z" stroke-width="1.8"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 32 32"><path class="ic-cloud-body" d="M9.5 25h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 12.6 6.2 6.2 0 0 0 9.5 25Z" stroke-width="1.8"/></symbol>
+    <symbol id="i-fog" viewBox="0 0 32 32"><path class="ic-cloud-line" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" fill="none" stroke-width="1.8"/><g class="ic-cloud-line" stroke-width="1.8" stroke-linecap="round"><path d="M5 23h22M8 27h16"/></g></symbol>
+    <symbol id="i-drizzle" viewBox="0 0 32 32"><path class="ic-cloud-body" d="M9.5 20h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 7.6 6.2 6.2 0 0 0 9.5 20Z" stroke-width="1.8"/><g class="ic-rain-drop"><circle cx="11" cy="25" r="1.3"/><circle cx="16" cy="27" r="1.3"/><circle cx="21" cy="25" r="1.3"/></g></symbol>
+    <symbol id="i-rain" viewBox="0 0 32 32"><path class="ic-cloud-body ic-cloud-body--30" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g class="ic-rain-line" stroke-width="2" stroke-linecap="round"><path d="M11 22l-1.5 5M16.5 22 15 27M22 22l-1.5 5"/></g></symbol>
+    <symbol id="i-snow" viewBox="0 0 32 32"><path class="ic-cloud-body" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g class="ic-cold-line" stroke-width="1.6" stroke-linecap="round"><path d="M10 22v5M7.8 23.2l4.4 2.6M12.2 23.2l-4.4 2.6M22 22v5M19.8 23.2l4.4 2.6M24.2 23.2l-4.4 2.6"/></g></symbol>
+    <symbol id="i-sleet" viewBox="0 0 32 32"><path class="ic-cloud-body" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><g class="ic-rain-line" stroke-width="2" stroke-linecap="round"><path d="M11 22l-1.5 5M21 22l-1.5 5"/></g><circle class="ic-cold-drop" cx="16" cy="25" r="1.6"/></symbol>
+    <symbol id="i-thunder" viewBox="0 0 32 32"><path class="ic-cloud-body ic-cloud-body--35" d="M9.5 19h13.2a5.3 5.3 0 0 0 .7-10.55A7.6 7.6 0 0 0 8.8 6.6 6.2 6.2 0 0 0 9.5 19Z" stroke-width="1.8"/><path class="ic-sun" d="M17 19.5l-4 6h3.5l-2 5 5.5-7h-3.6l2-4Z"/></symbol>
+    <symbol id="i-avg" viewBox="0 0 32 32"><g class="ic-muted-line" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M6 24h20"/><path d="M8 20c3-8 5-10 8-10s5 2 8 10"/></g></symbol>
   </defs>
 </svg>
 
@@ -502,14 +539,14 @@ footer a{color:var(--muted)}
         <div class="retry-bar retry-bar--inset" data-js="lookup-retry-bar" hidden><span class="retry-bar__text">部分天氣資料載入失敗。</span><button type="button" class="retry-button" data-js="lookup-retry">重新載入天氣</button></div>
       </div>
       <div id="lkAddBox" class="card" hidden>
-        <div class="ed-pad"><div class="ed-actions"><label class="f" for="lkGroup" style="min-width:160px">加入行程的組別<select id="lkGroup"></select></label><button class="btn primary" type="button" id="lkAdd" style="align-self:end">加入行程</button><span class="ed-msg" id="lkAddMsg"></span></div></div>
+        <div class="ed-pad"><div class="ed-actions"><label class="f lk-add__group" for="lkGroup">加入行程的組別<select id="lkGroup"></select></label><button class="btn primary lk-add__button" type="button" id="lkAdd">加入行程</button><span class="ed-msg" id="lkAddMsg"></span></div></div>
       </div>
       <details class="card mapcard" id="lkMapBox" hidden>
-        <summary><span class="al-title">位置</span><span class="muted" style="font-weight:400;font-size:12px">點地圖或拖曳圖標可改查該處</span></summary>
+        <summary><span class="al-title">位置</span><span class="muted sub-note">點地圖或拖曳圖標可改查該處</span></summary>
         <div id="lookupMap" class="map-box"></div>
       </details>
       <div id="lkResult" class="card" hidden>
-        <h2 class="sect-h"><span id="lkTitle"></span><span class="muted" id="lkMeta" style="font-weight:400;font-size:12px"></span></h2>
+        <h2 class="sect-h"><span id="lkTitle"></span><span class="muted sub-note" id="lkMeta"></span></h2>
         <div class="tbl-wrap"><table class="wtable"><thead><tr><th>日期</th><th>天氣</th><th>高溫</th><th>低溫</th><th>降雨</th><th>風速</th><th>日出／日落</th></tr></thead><tbody id="lkRows"></tbody></table></div>
       </div>
     </section>
@@ -553,7 +590,7 @@ footer a{color:var(--muted)}
         </section>
         <details class="card gh-set" id="ghSet">
           <summary>GitHub 發布設定</summary>
-          <div class="ed-pad" style="border-top:1px solid var(--line)">
+          <div class="ed-pad gh-set__body">
             <label class="f" for="ghOwner">帳號<input id="ghOwner" type="text" placeholder="your-account"></label>
             <label class="f" for="ghRepo">Repo 名稱<input id="ghRepo" type="text" placeholder="trip-weather"></label>
             <div class="form-2">
@@ -578,8 +615,8 @@ footer a{color:var(--muted)}
       <div class="ed-col right">
         <section class="card" id="segForm"></section>
         <section class="card" id="edWxCard">
-          <h3 class="ed-h">天氣預覽<span class="muted" style="font-weight:400;font-size:12px" id="edWxNote"></span></h3>
-          <div class="ed-pad" id="edWx" style="gap:0"></div>
+          <h3 class="ed-h">天氣預覽<span class="muted sub-note" id="edWxNote"></span></h3>
+          <div class="ed-pad ed-pad--tight" id="edWx"></div>
         </section>
       </div>
     </div>
@@ -1034,14 +1071,14 @@ function fitBarLabels() {
 let fitTimer; window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitBarLabels, 150); });
 function renderGrid(proj) {
   const grid = $('grid'), sp = tripSpan(proj);
-  if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div style="padding:28px 18px" class="muted">還沒有行程。按右上「編輯」新增第一段。</div>`; return; }
+  if (!sp) { grid.style.gridTemplateColumns = '1fr'; grid.innerHTML = `<div class="muted board-empty">還沒有行程。按右上「編輯」新增第一段。</div>`; return; }
   const dates = rangeDates(sp.a, sp.b), today = localISO(), hz = forecastHorizon();
   const kinds = dates.map(d => d < today ? 'past' : d <= hz ? 'fc' : 'cl');
   const cols = ['var(--vc-date)'], G = [];
   let c = 2;
   proj.groups.forEach(g => { const segs = proj.segments.filter(s => s.groupId === g.id); const lanes = halfSlots(segs, sp.a); G.push({ g, segs, lanes, c0: c, color: gColor(proj, g.id) }); for (let i = 0; i < lanes; i++) cols.push('var(--vc-bar)'); cols.push('minmax(var(--vc-cell),1fr)'); c += lanes + 1; });
   grid.style.gridTemplateColumns = cols.join(' ');
-  let html = `<div class="vh vcorner" style="grid-row:1;grid-column:1">日期</div>`;
+  let html = `<div class="vh vcorner">日期</div>`;
   G.forEach(({ g, segs, lanes, c0, color }) => { html += `<div class="vh gsep" style="grid-row:1;grid-column:${c0}/${c0 + lanes + 1}">${esc(g.name)}<small>${segs.filter(isStay).length} 段</small></div>`; });
   dates.forEach((d, i) => {
     const r = 2 + i * 2, k = kinds[i];
@@ -1116,7 +1153,7 @@ function renderAlerts(proj) {
 const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 let tripMap = null, tripLayer = null;
 function renderMap(proj) {
-  if (typeof L === 'undefined') { $('tripMap').innerHTML = '<p class="muted" style="padding:16px">地圖元件無法載入。</p>'; return; }
+  if (typeof L === 'undefined') { $('tripMap').innerHTML = '<p class="muted map-error">地圖元件無法載入。</p>'; return; }
   if (!tripMap) { tripMap = L.map('tripMap', { scrollWheelZoom: false }); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(tripMap); }
   if (tripLayer) tripLayer.remove();
   tripLayer = L.layerGroup().addTo(tripMap);
@@ -1141,8 +1178,8 @@ function renderMobileAlerts(proj, A) {
   const total = A.runs.length;
   badge.hidden = !total; badge.textContent = total > 99 ? '99+' : total;
   const today = localISO(), hz = forecastHorizon();
-  box.innerHTML = `<p class="hint" style="margin:0">只檢查預報期間（今天到 ${md(hz)}）：降雨機率 60% 以上或雨量 10 mm 以上、高溫 33°C 以上、低溫 0°C 以下、陣風 55 km/h 以上。</p>` +
-    A.byGroup.map(({ g, list }) => `<div class="al-grp"><h3>${esc(g.name)}<span class="muted" style="font-weight:400;font-size:12px;margin-left:6px">${list.length} 項</span></h3><ul class="alert-list">${list.length ? list.map(r => alertItem(r, A.T, A.msg)).join('') : `<li class="muted">${A.pending ? '載入中…' : '沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
+  box.innerHTML = `<p class="hint">只檢查預報期間（今天到 ${md(hz)}）：降雨機率 60% 以上或雨量 10 mm 以上、高溫 33°C 以上、低溫 0°C 以下、陣風 55 km/h 以上。</p>` +
+    A.byGroup.map(({ g, list }) => `<div class="al-grp"><h3>${esc(g.name)}<span class="muted sub-note al-grp__count">${list.length} 項</span></h3><ul class="alert-list">${list.length ? list.map(r => alertItem(r, A.T, A.msg)).join('') : `<li class="muted">${A.pending ? '載入中…' : '沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
 }
 function renderMobileList(proj) {
   const tabs = $('mGroupTabs'), box = $('mList');
@@ -1170,7 +1207,7 @@ function renderMobileList(proj) {
       else if (cd.kind === 'cl') { wx = `${icon('avg')}<span>歷年平均・雨日 ${cd.c.rain}%</span>`; temp = `<span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span><small>平均</small>`; }
       else wx = `<span>${cd.kind === 'loading' ? '載入中…' : cd.kind === 'past' ? '已過' : esc(cd.msg || '無資料')}</span>`;
       return `<button type="button" class="bitem" data-seg="${esc(s.id)}" data-date="${d}"><span class="bpill" style="background:${colors[k]}">${name}</span><span class="bwx">${wx}</span><span class="btemp num">${temp}</span></button>`;
-    }).join('') : `<div class="bitem"><span class="muted" style="font-size:13px">這天沒有安排</span></div>`;
+    }).join('') : `<div class="bitem"><span class="muted bitem__none">這天沒有安排</span></div>`;
     html += `<div class="brow${kind === 'past' ? ' ob' : ''}${kind === 'cl' ? ' cl' : ''}${d === today ? ' today' : ''}"><div class="bdate"><b>${md(d)}</b><small class="${isWeekend(d) ? 'wk' : ''}">週${wd(d)}</small>${d === today ? '<span class="tt">今天</span>' : ''}</div><div style="background:${line}"></div><div>${items}</div></div>`;
   });
   box.innerHTML = `<div class="blist">${html}</div>`;
@@ -1224,24 +1261,24 @@ function openDrawer(segId, date) {
   let hero = '', body = '';
   if (cd.kind === 'fc') {
     const x = cd.day, w = wxInfo(x.code);
-    hero = `<div class="dr-hero">${icon(x.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(x.tmax)}°</span> / <span class="lo">${r0(x.tmin)}°</span></div><div class="muted" style="font-size:12px">預報・距今 ${x.lead} 天</div></div></div>`;
+    hero = `<div class="dr-hero">${icon(x.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(x.tmax)}°</span> / <span class="lo">${r0(x.tmin)}°</span></div><div class="muted dr-hero__note">預報・距今 ${x.lead} 天</div></div></div>`;
     body += `<dl class="kv"><div><dt>降雨機率</dt><dd class="num">${x.pop ?? '—'}%</dd></div><div><dt>預估雨量</dt><dd class="num">${r1(x.psum)} mm</dd></div><div><dt>體感溫度</dt><dd class="num">${r0(x.amax)}° / ${r0(x.amin)}°</dd></div><div><dt>最大風速／陣風</dt><dd class="num">${r0(x.wind)} / ${r0(x.gust)} km/h</dd></div><div><dt>紫外線指數</dt><dd class="num">${x.uv == null ? '—' : r1(x.uv)}</dd></div><div><dt>日出／日落</dt><dd class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</dd></div></dl>`;
-    body += `<div class="dr-sec"><h4>預報可信度</h4><div class="conf-line"><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</div><p style="margin-top:4px">${esc(x.conf.why)}</p>`;
-    if (x.models.length) body += `<table class="mtable"><thead><tr><th>模型</th><th>高溫</th><th>低溫</th><th>雨量</th></tr></thead><tbody>${x.models.map(m => `<tr><td>${esc(m.name)} <span class="muted" style="font-size:11px">${esc(m.org)}</span></td><td class="num hi">${r1(m.tmax)}°</td><td class="num lo">${r1(m.tmin)}°</td><td class="num">${r1(m.psum)} mm</td></tr>`).join('')}</tbody></table>`;
+    body += `<div class="dr-sec"><h4>預報可信度</h4><div class="conf-line"><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</div><p class="dr-sec__why">${esc(x.conf.why)}</p>`;
+    if (x.models.length) body += `<table class="mtable"><thead><tr><th>模型</th><th>高溫</th><th>低溫</th><th>雨量</th></tr></thead><tbody>${x.models.map(m => `<tr><td>${esc(m.name)} <span class="muted mtable__org">${esc(m.org)}</span></td><td class="num hi">${r1(m.tmax)}°</td><td class="num lo">${r1(m.tmin)}°</td><td class="num">${r1(m.psum)} mm</td></tr>`).join('')}</tbody></table>`;
     body += `</div>`;
     if (cl) { const dt = x.tmax - cl.tmax; body += `<div class="dr-sec"><h4>與歷年同期比較</h4><p>歷年平均 <b class="num hi">${r0(cl.tmax)}°</b> / <b class="num lo">${r0(cl.tmin)}°</b>，雨日比例 ${cl.rain}%。這天的預報高溫${Math.abs(dt) < 1.5 ? '和往年差不多' : dt > 0 ? `比往年高約 ${r0(dt)}°` : `比往年低約 ${r0(-dt)}°`}。</p></div>`; }
   } else if (cd.kind === 'obs') {
     const o = cd.o, w = wxInfo(o.code);
-    hero = `<div class="dr-hero">${icon(o.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(o.tmax)}°</span> / <span class="lo">${r0(o.tmin)}°</span></div><div class="muted" style="font-size:12px">實際天氣（已過）</div></div></div>`;
+    hero = `<div class="dr-hero">${icon(o.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(o.tmax)}°</span> / <span class="lo">${r0(o.tmin)}°</span></div><div class="muted dr-hero__note">實際天氣（已過）</div></div></div>`;
     body += `<dl class="kv"><div><dt>當日雨量</dt><dd class="num">${r1(o.psum)} mm</dd></div><div><dt>最大風速／陣風</dt><dd class="num">${r0(o.wind)} / ${r0(o.gust)} km/h</dd></div><div><dt>日出／日落</dt><dd class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</dd></div><div><dt>資料類型</dt><dd>${o.src === 'era5' ? 'ERA5 再分析' : '氣象模型分析'}</dd></div></dl>`;
     if (cl) { const dt = o.tmax - cl.tmax; body += `<div class="dr-sec"><h4>與歷年同期比較</h4><p>歷年平均 <b class="num hi">${r0(cl.tmax)}°</b> / <b class="num lo">${r0(cl.tmin)}°</b>。這天的高溫${Math.abs(dt) < 1.5 ? '和往年差不多' : dt > 0 ? `比往年高約 ${r0(dt)}°` : `比往年低約 ${r0(-dt)}°`}。</p></div>`; }
     body += `<div class="dr-sec"><h4>資料來源</h4><p>已過的日期顯示當天的實際天氣：近 90 天為氣象模型的分析資料，更早為 ERA5 再分析資料。數值接近實測，但不是單一氣象站的紀錄。</p></div>`;
   } else if (cd.kind === 'cl') {
     const c = cd.c, yrs = climYears();
-    hero = `<div class="dr-hero cl">${icon('avg')}<div><div class="desc">歷年同期平均（非預報）</div><div class="big num"><span class="hi">${r0(c.tmax)}°</span> / <span class="lo">${r0(c.tmin)}°</span></div><div class="muted" style="font-size:12px">${yrs[0]}–${yrs.at(-1)} 年</div></div></div>`;
+    hero = `<div class="dr-hero cl">${icon('avg')}<div><div class="desc">歷年同期平均（非預報）</div><div class="big num"><span class="hi">${r0(c.tmax)}°</span> / <span class="lo">${r0(c.tmin)}°</span></div><div class="muted dr-hero__note">${yrs[0]}–${yrs.at(-1)} 年</div></div></div>`;
     const segDays = Object.values(climFor(s)?.days || {}); const expWet = segDays.reduce((t, v) => t + v.rain / 100, 0);
     body += `<dl class="kv"><div><dt>平均高溫</dt><dd class="num">${r1(c.tmax)}°C</dd></div><div><dt>平均低溫</dt><dd class="num">${r1(c.tmin)}°C</dd></div><div><dt>雨日比例（≥1 mm）</dt><dd class="num">${c.rain}%</dd></div><div><dt>平均日雨量</dt><dd class="num">${r1(c.psum)} mm</dd></div></dl>`;
-    body += `<div class="dr-sec"><h4>這是什麼數字？</h4><p>距今超過 ${CONFIG.forecastDays} 天，還沒有可用的預報。這裡是過去 ${CONFIG.climateYears} 年、每年 ${md(date)} 前後 ${CONFIG.climateWindow} 天（共 ${c.n} 天）的實測平均。雨日比例 ${c.rain}% 表示往年這段時間約每 10 天有 ${Math.round(c.rain / 10)} 天下雨。</p>${segDays.length > 1 ? `<p style="margin-top:6px">以往年推估，這段 ${segDays.length} 天的停留約會遇到 <b>${expWet.toFixed(1)}</b> 天下雨。</p>` : ''}<p style="margin-top:6px">進入 ${CONFIG.forecastDays} 天內後，這一格會自動改成預報。</p></div>`;
+    body += `<div class="dr-sec"><h4>這是什麼數字？</h4><p>距今超過 ${CONFIG.forecastDays} 天，還沒有可用的預報。這裡是過去 ${CONFIG.climateYears} 年、每年 ${md(date)} 前後 ${CONFIG.climateWindow} 天（共 ${c.n} 天）的實測平均。雨日比例 ${c.rain}% 表示往年這段時間約每 10 天有 ${Math.round(c.rain / 10)} 天下雨。</p>${segDays.length > 1 ? `<p class="dr-sec__more">以往年推估，這段 ${segDays.length} 天的停留約會遇到 <b>${expWet.toFixed(1)}</b> 天下雨。</p>` : ''}<p class="dr-sec__more">進入 ${CONFIG.forecastDays} 天內後，這一格會自動改成預報。</p></div>`;
   } else {
     hero = `<div class="dr-hero"><div class="muted">${cd.kind === 'past' ? '這天的實際天氣資料暫時無法取得。' : cd.kind === 'loading' ? '資料載入中…' : esc(cd.msg || '目前沒有資料。')}</div></div>`;
   }
@@ -1303,7 +1340,7 @@ async function runLookup() {
       const x = fcDay(fc, d);
       if (x) { const w = wxInfo(x.code); return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(x.code == null ? 'cloud' : w.icon)}${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span></span></td><td class="num hi">${r0(x.tmax)}°</td><td class="num lo">${r0(x.tmin)}°</td><td class="num">${x.pop ?? '—'}%・${r1(x.psum)} mm</td><td class="num">${r0(x.wind)} km/h</td><td class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</td></tr>`; }
       const o = ob[d];
-      if (o) { const w = wxInfo(o.code); return `<tr class="ob"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(o.code == null ? 'cloud' : w.icon)}${w.text} <span class="vtag ob" style="margin:0">實際</span></span></td><td class="num hi">${r0(o.tmax)}°</td><td class="num lo">${r0(o.tmin)}°</td><td class="num">${r1(o.psum)} mm</td><td class="num">${r0(o.wind)} km/h</td><td class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</td></tr>`; }
+      if (o) { const w = wxInfo(o.code); return `<tr class="ob"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(o.code == null ? 'cloud' : w.icon)}${w.text} <span class="vtag ob vtag--inline">實際</span></span></td><td class="num hi">${r0(o.tmax)}°</td><td class="num lo">${r0(o.tmin)}°</td><td class="num">${r1(o.psum)} mm</td><td class="num">${r0(o.wind)} km/h</td><td class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</td></tr>`; }
       const c = cl[d];
       if (c) return `<tr class="cl"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon('avg')}歷年同期平均</span></td><td class="num hi">${r0(c.tmax)}°</td><td class="num lo">${r0(c.tmin)}°</td><td class="num">雨日 ${c.rain}%</td><td class="muted">—</td><td class="muted">—</td></tr>`;
       return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td class="muted" colspan="6">${d < today ? '已過' : '無資料'}</td></tr>`;
@@ -1361,7 +1398,7 @@ function renderEdGroups() {
   box.querySelectorAll('[data-gdel]').forEach(b => b.addEventListener('click', () => {
     const g = draft.groups.find(x => x.id === b.dataset.gdel); if (!g) return;
     const n = draft.segments.filter(s => s.groupId === g.id).length;
-    hint.innerHTML = `<span style="color:var(--bad);font-weight:700">刪除${esc(g.name)}${n ? `（連同 ${n} 段行程）` : ''}？</span><button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button>`;
+    hint.innerHTML = `<span class="g-hint__ask">刪除${esc(g.name)}${n ? `（連同 ${n} 段行程）` : ''}？</span><button class="btn sm danger" type="button" data-yes>刪除</button><button class="btn sm" type="button" data-no>取消</button>`;
     hint.querySelector('[data-yes]').addEventListener('click', () => {
       draft.groups = draft.groups.filter(x => x.id !== g.id); draft.segments = draft.segments.filter(s => s.groupId !== g.id); fixGroups(draft.groups);
       if (selGroup === g.id) { selGroup = draft.groups[0].id; selSeg = groupSegs(selGroup)[0]?.id || null; }
@@ -1382,10 +1419,10 @@ function segCardHTML(s) {
   const dates = s.start ? (fixed ? `${md(s.start)}<small>週${wd(s.start)}</small>` : `${md(s.start)} – ${md(s.end)}<small>週${wd(s.start)}起・${n} 天</small>`) : `<span class="warn">尚未設定日期</span><small>點選後在右側日曆選擇</small>`;
   const city = fixed ? `✈ ${KIND_TXT[s.kind]}` : (s.label ? esc(s.label) : s.place ? esc(s.place.split(',')[0]) : '<span class="warn">未選地點</span>') + (s.country ? `<small>${esc(s.country)}</small>` : '');
   const meta = fixed ? 'Taipei, Taiwan' : (s.lat == null ? '<span class="warn">尚未從選單選定地點</span>' : esc(s.place || '　'));
-  return `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}${fixed ? ' fixed' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${dates}</span><span style="min-width:0"><span class="city" style="display:block">${city}</span><span class="meta" style="display:block">${meta}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="${fixed ? '清除日期' : '刪除這一段'}" title="${fixed ? '清除日期' : '刪除這一段'}">×</button></span></div>`;
+  return `<div class="seg-item"><button type="button" class="seg-card${on ? ' on' : ''}${fixed ? ' fixed' : ''}" data-ssel="${esc(s.id)}" aria-pressed="${on}"><span class="dates">${dates}</span><span class="seg-card__info"><span class="city">${city}</span><span class="meta">${meta}</span></span></button><span class="seg-del-wrap"><button type="button" class="seg-x" data-sdel="${esc(s.id)}" aria-label="${fixed ? '清除日期' : '刪除這一段'}" title="${fixed ? '清除日期' : '刪除這一段'}">×</button></span></div>`;
 }
 function fixedPlaceholder(kind) {
-  return `<div class="seg-item"><button type="button" class="seg-card fixed ph" data-sfix="${kind}"><span class="dates"><span class="muted">未設定</span><small>點選後選日期</small></span><span style="min-width:0"><span class="city" style="display:block">✈ ${KIND_TXT[kind]}</span><span class="meta" style="display:block">Taipei, Taiwan</span></span></button></div>`;
+  return `<div class="seg-item"><button type="button" class="seg-card fixed ph" data-sfix="${kind}"><span class="dates"><span class="muted">未設定</span><small>點選後選日期</small></span><span class="seg-card__info"><span class="city">✈ ${KIND_TXT[kind]}</span><span class="meta">Taipei, Taiwan</span></span></button></div>`;
 }
 function gapHTML(prev, s) {
   if (!prev || !prev.start || !s.start) return '';
@@ -1401,7 +1438,7 @@ function renderEdSegs() {
   const dep = all.find(s => s.kind === 'depart'), ret = all.find(s => s.kind === 'return'), stays = all.filter(isStay);
   let html = dep ? segCardHTML(dep) : fixedPlaceholder('depart');
   let prev = dep;
-  if (!stays.length) html += `<div class="ed-empty" style="padding:18px 12px">這一組還沒有停留城市。<br>按右上「＋ 新增一段」，或從「地點查詢」加入。</div>`;
+  if (!stays.length) html += `<div class="ed-empty ed-empty--compact">這一組還沒有停留城市。<br>按右上「＋ 新增一段」，或從「地點查詢」加入。</div>`;
   stays.forEach(s => { html += (gapHTML(prev, s) || '<div class="seg-gap tight"></div>') + segCardHTML(s); if (s.start) prev = s; });
   html += (ret ? gapHTML(prev, ret) || '<div class="seg-gap tight"></div>' : '<div class="seg-gap tight"></div>') + (ret ? segCardHTML(ret) : fixedPlaceholder('return'));
   box.innerHTML = html;
@@ -1436,7 +1473,7 @@ function renderEdForm() {
   if (!s) { box.innerHTML = `<h3 class="ed-h">編輯這一段</h3><div class="ed-empty">從中間選一段行程來編輯，<br>或按「＋ 新增一段」。</div>`; $('edWx').innerHTML = ''; $('edWxNote').textContent = ''; $('edWxCard').hidden = true; return; }
   $('edWxCard').hidden = false;
   if (!isStay(s)) {
-    box.innerHTML = `<h3 class="ed-h">✈ ${KIND_TXT[s.kind]}</h3><div class="ed-pad"><div class="f" style="display:grid;gap:6px"><span>${s.kind === 'depart' ? '從台北出發的日期' : '回到台北的日期'}</span><div id="sCal"></div></div></div>`;
+    box.innerHTML = `<h3 class="ed-h">✈ ${KIND_TXT[s.kind]}</h3><div class="ed-pad"><div class="f cal-field"><span>${s.kind === 'depart' ? '從台北出發的日期' : '回到台北的日期'}</span><div id="sCal"></div></div></div>`;
     calState = { month: (s.start || localISO()).slice(0, 7), phase: 'single' }; renderCal(s);
     schedulePreview(0); return;
   }
@@ -1445,7 +1482,7 @@ function renderEdForm() {
     <label class="f" for="sGroup">組別<select id="sGroup">${draft.groups.map(g => `<option value="${esc(g.id)}"${g.id === s.groupId ? ' selected' : ''}>${esc(g.name || '未命名')}</option>`).join('')}</select></label>
     <div class="ac"><label class="f" for="sCity">搜尋地點</label><input type="search" id="sCity" value="${esc(s.place || '')}" placeholder="建議用英文搜尋，例如 Florence" autocomplete="off"><div class="ac-list" id="sCityAc" hidden></div><div class="geo${s.lat == null ? ' bad' : ''}" id="sGeo"></div></div>
     <label class="f" for="sLabel">顯示名稱<input type="text" id="sLabel" value="${esc(s.label)}" maxlength="20" placeholder="總覽上顯示的名稱，可改繁體中文（不影響座標）"></label>
-    <div class="f" style="display:grid;gap:6px"><span>抵達與離開日期</span><div id="sCal"></div></div>
+    <div class="f cal-field"><span>抵達與離開日期</span><div id="sCal"></div></div>
   </div>`;
   const geo = () => { const el = $('sGeo'); el.className = 'geo' + (s.lat == null ? ' bad' : ''); el.textContent = s.lat == null ? '尚未選定地點：輸入後請從選單點選，才會帶入正確座標' : `已選定：${s.place || s.label}・${(+s.lat).toFixed(3)}, ${(+s.lon).toFixed(3)}`; };
   geo();
@@ -1472,7 +1509,7 @@ function renderCal(s) {
   const n = s.start ? diffDays(s.start, s.end) + 1 : 0, ph = calState.phase;
   const dl = v => v ? `<b>${md(v)}</b>（${wd(v)}）` : '<b class="muted">未選</b>';
   const single = !isStay(s);
-  box.innerHTML = `<div class="cal-pick"${single ? ' style="grid-template-columns:1fr"' : ''}>${single ? `<div class="cal-box on"><small>${KIND_TXT[s.kind]}</small>${dl(s.start)}</div>` : `<button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button>`}</div>
+  box.innerHTML = `<div class="cal-pick${single ? ' cal-pick--single' : ''}">${single ? `<div class="cal-box on"><small>${KIND_TXT[s.kind]}</small>${dl(s.start)}</div>` : `<button type="button" class="cal-box${ph === 'start' ? ' on' : ''}" data-phase="start"><small>抵達</small>${dl(s.start)}</button><button type="button" class="cal-box${ph === 'end' ? ' on' : ''}" data-phase="end"><small>離開</small>${dl(s.end)}</button>`}</div>
   <div class="cal"><div class="cal-h"><button type="button" class="cal-nav" data-nav="-1" aria-label="上個月">‹</button><b>${Y} 年 ${M} 月</b><button type="button" class="cal-nav" data-nav="1" aria-label="下個月">›</button></div><div class="cal-g">${cells}</div></div>
   <div class="cal-hint"><span>${single ? '點日曆選一天' : ph === 'start' ? '點日曆選抵達日' : ph === 'end' ? '點日曆選離開日' : '點日期調整；要指定改哪一天，先點上方抵達或離開'}${n && !single ? `・共 ${n} 天` : ''}</span>${occ.size ? '<span><i class="occ-dot"></i>本組其他行程</span>' : ''}</div>`;
   box.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { const d = parseISO(calState.month + '-01'); d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.nav)); calState.month = toISO(d).slice(0, 7); renderCal(s); }));
@@ -1508,11 +1545,11 @@ async function renderPreview() {
   if (dates.some(d => d >= today && !fcDay(fcByLoc.get(k) === 'err' ? null : fcByLoc.get(k), d))) { box.innerHTML = '<p class="hint">正在計算歷年同期平均…</p>'; await ensureClimate([s]); if (my !== pvTok) return; }
   box.innerHTML = dates.map(d => {
     const cd = cellData(s, d), head = `<span class="d">${md(d)}<small>週${wd(d)}</small></span>`;
-    if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted" style="font-size:12px">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
-    if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); return `<div class="pv-row">${head}${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}<span class="muted" style="font-size:12px">　實際・雨量 ${r1(o.psum)} mm</span></span><span class="t"><span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span></span></div>`; }
-    if (cd.kind === 'cl') return `<div class="pv-row cl">${head}${icon('avg')}<span>歷年平均<span class="muted" style="font-size:12px">　雨日 ${cd.c.rain}%</span></span><span class="t"><span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span></span></div>`;
+    if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted pv-row__extra">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
+    if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); return `<div class="pv-row">${head}${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}<span class="muted pv-row__extra">　實際・雨量 ${r1(o.psum)} mm</span></span><span class="t"><span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span></span></div>`; }
+    if (cd.kind === 'cl') return `<div class="pv-row cl">${head}${icon('avg')}<span>歷年平均<span class="muted pv-row__extra">　雨日 ${cd.c.rain}%</span></span><span class="t"><span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span></span></div>`;
     return `<div class="pv-row">${head}<span></span><span class="muted">${cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : esc(cd.msg || '無資料')}</span><span></span></div>`;
-  }).join('') + (rangeDates(s.start, s.end).length > 31 ? '<p class="hint" style="margin-top:8px">只預覽前 31 天。</p>' : '');
+  }).join('') + (rangeDates(s.start, s.end).length > 31 ? '<p class="hint pv-more">只預覽前 31 天。</p>' : '');
 }
 
 /* 發布 */

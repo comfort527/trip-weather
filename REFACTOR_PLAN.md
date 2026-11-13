@@ -80,7 +80,8 @@
   - 做法：在對應元素加 class（如 `map-box`、`ed-bar__optional`），CSS 改用 class。
   - 驗證：T22、T43、T38、T77、手機版編輯操作列。
 
-- [ ] #9【風險：中】靜態 inline style 改為 class
+- [x] #9【風險：中】靜態 inline style 改為 class
+  - 完成：2026-11-13。57 處靜態 `style` 全部改為 class：天氣圖示 21 處（`.icon-sprite`、`.ic-sun`、`.ic-cloud-body` 等）、畫面元素 36 處（`.sub-note`、`.dr-hero__note`、`.cal-pick--single`、`.ed-pad--tight`、`.seg-card__info` 等）；與既有 class 重複的直接移除。剩餘 12 處動態 style 待 #20 決定。驗證：7 張 baseline 完全相同；詳細面板（預報／歷年平均／已過）、編輯頁（單日日曆、空組別、刪除確認）、地點查詢、手機需要留意共 15 張修改前後比對，手機版全部完全相同，電腦版差異 ≤0.04%（字體反鋸齒雜訊，前一輪同畫面完全相同）。圖示樣式僅在 Chromium 驗證。
   - 檔案：index.html
   - 問題：`style="..."` 共 56 處。靜態的如：第 519–531 行 SVG 圖示的 `style="fill:var(…)"`、HTML 中的 `style="font-weight:400;font-size:12px"`、`style="gap:4px"`、`style="padding:28px 18px"` 等；動態的如矩陣格線位置 `grid-row/grid-column`、城市顏色 `background`。
   - 做法：本項只處理**靜態**的 inline style，改成 class。動態位置與顏色改用 CSS 自訂屬性（如 `style="--row:3"`）是否算違規，**請你決定**後另立項目。
@@ -151,3 +152,9 @@
   - 問題：改為「依城市上色」後，`.vbar.alt`、`.vbar.tint` 已無程式使用，tokens.css 的 `--bar-ink-alt` 也只剩 `.vbar.alt` 使用。（原列的 `.pill` 已於 #6 一併刪除。）
   - 做法：確認後刪除（屬刪除程式碼，動手前需確認）。
   - 驗證：T13、T14、T30、T5。
+
+- [ ] #20【風險：中】動態 inline style 的處理方式（**需你決定**）
+  - 檔案：index.html
+  - 問題：12 處由程式即時計算的 `style`：總覽矩陣格子與色條位置 7 處（`grid-row`／`grid-column`）、城市色條／組別色點／手機色線顏色 4 處（`background:var(--pN)`）、降雨長條長度 1 處（`width:N%`）。
+  - 選項：(a) 在 CLAUDE.md 列為核准例外（只限即時計算的位置、尺寸、資料顏色，顏色須為 tokens 變數）；(b) 改用 CSS 自訂屬性（如 `style="--row:5"` 搭配 `grid-row:var(--row)`）；(c) 顏色改 `.place-1`～`.place-8` 等 class、位置改以 `element.style` 設定。
+  - 驗證：T13–T16、T30、T32、T62。
