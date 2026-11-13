@@ -66,7 +66,8 @@
 
 ## 五、CSS 規則
 
-- [ ] #7【風險：低】`!important` 例外確認
+- [x] #7【風險：低】`!important` 例外確認
+  - 完成：2026-11-13（使用者決定兩處都保留）。在 CLAUDE.md 的 CSS 規則下註明這兩處為唯一核准的例外，程式未修改。驗證：`!important` 仍只出現在這兩條規則。
   - 檔案：index.html
   - 問題：第 60 行 `[hidden]{display:none!important}`、第 515 行 `prefers-reduced-motion` 的 `transition:none!important`。兩者是常見的無障礙／隱藏慣例。
   - 做法：**請你決定**是否列為允許的例外；若允許，在 CLAUDE.md 註記，不改程式。

@@ -42,6 +42,9 @@ assets/             圖片、字型、圖示
 - 斷點固定為：手機 `< 640px`、平板 `640px–1023px`、桌機 `≥ 1024px`。採用行動優先（min-width）。
 - class 命名採用 BEM：`.card`、`.card__title`、`.card--featured`。
 - 禁止用 `#id` 選擇器寫樣式；禁止 `!important`（除非先問我）。
+  - 已核准的例外（2026-11-13，只限這兩處，其他地方仍禁止）：
+    1. `[hidden]{display:none!important}`：確保加上 `hidden` 的元素一定隱藏，不被元件自己的 `display` 蓋掉。
+    2. `@media (prefers-reduced-motion:reduce)` 中的 `transition:none!important; animation:none!important`：使用者開啟「減少動態效果」時關閉所有動畫（無障礙）。
 - 選擇器巢狀不超過 3 層。
 
 ## JavaScript 規則
