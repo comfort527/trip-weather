@@ -132,6 +132,7 @@
   - 問題：圖示與 manifest 放在根目錄。
   - 做法：列出 index.html 的 4 個 `<link>` 與 manifest 內 3 個圖示路徑，確認後一起修改。`data.json` **不建議搬移**：編輯頁發布時寫入的 GitHub 路徑與同仁讀取的網址都依賴它。
   - 驗證：T3。
+  - 進度（2026-11-15，依使用者要求重新設計圖示）：新圖示已放在 `assets/icons/`（iPhone／iPad／Android 一般與安全範圍版、分頁圖示），index.html 與 site.webmanifest 已改指向新位置並加 `?v=2`。剩餘：根目錄的舊圖示 `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png`、`icon-192.png`、`icon-512.png` 已不再被引用，待使用者確認後刪除；`site.webmanifest` 是否搬移另議。
 
 ## 其他
 
