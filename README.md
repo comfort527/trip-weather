@@ -15,3 +15,10 @@
 
 - 預報：Open-Meteo（ECMWF、NOAA GFS、DWD ICON 等模型）
 - 歷年同期平均：Open-Meteo Historical Weather API（ERA5 再分析），過去 10 年、前後 3 天
+
+## 中央氣象署預報（台灣地點）
+
+- 台灣地點未來 7 天的預報使用中央氣象署開放資料（F-D0047-091 臺灣各縣市未來1週逐12小時天氣預報）。
+- `.github/workflows/cwa.yml` 每 3 小時執行 `.github/scripts/fetch-cwa.mjs`，把資料整理成 `data/cwa.json`；網頁只讀這個檔案。
+- 授權碼存在 repo 的 **Settings → Secrets and variables → Actions**，名稱 `CWA_KEY`，不會出現在程式碼或網頁中。
+- `data/cwa.json` 讀不到或超過 36 小時未更新時，網頁自動改用 Open-Meteo。

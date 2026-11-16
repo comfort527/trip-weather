@@ -991,12 +991,89 @@ function tripSpan(proj) {
   return { a, b: diffDays(a, b) > 120 ? addDays(a, 120) : b };
 }
 const fcByLoc = new Map(); // locKey -> forecast | 'err'
+/* ========= 中央氣象署（台灣地點的預報） ========= */
+// data/cwa.json 由 GitHub Actions 每 3 小時更新（.github/workflows/cwa.yml），網頁只讀這個靜態檔，不含授權碼。
+const CWA_URL = 'data/cwa.json';
+const CWA_MAX_AGE_HOURS = 36;      // 超過就視為過期，改用 Open-Meteo
+const CWA_MAX_DISTANCE_KM = 60;    // 離最近縣市超過這個距離就不套用
+let cwaData = null, cwaStatus = STATUS.IDLE, cwaPromise = null;
+// 清理 API 文字：去掉 HTML 特殊字元，可直接放進畫面
+const toPlainText = v => String(v ?? '').replace(/[<>&"'`]/g, '').trim();
+function ensureCwa() {
+  if (cwaPromise) return cwaPromise;
+  cwaStatus = STATUS.LOADING;
+  cwaPromise = (async () => {
+    try {
+      const r = await fetch(`${CWA_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      const age = (Date.now() - Date.parse(j?.updatedAt ?? '')) / 36e5;
+      if (!(age <= CWA_MAX_AGE_HOURS)) throw new Error(`資料已 ${Number.isFinite(age) ? Math.round(age) : '?'} 小時未更新`);
+      cwaData = { updatedAt: j.updatedAt, locations: (j?.locations ?? []).filter(l => toNum(l?.lat) != null && toNum(l?.lon) != null) };
+      cwaStatus = STATUS.SUCCESS;
+    } catch (e) {
+      console.error('中央氣象署預報（data/cwa.json）無法使用，台灣地點改用 Open-Meteo：', e);
+      cwaData = null; cwaStatus = STATUS.ERROR;
+    }
+  })();
+  return cwaPromise;
+}
+function isTaiwan(lat, lon, countryCode) {
+  if (countryCode === 'TW') return true;
+  return lat >= 21.8 && lat <= 26.5 && lon >= 118 && lon <= 122.2;
+}
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const k = Math.PI / 180, dLat = (lat2 - lat1) * k, dLon = (lon2 - lon1) * k;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * k) * Math.cos(lat2 * k) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(a));
+}
+function nearestCwaLocation(lat, lon) {
+  if (!cwaData) return null;
+  let best = null, bestKm = Infinity;
+  cwaData.locations.forEach(l => { const km = distanceKm(lat, lon, toNum(l.lat), toNum(l.lon)); if (km < bestKm) { best = l; bestKm = km; } });
+  return bestKm <= CWA_MAX_DISTANCE_KM ? best : null;
+}
+// 中央氣象署天氣代碼 → 網站圖示用的 WMO 代碼
+function cwaToWmo(code) {
+  const n = Number(code);
+  if (n === 1) return 0;
+  if (n === 2 || n === 3) return 2;
+  if (n >= 4 && n <= 7) return 3;
+  if ((n >= 8 && n <= 10) || (n >= 29 && n <= 32) || n === 38 || n === 39) return 61;
+  if (n >= 11 && n <= 14) return 63;
+  if (n === 19 || n === 20) return 80;
+  if ((n >= 15 && n <= 18) || n === 21 || n === 22 || (n >= 33 && n <= 36) || n === 41) return 95;
+  if (n >= 24 && n <= 28) return 45;
+  if (n === 23) return 85;
+  if (n === 37) return 66;
+  if (n === 42) return 71;
+  return 3;
+}
+// 台灣地點某天的中央氣象署預報；沒有就回傳 null。日出日落、多模型比較沿用 Open-Meteo（omDay）
+function cwaDayAt(lat, lon, countryCode, date, omDay) {
+  if (!isTaiwan(lat, lon, countryCode)) return null;
+  const loc = nearestCwaLocation(lat, lon);
+  const c = loc?.days?.[date];
+  if (!c || toNum(c.tmax) == null) return null;
+  const wind = toNum(c.wind);
+  const day = { date, code: cwaToWmo(c.code), text: toPlainText(c.text) || null, tmax: toNum(c.tmax), tmin: toNum(c.tmin), amax: toNum(c.amax), amin: toNum(c.amin),
+    pop: toNum(c.pop), psum: null, wind: wind == null ? null : wind * 3.6, gust: null, uv: toNum(c.uv),
+    sunrise: omDay?.sunrise ?? null, sunset: omDay?.sunset ?? null, models: omDay?.models ?? [],
+    src: 'cwa', area: toPlainText(loc.name), desc: toPlainText(c.desc), updatedAt: cwaData.updatedAt };
+  day.lead = diffDays(localISO(), date);
+  day.conf = confidence(day);
+  return day;
+}
+// 預報日的天氣文字與圖示：中央氣象署有自己的中文描述時優先使用
+function fmtTime(iso) { const t = new Date(iso); return Number.isNaN(t.getTime()) ? '—' : `${t.getMonth() + 1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())}`; }
+function dayWx(x) { const w = wxInfo(x.code); return x.text ? { ...w, text: x.text } : w; }
 function cellData(seg, date) {
   const today = localISO();
   if (date < today) { const pm = pastMem.get(locKey(seg.lat, seg.lon)); if (!pm || !(date in pm)) return { kind: 'loading' }; return pm[date] ? { kind: 'obs', o: pm[date] } : { kind: 'past' }; }
   const fc = fcByLoc.get(locKey(seg.lat, seg.lon));
   if (fc === undefined) return { kind: 'loading' };
-  const day = fc !== 'err' ? fcDay(fc, date) : null;
+  const om = fc !== 'err' ? fcDay(fc, date) : null;
+  const day = cwaDayAt(seg.lat, seg.lon, seg.countryCode, date, om) || om;
   if (day) return { kind: 'fc', day };
   const cl = climFor(seg);
   if (!cl) return { kind: 'loading' };
@@ -1021,14 +1098,16 @@ function renderHeader(proj) {
 function renderSpan(proj) {
   const today = localISO(), hz = forecastHorizon();
   const up = proj.updatedAt ? new Date(proj.updatedAt) : null;
-  $('spanRow').innerHTML = `<span>今天 <b class="num">${md(today)}（${wd(today)}）</b></span><span>預報涵蓋至 <b class="num">${md(hz)}</b>，之後顯示 <b>${climYears()[0]}–${climYears().at(-1)} 年</b>同期平均</span>${up && !isNaN(up) ? `<span>行程更新於 <b class="num">${up.getMonth() + 1}/${up.getDate()} ${pad(up.getHours())}:${pad(up.getMinutes())}</b></span>` : ''}`;
+  const hasTw = proj.segments.some(x => x.lat != null && isTaiwan(x.lat, x.lon, x.countryCode));
+  const cwaNote = hasTw && cwaData ? `<span>台灣地點使用 <b>中央氣象署</b>預報（${fmtTime(cwaData.updatedAt)} 更新）</span>` : '';
+  $('spanRow').innerHTML = `<span>今天 <b class="num">${md(today)}（${wd(today)}）</b></span><span>預報涵蓋至 <b class="num">${md(hz)}</b>，之後顯示 <b>${climYears()[0]}–${climYears().at(-1)} 年</b>同期平均</span>${up && !isNaN(up) ? `<span>行程更新於 <b class="num">${up.getMonth() + 1}/${up.getDate()} ${pad(up.getHours())}:${pad(up.getMinutes())}</b></span>` : ''}${cwaNote}`;
 }
 function hxButton(seg, date, showCity) {
   const cd = cellData(seg, date);
   const attrs = `data-seg="${esc(seg.id)}" data-date="${date}"`;
   const city = !isStay(seg) ? `<span class="hc">✈ ${KIND_TXT[seg.kind]}</span>` : showCity ? `<span class="hc">${esc(seg.label)}</span>` : '';
   if (cd.kind === 'fc') {
-    const d = cd.day, w = wxInfo(d.code), pop = d.pop ?? 0;
+    const d = cd.day, w = dayWx(d), pop = d.pop ?? 0;
     return `<button class="hx" type="button" ${attrs} aria-label="${esc(seg.label)} ${md(date)} ${w.text} 高溫${r0(d.tmax)}度 低溫${r0(d.tmin)}度 降雨機率${pop}% ${CONF_TXT[d.conf.level]}">${city}${icon(d.code == null ? 'cloud' : w.icon)}<span class="t num"><span class="hi">${r0(d.tmax)}°</span>/<span class="lo">${r0(d.tmin)}°</span></span><span class="r num"><span class="rbar"><i style="width:${Math.min(100, pop)}%"></i></span>${d.pop == null ? '—' : pop + '%'}</span><span class="dot ${d.conf.level}" title="${CONF_TXT[d.conf.level]}"></span></button>`;
   }
   if (cd.kind === 'obs') {
@@ -1207,7 +1286,7 @@ function renderMobileList(proj) {
     const items = act.length ? act.map((s, k) => {
       const cd = cellData(s, d), name = isStay(s) ? esc(s.label || '未填城市') : '✈ ' + KIND_TXT[s.kind];
       let wx = '', temp = '';
-      if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); wx = `${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text}・降雨 ${x.pop ?? '—'}%</span>`; temp = `<span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span><small><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</small>`; }
+      if (cd.kind === 'fc') { const x = cd.day, w = dayWx(x); wx = `${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text}・降雨 ${x.pop ?? '—'}%</span>`; temp = `<span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span><small><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</small>`; }
       else if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); wx = `${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}・雨量 ${r1(o.psum)} mm</span>`; temp = `<span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span><small>實際</small>`; }
       else if (cd.kind === 'cl') { wx = `${icon('avg')}<span>歷年平均・雨日 ${cd.c.rain}%</span>`; temp = `<span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span><small>平均</small>`; }
       else wx = `<span>${cd.kind === 'loading' ? '載入中…' : cd.kind === 'past' ? '已過' : esc(cd.msg || '無資料')}</span>`;
@@ -1251,7 +1330,8 @@ async function loadWeather(proj) {
   const tasks = [
     pool(locs, 3, async s => { try { fcByLoc.set(locKey(s.lat, s.lon), await fetchForecast(s.lat, s.lon)); } catch (e) { console.error('預報取得失敗：', s.label, e); fcByLoc.set(locKey(s.lat, s.lon), 'err'); } if (my === loadToken) renderOverview(); }),
     ensureClimate(climNeeded).then(() => { if (my === loadToken) renderOverview(); }),
-    ensurePast(segs).then(() => { if (my === loadToken) renderOverview(); })
+    ensurePast(segs).then(() => { if (my === loadToken) renderOverview(); }),
+    ensureCwa().then(() => { if (my === loadToken) renderOverview(); })
   ];
   await Promise.all(tasks);
   if (my === loadToken) syncWeatherRetry();
@@ -1265,9 +1345,10 @@ function openDrawer(segId, date) {
   const cd = cellData(s, date); const cl = climFor(s)?.days?.[date];
   let hero = '', body = '';
   if (cd.kind === 'fc') {
-    const x = cd.day, w = wxInfo(x.code);
-    hero = `<div class="dr-hero">${icon(x.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(x.tmax)}°</span> / <span class="lo">${r0(x.tmin)}°</span></div><div class="muted dr-hero__note">預報・距今 ${x.lead} 天</div></div></div>`;
+    const x = cd.day, w = dayWx(x);
+    hero = `<div class="dr-hero">${icon(x.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(x.tmax)}°</span> / <span class="lo">${r0(x.tmin)}°</span></div><div class="muted dr-hero__note">${x.src === 'cwa' ? '中央氣象署預報' : '預報'}・距今 ${x.lead} 天</div></div></div>`;
     body += `<dl class="kv"><div><dt>降雨機率</dt><dd class="num">${x.pop ?? '—'}%</dd></div><div><dt>預估雨量</dt><dd class="num">${r1(x.psum)} mm</dd></div><div><dt>體感溫度</dt><dd class="num">${r0(x.amax)}° / ${r0(x.amin)}°</dd></div><div><dt>最大風速／陣風</dt><dd class="num">${r0(x.wind)} / ${r0(x.gust)} km/h</dd></div><div><dt>紫外線指數</dt><dd class="num">${x.uv == null ? '—' : r1(x.uv)}</dd></div><div><dt>日出／日落</dt><dd class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</dd></div></dl>`;
+    if (x.src === 'cwa') body += `<div class="dr-sec"><h4>中央氣象署預報</h4><p>${esc(x.desc || '')}</p><p class="dr-sec__more">資料來源：中央氣象署一週預報（${esc(x.area)}，${fmtTime(x.updatedAt)} 更新）。預估雨量與陣風氣象署未提供；可信度與下方模型比較來自國際模型。</p></div>`;
     body += `<div class="dr-sec"><h4>預報可信度</h4><div class="conf-line"><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</div><p class="dr-sec__why">${esc(x.conf.why)}</p>`;
     if (x.models.length) body += `<table class="mtable"><thead><tr><th>模型</th><th>高溫</th><th>低溫</th><th>雨量</th></tr></thead><tbody>${x.models.map(m => `<tr><td>${esc(m.name)} <span class="muted mtable__org">${esc(m.org)}</span></td><td class="num hi">${r1(m.tmax)}°</td><td class="num lo">${r1(m.tmin)}°</td><td class="num">${r1(m.psum)} mm</td></tr>`).join('')}</tbody></table>`;
     body += `</div>`;
@@ -1334,7 +1415,9 @@ async function runLookup() {
   try {
     const fc = await fetchForecast(lkLoc.lat, lkLoc.lon).catch(e => { console.error('地點查詢：預報取得失敗：', e); status = STATUS.ERROR; return null; });
     const dates = rangeDates(a, b), today = localISO();
-    const needCl = dates.filter(d => d >= today && !fcDay(fc, d));
+    await ensureCwa();
+    const tw = d => cwaDayAt(lkLoc.lat, lkLoc.lon, lkLoc.countryCode, d, fcDay(fc, d));
+    const needCl = dates.filter(d => d >= today && !tw(d) && !fcDay(fc, d));
     const pastDates = dates.filter(d => d < today); let ob = {};
     if (pastDates.length) { lkStatus('正在取得已過日期的實際天氣…'); ob = await fetchPast(lkLoc.lat, lkLoc.lon, pastDates).catch(e => { console.error('地點查詢：實際天氣取得失敗：', e); status = STATUS.ERROR; return {}; }); }
     let cl = {}; if (needCl.length) { lkStatus('預報範圍外的日期，正在計算歷年同期平均…'); cl = await computeClimate(lkLoc.lat, lkLoc.lon, needCl).catch(e => { console.error('地點查詢：歷年同期平均取得失敗：', e); status = STATUS.ERROR; return {}; }); }
@@ -1342,8 +1425,8 @@ async function runLookup() {
     $('lkTitle').textContent = lkLoc.label;
     $('lkMeta').textContent = `${[lkLoc.admin1, lkLoc.country].filter(Boolean).join('，')}・${(+lkLoc.lat).toFixed(3)}, ${(+lkLoc.lon).toFixed(3)}`;
     $('lkRows').innerHTML = dates.map(d => {
-      const x = fcDay(fc, d);
-      if (x) { const w = wxInfo(x.code); return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(x.code == null ? 'cloud' : w.icon)}${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span></span></td><td class="num hi">${r0(x.tmax)}°</td><td class="num lo">${r0(x.tmin)}°</td><td class="num">${x.pop ?? '—'}%・${r1(x.psum)} mm</td><td class="num">${r0(x.wind)} km/h</td><td class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</td></tr>`; }
+      const x = tw(d) || fcDay(fc, d);
+      if (x) { const w = dayWx(x); return `<tr><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(x.code == null ? 'cloud' : w.icon)}${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span></span></td><td class="num hi">${r0(x.tmax)}°</td><td class="num lo">${r0(x.tmin)}°</td><td class="num">${x.pop ?? '—'}%・${r1(x.psum)} mm</td><td class="num">${r0(x.wind)} km/h</td><td class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</td></tr>`; }
       const o = ob[d];
       if (o) { const w = wxInfo(o.code); return `<tr class="ob"><td><b class="num">${md(d)}</b> <span class="muted">週${wd(d)}</span></td><td><span class="wcell">${icon(o.code == null ? 'cloud' : w.icon)}${w.text} <span class="vtag ob vtag--inline">實際</span></span></td><td class="num hi">${r0(o.tmax)}°</td><td class="num lo">${r0(o.tmin)}°</td><td class="num">${r1(o.psum)} mm</td><td class="num">${r0(o.wind)} km/h</td><td class="num">${o.sunrise ? o.sunrise.slice(11) : '—'} / ${o.sunset ? o.sunset.slice(11) : '—'}</td></tr>`; }
       const c = cl[d];
@@ -1550,7 +1633,7 @@ async function renderPreview() {
   if (dates.some(d => d >= today && !fcDay(fcByLoc.get(k) === 'err' ? null : fcByLoc.get(k), d))) { box.innerHTML = '<p class="hint">正在計算歷年同期平均…</p>'; await ensureClimate([s]); if (my !== pvTok) return; }
   box.innerHTML = dates.map(d => {
     const cd = cellData(s, d), head = `<span class="d">${md(d)}<small>週${wd(d)}</small></span>`;
-    if (cd.kind === 'fc') { const x = cd.day, w = wxInfo(x.code); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted pv-row__extra">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
+    if (cd.kind === 'fc') { const x = cd.day, w = dayWx(x); return `<div class="pv-row">${head}${icon(x.code == null ? 'cloud' : w.icon)}<span>${w.text} <span class="dot ${x.conf.level}" title="${CONF_TXT[x.conf.level]}"></span><span class="muted pv-row__extra">　降雨 ${x.pop ?? '—'}%</span></span><span class="t"><span class="hi">${r0(x.tmax)}°</span>/<span class="lo">${r0(x.tmin)}°</span></span></div>`; }
     if (cd.kind === 'obs') { const o = cd.o, w = wxInfo(o.code); return `<div class="pv-row">${head}${icon(o.code == null ? 'cloud' : w.icon)}<span>${w.text}<span class="muted pv-row__extra">　實際・雨量 ${r1(o.psum)} mm</span></span><span class="t"><span class="hi">${r0(o.tmax)}°</span>/<span class="lo">${r0(o.tmin)}°</span></span></div>`; }
     if (cd.kind === 'cl') return `<div class="pv-row cl">${head}${icon('avg')}<span>歷年平均<span class="muted pv-row__extra">　雨日 ${cd.c.rain}%</span></span><span class="t"><span class="hi">${r0(cd.c.tmax)}°</span>/<span class="lo">${r0(cd.c.tmin)}°</span></span></div>`;
     return `<div class="pv-row">${head}<span></span><span class="muted">${cd.kind === 'past' ? '已過' : cd.kind === 'loading' ? '載入中…' : esc(cd.msg || '無資料')}</span><span></span></div>`;
