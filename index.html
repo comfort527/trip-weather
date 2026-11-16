@@ -613,7 +613,8 @@ footer a{color:var(--muted)}
         <section class="card">
           <h3 class="ed-h">行程報告</h3>
           <div class="ed-pad">
-            <label class="f" for="edReport">報告內容（成員在「報告」分頁看到）<textarea id="edReport" class="ed-report__text" data-js="report-input" rows="10" maxlength="20000" placeholder="把報告貼在這裡。換行會照原樣顯示，網址會變成可點的連結。"></textarea></label>
+            <label class="f" for="edReport">報告內容（成員在「報告」分頁看到）<textarea id="edReport" class="ed-report__text" data-js="report-input" rows="10" maxlength="20000" placeholder="把報告貼在這裡。可用 ## 標題、**粗體**、- 清單；網址會變成可點的連結。"></textarea></label>
+            <a class="btn sm ed-report__preview" href="#report-preview">預覽報告</a>
           </div>
         </section>
         <details class="card gh-set" id="ghSet">
@@ -1796,24 +1797,84 @@ $('ghTest').addEventListener('click', async () => {
 });
 
 /* ========= 行程報告 ========= */
-const REPORT_LINK_PATTERN = /https?:\/\/[^\s<>"'，。、）」]+/g;
+// 報告支援簡易格式：# 標題、**粗體**、[文字](網址)、- 清單、1. 清單、--- 分隔線；網址自動變連結
+const REPORT_INLINE_PATTERN = /\*\*(.+?)\*\*|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"'，。、）」]+)/g;
+const REPORT_BLOCK_PATTERN = Object.freeze({
+  rule: /^\s*([-*_])(\s*\1){2,}\s*$/,
+  heading: /^\s*(#{1,6})\s+(.*?)\s*#*\s*$/,
+  ul: /^\s*[-*•]\s+(.*)$/,
+  ol: /^\s*(\d+)[.)]\s+(.*)$/,
+});
+const REPORT_HEADING_SIZE = ['major', 'minor', 'small'];
 const byJs = name => document.querySelector(`[data-js="${name}"]`);
 function hasReport(proj) { return Boolean(proj?.report?.text?.trim()); }
 function syncReportTabs(proj) {
   document.querySelectorAll('[data-js="report-tab"]').forEach(tab => { tab.hidden = !hasReport(proj); });
 }
-// 把文字放進元素，網址轉成連結；一律用文字節點，不用 innerHTML
-function appendLinkedText(target, text) {
+function createReportEl(tag, className) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  return el;
+}
+function createReportLink(href, text) {
+  const link = createReportEl('a', 'report__link');
+  link.href = href; link.textContent = text; link.target = '_blank'; link.rel = 'noopener noreferrer';
+  return link;
+}
+// 行內格式：一律建立元素與文字節點，不用 innerHTML
+function appendReportInline(target, text) {
   let last = 0;
-  for (const match of text.matchAll(REPORT_LINK_PATTERN)) {
+  for (const match of text.matchAll(REPORT_INLINE_PATTERN)) {
     target.append(text.slice(last, match.index));
-    const link = document.createElement('a');
-    link.className = 'report__link'; link.href = match[0]; link.textContent = match[0];
-    link.target = '_blank'; link.rel = 'noopener noreferrer';
-    target.append(link);
+    const [, bold, label, labelHref, bareHref] = match;
+    if (bold != null) { const strong = createReportEl('strong'); appendReportInline(strong, bold); target.append(strong); }
+    else target.append(label != null ? createReportLink(labelHref, label) : createReportLink(bareHref, bareHref));
     last = match.index + match[0].length;
   }
   target.append(text.slice(last));
+}
+function classifyReportLine(line) {
+  if (!line.trim()) return { type: 'blank' };
+  if (REPORT_BLOCK_PATTERN.rule.test(line)) return { type: 'rule' };
+  const heading = line.match(REPORT_BLOCK_PATTERN.heading);
+  if (heading) return { type: 'heading', level: heading[1].length, text: heading[2] };
+  const ul = line.match(REPORT_BLOCK_PATTERN.ul);
+  if (ul) return { type: 'ul', text: ul[1] };
+  const ol = line.match(REPORT_BLOCK_PATTERN.ol);
+  if (ol) return { type: 'ol', text: ol[2], start: Number(ol[1]) };
+  return { type: 'text', text: line };
+}
+function createReportHeading(line, topLevel) {
+  const rank = Math.min(line.level - topLevel, REPORT_HEADING_SIZE.length - 1);
+  const heading = createReportEl(`h${3 + rank}`, `report__heading report__heading--${REPORT_HEADING_SIZE[rank]}`);
+  appendReportInline(heading, line.text);
+  return heading;
+}
+// 段落與清單：同類型的連續行合併成一個區塊
+function appendReportFlow(target, line, open) {
+  if (open?.type !== line.type) {
+    const el = createReportEl(line.type === 'text' ? 'p' : line.type, line.type === 'text' ? 'report__para' : 'report__list');
+    if (line.type === 'ol' && line.start > 1) el.start = line.start;
+    target.append(el);
+    open = { type: line.type, el };
+  } else if (line.type === 'text') open.el.append('\n');
+  if (line.type === 'text') { appendReportInline(open.el, line.text); return open; }
+  const item = createReportEl('li');
+  appendReportInline(item, line.text);
+  open.el.append(item);
+  return open;
+}
+function renderReportMarkdown(target, text) {
+  const lines = text.split(/\r?\n/).map(classifyReportLine);
+  const levels = lines.filter(l => l.type === 'heading').map(l => l.level);
+  const topLevel = levels.length ? Math.min(...levels) : 1;
+  let open = null;
+  for (const line of lines) {
+    if (line.type === 'blank') { open = null; continue; }
+    if (line.type === 'rule') { open = null; target.append(createReportEl('hr', 'report__rule')); continue; }
+    if (line.type === 'heading') { open = null; target.append(createReportHeading(line, topLevel)); continue; }
+    open = appendReportFlow(target, line, open);
+  }
 }
 function showReportState(status, proj) {
   byJs('report-loading').hidden = status !== STATUS.LOADING;
@@ -1827,8 +1888,14 @@ function renderReport(proj) {
   body.replaceChildren();
   meta.textContent = '';
   if (status !== STATUS.SUCCESS || !hasReport(proj)) return;
-  appendLinkedText(body, proj.report.text.trim());
+  renderReportMarkdown(body, proj.report.text.trim());
   if (proj.report.updatedAt) meta.textContent = `最後更新：${fmtTime(proj.report.updatedAt)}`;
+}
+function renderReportView(proj, isPreview) {
+  const banner = $('banner');
+  banner.hidden = !isPreview;
+  if (isPreview) { banner.className = 'banner'; banner.innerHTML = '這是<b>編輯中尚未發布</b>的報告預覽，同仁還看不到。<a href="#edit">回到編輯</a>'; }
+  renderReport(proj);
 }
 async function retryReport() {
   showReportState(STATUS.LOADING);
@@ -1842,7 +1909,7 @@ byJs('report-retry').addEventListener('click', retryReport);
 function route() {
   const h = location.hash;
   const mobile = window.matchMedia('(max-width:760px)').matches;
-  let v = h === '#lookup' ? 'lookup' : h === '#edit' ? 'edit' : h === '#report' ? 'report' : (h === '#alerts' && mobile) ? 'alerts' : 'overview';
+  let v = h === '#lookup' ? 'lookup' : h === '#edit' ? 'edit' : (h === '#report' || h === '#report-preview') ? 'report' : (h === '#alerts' && mobile) ? 'alerts' : 'overview';
   if (v === 'edit' && !isEditor()) v = 'gate';
   syncEditTab();
   ['overview', 'lookup', 'edit', 'gate', 'alerts', 'report'].forEach(k => { $('view-' + k).hidden = k !== v; });
@@ -1864,7 +1931,7 @@ function route() {
   }
   if (v === 'lookup') { $('banner').hidden = true; if (lkMap) setTimeout(() => lkMap.invalidateSize(), 50); }
   if (v === 'edit') $('banner').hidden = true;
-  if (v === 'report') { $('banner').hidden = true; renderReport(data); }
+  if (v === 'report') renderReportView(h === '#report-preview' && draft ? draft : data, h === '#report-preview' && draft);
 }
 window.addEventListener('hashchange', route);
 
