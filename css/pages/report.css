@@ -1,18 +1,20 @@
-/* 行程報告分頁（#report）與編輯頁的報告欄位 */
+/* 行程報告分頁（#report）與編輯頁的報告欄位
+   字型：標題用宋體（--f-display）、內文用黑體；章節標題左側色條、粗體為強調色 */
 .report{max-width:var(--measure);margin:var(--sp-4) auto 0;padding:var(--sp-5) var(--sp-4)}
-.report__title{margin:0;font-family:var(--f-display);font-size:var(--fs-xl)}
+.report__title{margin:0;font-family:var(--f-display);font-weight:900;font-size:var(--fs-2xl);letter-spacing:var(--ls-title)}
 .report__meta{margin:var(--sp-1) 0 var(--sp-5);font-size:var(--fs-sm);color:var(--muted)}
 .report__meta:empty{margin-bottom:var(--sp-3)}
 .report__state{margin:0;color:var(--muted)}
 .report__body{font-size:var(--fs-md);line-height:var(--lh-read);color:var(--ink);overflow-wrap:anywhere}
 .report__body > :first-child{margin-top:0}
 .report__para{margin:0 0 var(--sp-3);white-space:pre-wrap}
-.report__heading{margin:var(--sp-5) 0 var(--sp-2);line-height:var(--lh-tight)}
-.report__heading--major{font-size:var(--fs-lg);padding-bottom:var(--sp-1);border-bottom:1px solid var(--line)}
-.report__heading--minor{font-size:var(--fs-md)}
+.report__heading{margin:var(--sp-5) 0 var(--sp-2);font-family:var(--f-display);font-weight:900;line-height:var(--lh-tight)}
+.report__heading--major{font-size:var(--fs-xl);padding-bottom:var(--sp-2);border-bottom:var(--bw-2) solid var(--ink)}
+.report__heading--minor{font-size:var(--fs-lg);padding-left:var(--sp-3);border-left:var(--bw-4) solid var(--accent)}
 .report__heading--small{font-size:var(--fs-md);color:var(--muted)}
+.report__strong{color:var(--accent)}
 .report__list{margin:0 0 var(--sp-3);padding-left:var(--sp-5)}
-.report__rule{margin:var(--sp-5) 0;border:0;border-top:1px solid var(--line)}
+.report__rule{margin:var(--sp-5) 0;border:0;border-top:var(--bw-1) solid var(--line)}
 .report__link{color:var(--accent)}
 .ed-report__text{resize:vertical;font-weight:normal;line-height:var(--lh-read)}
 .ed-report__preview{justify-self:start;align-self:start;text-decoration:none}
