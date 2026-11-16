@@ -1019,7 +1019,7 @@ function ensureCwa() {
   return cwaPromise;
 }
 function isTaiwan(lat, lon, countryCode) {
-  if (countryCode === 'TW') return true;
+  if (countryCode) return countryCode === 'TW';          // 有國家代碼就以它為準（避免把廈門、福州當成台灣）
   return lat >= 21.8 && lat <= 26.5 && lon >= 118 && lon <= 122.2;
 }
 function distanceKm(lat1, lon1, lat2, lon2) {
@@ -1055,16 +1055,26 @@ function cwaDayAt(lat, lon, countryCode, date, omDay) {
   const loc = nearestCwaLocation(lat, lon);
   const c = loc?.days?.[date];
   if (!c || toNum(c.tmax) == null) return null;
-  const wind = toNum(c.wind);
+  const wind = toNum(c.wind), cwaPop = toNum(c.pop);
+  // 氣象署未提供的欄位（預估雨量、陣風、第 4 天後的降雨機率）用國際模型補上，並記下來源
+  const filled = [];
+  const fill = (name, v) => { if (v != null) filled.push(name); return v ?? null; };
   const day = { date, code: cwaToWmo(c.code), text: toPlainText(c.text) || null, tmax: toNum(c.tmax), tmin: toNum(c.tmin), amax: toNum(c.amax), amin: toNum(c.amin),
-    pop: toNum(c.pop), psum: null, wind: wind == null ? null : wind * 3.6, gust: null, uv: toNum(c.uv),
+    pop: cwaPop ?? fill('降雨機率', omDay?.pop), popDay: toNum(c.popDay), popNight: toNum(c.popNight),
+    psum: fill('預估雨量', omDay?.psum), wind: wind == null ? null : wind * 3.6, gust: fill('陣風', omDay?.gust), uv: toNum(c.uv),
     sunrise: omDay?.sunrise ?? null, sunset: omDay?.sunset ?? null, models: omDay?.models ?? [],
-    src: 'cwa', area: toPlainText(loc.name), desc: toPlainText(c.desc), updatedAt: cwaData.updatedAt };
+    src: 'cwa', area: toPlainText(loc.name), descDay: toPlainText(c.descDay), descNight: toPlainText(c.descNight), filled, updatedAt: cwaData.updatedAt };
   day.lead = diffDays(localISO(), date);
   day.conf = confidence(day);
   return day;
 }
 // 預報日的天氣文字與圖示：中央氣象署有自己的中文描述時優先使用
+function cwaDrawerHTML(x) {
+  const part = (label, text) => (text ? `<p class="dr-sec__more"><b>${label}</b>：${esc(text)}</p>` : '');
+  const pops = [x.popDay != null ? `白天 ${x.popDay}%` : '', x.popNight != null ? `晚上 ${x.popNight}%` : ''].filter(Boolean).join('／');
+  const filled = x.filled.length ? `${x.filled.join('、')}由國際模型補上；` : '';
+  return `<div class="dr-sec"><h4>中央氣象署預報</h4>${pops ? `<p>降雨機率 ${pops}</p>` : ''}${part('白天', x.descDay)}${part('晚上', x.descNight)}<p class="dr-sec__more">資料來源：中央氣象署一週預報（${esc(x.area)}，${fmtTime(x.updatedAt)} 更新）。${filled}可信度與下方模型比較來自國際模型。</p></div>`;
+}
 function fmtTime(iso) { const t = new Date(iso); return Number.isNaN(t.getTime()) ? '—' : `${t.getMonth() + 1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())}`; }
 function dayWx(x) { const w = wxInfo(x.code); return x.text ? { ...w, text: x.text } : w; }
 function cellData(seg, date) {
@@ -1348,7 +1358,7 @@ function openDrawer(segId, date) {
     const x = cd.day, w = dayWx(x);
     hero = `<div class="dr-hero">${icon(x.code == null ? 'cloud' : w.icon)}<div><div class="desc">${w.text}</div><div class="big num"><span class="hi">${r0(x.tmax)}°</span> / <span class="lo">${r0(x.tmin)}°</span></div><div class="muted dr-hero__note">${x.src === 'cwa' ? '中央氣象署預報' : '預報'}・距今 ${x.lead} 天</div></div></div>`;
     body += `<dl class="kv"><div><dt>降雨機率</dt><dd class="num">${x.pop ?? '—'}%</dd></div><div><dt>預估雨量</dt><dd class="num">${r1(x.psum)} mm</dd></div><div><dt>體感溫度</dt><dd class="num">${r0(x.amax)}° / ${r0(x.amin)}°</dd></div><div><dt>最大風速／陣風</dt><dd class="num">${r0(x.wind)} / ${r0(x.gust)} km/h</dd></div><div><dt>紫外線指數</dt><dd class="num">${x.uv == null ? '—' : r1(x.uv)}</dd></div><div><dt>日出／日落</dt><dd class="num">${x.sunrise ? x.sunrise.slice(11) : '—'} / ${x.sunset ? x.sunset.slice(11) : '—'}</dd></div></dl>`;
-    if (x.src === 'cwa') body += `<div class="dr-sec"><h4>中央氣象署預報</h4><p>${esc(x.desc || '')}</p><p class="dr-sec__more">資料來源：中央氣象署一週預報（${esc(x.area)}，${fmtTime(x.updatedAt)} 更新）。預估雨量與陣風氣象署未提供；可信度與下方模型比較來自國際模型。</p></div>`;
+    if (x.src === 'cwa') body += cwaDrawerHTML(x);
     body += `<div class="dr-sec"><h4>預報可信度</h4><div class="conf-line"><span class="dot ${x.conf.level}"></span>${CONF_TXT[x.conf.level]}</div><p class="dr-sec__why">${esc(x.conf.why)}</p>`;
     if (x.models.length) body += `<table class="mtable"><thead><tr><th>模型</th><th>高溫</th><th>低溫</th><th>雨量</th></tr></thead><tbody>${x.models.map(m => `<tr><td>${esc(m.name)} <span class="muted mtable__org">${esc(m.org)}</span></td><td class="num hi">${r1(m.tmax)}°</td><td class="num lo">${r1(m.tmin)}°</td><td class="num">${r1(m.psum)} mm</td></tr>`).join('')}</tbody></table>`;
     body += `</div>`;
@@ -1629,6 +1639,7 @@ async function renderPreview() {
   try { fcByLoc.set(k, await fetchForecast(s.lat, s.lon)); } catch (e) { console.error('編輯頁天氣預覽：預報取得失敗：', e); fcByLoc.set(k, 'err'); }
   if (my !== pvTok) return;
   const today = localISO();
+  await ensureCwa(); if (my !== pvTok) return;
   if (dates.some(d => d < today)) { await ensurePast([s]); if (my !== pvTok) return; }
   if (dates.some(d => d >= today && !fcDay(fcByLoc.get(k) === 'err' ? null : fcByLoc.get(k), d))) { box.innerHTML = '<p class="hint">正在計算歷年同期平均…</p>'; await ensureClimate([s]); if (my !== pvTok) return; }
   box.innerHTML = dates.map(d => {

@@ -1,7 +1,7 @@
 // 讀取中央氣象署「臺灣各縣市鄉鎮未來1週逐12小時天氣預報」（F-D0047-091），
 // 整理成每個縣市、每一天的資料，寫入 data/cwa.json 給網頁使用。
 // 授權碼由環境變數 CWA_KEY 提供（GitHub Actions 的 Secrets），不會寫進輸出檔。
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 const DATASET = 'F-D0047-091';
@@ -33,29 +33,39 @@ function groupPeriods(times, readValue) {
     .filter(p => p.date && p.value != null);
 }
 
-// 與某天重疊的時段：前一晚 18 時、當天 06 時、當天 18 時
-function overlapping(periods, date) {
+// 每天分三個時段：前一晚（前一天 18 時起，涵蓋當天清晨）、白天（當天 18 時前開始）、晚上（當天 18 時起）
+function periodsOf(list, date) {
   const prev = addDays(date, -1);
-  return periods.filter(p => p.date === date || (p.date === prev && p.hour >= 12));
+  return {
+    prevNight: list.filter(p => p.date === prev && p.hour >= 18),
+    day: list.filter(p => p.date === date && p.hour < 18),
+    night: list.filter(p => p.date === date && p.hour >= 18),
+  };
 }
 
 function summarizeDay(el, date) {
-  const startsOn = list => list.filter(p => p.date === date);
-  const daytime = list => startsOn(list).find(p => p.hour < 12) ?? startsOn(list)[0];
   const maxOf = list => (list.length ? Math.max(...list.map(p => p.value)) : null);
   const minOf = list => (list.length ? Math.min(...list.map(p => p.value)) : null);
-  const weather = daytime(el.weather);
+  const first = list => list[0]?.value ?? null;
+  // 最高溫看白天；最低溫看當天清晨（前一晚時段）到白天，與氣象署白天描述的溫度範圍一致
+  const dayOnly = name => { const p = periodsOf(el[name], date); return p.day.length ? p.day : p.night; };
+  const morningToDay = name => { const p = periodsOf(el[name], date); return [...p.prevNight, ...dayOnly(name)]; };
+  const w = periodsOf(el.weather, date), pop = periodsOf(el.pop, date), desc = periodsOf(el.desc, date), wind = periodsOf(el.wind, date);
+  const weather = first(w.day) ?? first(w.night);
   return {
-    code: weather?.value.code ?? null,
-    text: weather?.value.text ?? null,
-    tmax: maxOf(overlapping(el.tmax, date)),
-    tmin: minOf(overlapping(el.tmin, date)),
-    amax: maxOf(overlapping(el.amax, date)),
-    amin: minOf(overlapping(el.amin, date)),
-    pop: maxOf(startsOn(el.pop)),
-    wind: maxOf(startsOn(el.wind)),
-    uv: daytime(el.uv)?.value ?? null,
-    desc: daytime(el.desc)?.value ?? null,
+    code: weather?.code ?? null,
+    text: weather?.text ?? null,
+    tmax: maxOf(dayOnly('tmax')),
+    tmin: minOf(morningToDay('tmin')),
+    amax: maxOf(dayOnly('amax')),
+    amin: minOf(morningToDay('amin')),
+    pop: maxOf([...pop.day, ...pop.night]),
+    popDay: first(pop.day),
+    popNight: first(pop.night),
+    wind: maxOf([...wind.day, ...wind.night]),
+    uv: first(periodsOf(el.uv, date).day),
+    descDay: first(desc.day),
+    descNight: first(desc.night),
   };
 }
 
@@ -83,6 +93,12 @@ async function main() {
   const data = await fetchForecast(key);
   const locations = (data?.Location ?? []).map(summarizeLocation).filter(l => l.lat != null && l.lon != null);
   if (!locations.length) throw new Error('沒有取得任何縣市資料');
+  // 預報內容沒變就不改檔，避免排程每次都產生一筆提交
+  const previous = await readFile(OUTPUT, 'utf8').then(JSON.parse).catch(() => null);
+  if (previous && JSON.stringify(previous.locations) === JSON.stringify(locations)) {
+    console.log('預報內容沒有變動，不更新檔案');
+    return;
+  }
   const output = { source: '中央氣象署 F-D0047-091 臺灣各縣市未來1週逐12小時天氣預報', dataset: DATASET, updatedAt: new Date().toISOString(), locations };
   await mkdir(dirname(OUTPUT), { recursive: true });
   await writeFile(OUTPUT, JSON.stringify(output, null, 1) + '\n');
