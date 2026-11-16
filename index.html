@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/pages/report.css">
 <style>
 /* Layout: a departure-board matrix — groups down the side, trip days across, forecast vs. climate split by a labelled band. */
 *{box-sizing:border-box}
@@ -477,6 +478,7 @@ footer a{color:var(--muted)}
     </div>
     <div class="top-actions">
       <nav class="tabs" aria-label="頁面">
+        <a class="tab" href="#report" data-view="report" data-js="report-tab" hidden>報告</a>
         <a class="tab" href="#lookup" data-view="lookup">地點查詢</a>
         <a class="tab" href="#overview" data-view="overview">行程總覽</a>
       </nav>
@@ -519,6 +521,21 @@ footer a{color:var(--muted)}
       <h2>行程地圖<span>各組停留城市</span></h2>
       <div id="tripMap" class="map-box" role="img" aria-label="行程城市地圖"></div>
     </section>
+  </main>
+
+  <!-- 行程報告 -->
+  <main id="view-report" hidden>
+    <article class="card report">
+      <h2 class="report__title">行程報告</h2>
+      <p class="report__meta" data-js="report-meta"></p>
+      <p class="report__state" data-js="report-loading" hidden>行程檔讀取中…</p>
+      <div class="report__state" data-js="report-error" hidden>
+        <p>無法讀取行程檔，暫時看不到報告。</p>
+        <button class="btn sm" type="button" data-js="report-retry">重試</button>
+      </div>
+      <p class="report__state" data-js="report-empty" hidden>目前還沒有報告。</p>
+      <div class="report__body" data-js="report-body"></div>
+    </article>
   </main>
 
   <!-- 需要留意（手機） -->
@@ -593,6 +610,12 @@ footer a{color:var(--muted)}
             <label class="f" for="edSub">說明（選填）<input id="edSub" type="text" maxlength="120" placeholder="例如：第一梯次"></label>
           </div>
         </section>
+        <section class="card">
+          <h3 class="ed-h">行程報告</h3>
+          <div class="ed-pad">
+            <label class="f" for="edReport">報告內容（成員在「報告」分頁看到）<textarea id="edReport" class="ed-report__text" data-js="report-input" rows="10" maxlength="20000" placeholder="把報告貼在這裡。換行會照原樣顯示，網址會變成可點的連結。"></textarea></label>
+          </div>
+        </section>
         <details class="card gh-set" id="ghSet">
           <summary>GitHub 發布設定</summary>
           <div class="ed-pad gh-set__body">
@@ -637,6 +660,7 @@ footer a{color:var(--muted)}
 <nav class="tabbar" id="tabbar" aria-label="主選單">
   <a class="ti" href="#overview" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>行程</a>
   <a class="ti" href="#alerts" data-view="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span class="badge" id="alertBadge" hidden></span>需要留意</a>
+  <a class="ti" href="#report" data-view="report" data-js="report-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>報告</a>
   <a class="ti" href="#lookup" data-view="lookup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>地點查詢</a>
   <a class="ti" href="#edit" data-view="edit" id="tabEdit" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>編輯</a>
 </nav>
@@ -981,7 +1005,8 @@ function normalize(p, keepUndated = false) {
     lat: Number.isFinite(+s.lat) && s.lat !== null && s.lat !== '' ? +s.lat : null, lon: Number.isFinite(+s.lon) && s.lon !== null && s.lon !== '' ? +s.lon : null, timezone: String(s.timezone || 'auto'),
     start: String(s.start || ''), end: String(!s.end || s.end < s.start ? (s.start || '') : s.end), kind: ['depart', 'return'].includes(s.kind) ? s.kind : 'stay', place: String(s.place || ''), note: '', climate: s.climate && s.climate.key ? s.climate : undefined
   }));
-  return { version: 1, title: String(p.title || '行程天氣'), subtitle: String(p.subtitle || ''), updatedAt: p.updatedAt || null, groups, segments };
+  const report = { text: String(p.report?.text ?? ''), updatedAt: p.report?.updatedAt ?? null };
+  return { version: 1, title: String(p.title || '行程天氣'), subtitle: String(p.subtitle || ''), updatedAt: p.updatedAt || null, report, groups, segments };
 }
 
 /* ========= 總覽 ========= */
@@ -1471,7 +1496,7 @@ function ghCfg() { return { ...CONFIG.github, ...(sget(GH_KEY) || {}) }; }
 function saveDraft() { sset(DRAFT_KEY, draft); $('draftState').textContent = '有未發布的修改'; if (location.hash === '#edit') renderHeader(draft); }
 function startEdit() {
   if (!draft) { const saved = sget(DRAFT_KEY); draft = saved ? normalize(saved, true) : normalize(JSON.parse(JSON.stringify(data)), true); $('draftState').textContent = saved ? '已載入上次未發布的修改' : ''; }
-  $('edTitle').value = draft.title; $('edSub').value = draft.subtitle;
+  $('edTitle').value = draft.title; $('edSub').value = draft.subtitle; $('edReport').value = draft.report.text;
   const c = ghCfg(); $('ghOwner').value = c.owner || ''; $('ghRepo').value = c.repo || ''; $('ghBranch').value = c.branch || 'main'; $('ghPath').value = c.path || 'data.json'; $('ghToken').value = c.token || '';
   if (!c.token) $('ghSet').open = true;
   if (!draft.groups.some(g => g.id === selGroup)) selGroup = draft.groups[0].id;
@@ -1481,6 +1506,7 @@ function startEdit() {
 function renderEditor() { renderEdGroups(); renderEdSegs(); renderEdForm(); }
 $('edTitle').addEventListener('input', () => { draft.title = $('edTitle').value; saveDraft(); renderHeader(draft); });
 $('edSub').addEventListener('input', () => { draft.subtitle = $('edSub').value; saveDraft(); renderHeader(draft); });
+document.querySelector('[data-js="report-input"]').addEventListener('input', e => { draft.report = { text: e.target.value, updatedAt: new Date().toISOString() }; saveDraft(); });
 function groupSegs(gid) { return draft.segments.filter(s => s.groupId === gid).sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end)); }
 
 /* 組別頁籤（固定：本隊＋先遣） */
@@ -1769,14 +1795,58 @@ $('ghTest').addEventListener('click', async () => {
   } catch (e) { console.error('GitHub 測試連線失敗：', e); ghMsg(e.message || '連線失敗。', 'err'); }
 });
 
+/* ========= 行程報告 ========= */
+const REPORT_LINK_PATTERN = /https?:\/\/[^\s<>"'，。、）」]+/g;
+const byJs = name => document.querySelector(`[data-js="${name}"]`);
+function hasReport(proj) { return Boolean(proj?.report?.text?.trim()); }
+function syncReportTabs(proj) {
+  document.querySelectorAll('[data-js="report-tab"]').forEach(tab => { tab.hidden = !hasReport(proj); });
+}
+// 把文字放進元素，網址轉成連結；一律用文字節點，不用 innerHTML
+function appendLinkedText(target, text) {
+  let last = 0;
+  for (const match of text.matchAll(REPORT_LINK_PATTERN)) {
+    target.append(text.slice(last, match.index));
+    const link = document.createElement('a');
+    link.className = 'report__link'; link.href = match[0]; link.textContent = match[0];
+    link.target = '_blank'; link.rel = 'noopener noreferrer';
+    target.append(link);
+    last = match.index + match[0].length;
+  }
+  target.append(text.slice(last));
+}
+function showReportState(status, proj) {
+  byJs('report-loading').hidden = status !== STATUS.LOADING;
+  byJs('report-error').hidden = status !== STATUS.ERROR;
+  byJs('report-empty').hidden = status !== STATUS.SUCCESS || hasReport(proj);
+}
+function renderReport(proj) {
+  const status = isDemoFallback ? STATUS.ERROR : STATUS.SUCCESS;
+  const body = byJs('report-body'), meta = byJs('report-meta');
+  showReportState(status, proj);
+  body.replaceChildren();
+  meta.textContent = '';
+  if (status !== STATUS.SUCCESS || !hasReport(proj)) return;
+  appendLinkedText(body, proj.report.text.trim());
+  if (proj.report.updatedAt) meta.textContent = `最後更新：${fmtTime(proj.report.updatedAt)}`;
+}
+async function retryReport() {
+  showReportState(STATUS.LOADING);
+  isDemoFallback = false;
+  await loadData();
+  route();
+}
+byJs('report-retry').addEventListener('click', retryReport);
+
 /* ========= 路由 ========= */
 function route() {
   const h = location.hash;
   const mobile = window.matchMedia('(max-width:760px)').matches;
-  let v = h === '#lookup' ? 'lookup' : h === '#edit' ? 'edit' : (h === '#alerts' && mobile) ? 'alerts' : 'overview';
+  let v = h === '#lookup' ? 'lookup' : h === '#edit' ? 'edit' : h === '#report' ? 'report' : (h === '#alerts' && mobile) ? 'alerts' : 'overview';
   if (v === 'edit' && !isEditor()) v = 'gate';
   syncEditTab();
-  ['overview', 'lookup', 'edit', 'gate', 'alerts'].forEach(k => { $('view-' + k).hidden = k !== v; });
+  ['overview', 'lookup', 'edit', 'gate', 'alerts', 'report'].forEach(k => { $('view-' + k).hidden = k !== v; });
+  syncReportTabs(data);
   document.querySelectorAll('.tabbar .ti').forEach(t => t.setAttribute('aria-current', t.dataset.view === (v === 'gate' ? 'edit' : v) ? 'page' : 'false'));
   document.querySelectorAll('.tab, .tab-edit').forEach(t => t.setAttribute('aria-current', t.dataset.view === v || (v === 'overview' && h === '#edit-preview' && t.dataset.view === 'overview') ? 'page' : 'false'));
   closeDrawer();
@@ -1794,6 +1864,7 @@ function route() {
   }
   if (v === 'lookup') { $('banner').hidden = true; if (lkMap) setTimeout(() => lkMap.invalidateSize(), 50); }
   if (v === 'edit') $('banner').hidden = true;
+  if (v === 'report') { $('banner').hidden = true; renderReport(data); }
 }
 window.addEventListener('hashchange', route);
 

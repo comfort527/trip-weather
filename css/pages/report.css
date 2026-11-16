@@ -1,0 +1,12 @@
+/* 行程報告分頁（#report）與編輯頁的報告欄位 */
+.report{max-width:var(--measure);margin:var(--sp-4) auto 0;padding:var(--sp-5) var(--sp-4)}
+.report__title{margin:0;font-family:var(--f-display);font-size:var(--fs-lg)}
+.report__meta{margin:var(--sp-1) 0 var(--sp-5);font-size:var(--fs-sm);color:var(--muted)}
+.report__meta:empty{margin-bottom:var(--sp-3)}
+.report__state{margin:0;color:var(--muted)}
+.report__body{font-size:var(--fs-md);line-height:var(--lh-read);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.report__link{color:var(--accent)}
+.ed-report__text{resize:vertical;font-weight:normal;line-height:var(--lh-read)}
+@media (min-width:640px){
+  .report{padding:var(--sp-6)}
+}
