@@ -77,4 +77,4 @@
 - [ ] T86 直接打開 #edit 選台北出發／返抵段 → 右下天氣預覽顯示中央氣象署的中文天氣
 - [ ] T82 地點查詢台灣城市：7 天內為中央氣象署資料，之後為 Open-Meteo 或歷年平均
 - [ ] T83 備援：data/cwa.json 讀不到或超過 36 小時未更新 → 台灣地點自動改用 Open-Meteo，頁面正常
-- [ ] T84 自動排程：GitHub → Actions →「更新中央氣象署預報」→ Run workflow → 成功，data/cwa.json 的 updatedAt 更新
+- [ ] T84 自動排程：GitHub → Actions →「更新中央氣象署預報」→ Run workflow → 綠色勾勾；紀錄出現「已寫入 data/cwa.json」（有新預報，會多一筆提交）或「預報內容沒有變動」（不提交，也算成功）
