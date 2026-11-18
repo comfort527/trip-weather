@@ -1,0 +1,39 @@
+/* 液態玻璃（Liquid Glass）
+   浮在內容上方的元件（底部選單、頁首、組別按鈕、詳細資料面板）用毛玻璃；
+   卡片與清單只做半透明，透出背景光暈（不加模糊，避免手機捲動變慢）。
+   必須在 index.html 內嵌 <style> 之後載入，才能覆蓋舊樣式。 */
+
+/* 背景光暈 */
+body{background:transparent}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--glass-backdrop)}
+
+/* 頁首分頁按鍵 */
+.tabs{border:0;border-radius:var(--radius-pill);padding:var(--sp-1);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
+.tab{border-radius:var(--radius-pill);padding:var(--sp-2) var(--sp-4)}
+.tab[aria-current="page"]{background:var(--glass-gloss),var(--accent);box-shadow:var(--glass-gloss-rim),var(--glass-glow-accent)}
+.tab-edit{border:0;border-radius:var(--radius-pill);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
+.tab-edit[aria-current="page"]{background:var(--glass-gloss),var(--ink);box-shadow:var(--glass-gloss-rim),var(--glass-glow-ink)}
+
+/* 手機底部選單：浮動玻璃膠囊（只在手機版顯示） */
+.tabbar{left:max(var(--sp-3),env(safe-area-inset-left,0px));right:max(var(--sp-3),env(safe-area-inset-right,0px));bottom:calc(var(--sp-3) + env(safe-area-inset-bottom,0px));padding:var(--sp-2);border:0;border-radius:var(--radius-dock);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
+.tabbar .ti{border-radius:var(--radius-dock-item);padding:var(--sp-1) 0}
+.tabbar .ti[aria-current="page"]{background:var(--glass-active);box-shadow:var(--glass-rim)}
+
+/* 手機組別按鈕 */
+.gtabs{background:transparent;-webkit-backdrop-filter:var(--glass-blur-bar);backdrop-filter:var(--glass-blur-bar)}
+.gtab{border:0;background:var(--glass-fill);box-shadow:var(--glass-rim),var(--glass-shadow-sm)}
+.gtab[aria-selected="true"]{background:var(--glass-gloss),var(--ink);box-shadow:var(--glass-gloss-rim),var(--glass-glow-ink)}
+
+/* 卡片與清單：半透明 */
+.card,.blist,.malerts .al-grp{border-color:var(--glass-edge);border-radius:var(--radius-glass);background:var(--glass-fill-strong);box-shadow:var(--glass-rim),var(--glass-shadow)}
+
+/* 詳細資料面板：四邊離開畫面的玻璃面板 */
+.scrim{background:var(--glass-scrim)}
+.drawer{margin:var(--sp-2);max-width:calc(100% - 2 * var(--sp-2));border:0;border-radius:var(--radius-sheet);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--glass-blur-panel);backdrop-filter:var(--glass-blur-panel);box-shadow:var(--glass-rim),var(--shadow-drawer)}
+
+/* 電腦版：頁首往下捲動時黏在上方（編輯頁除外，避免擋住編輯操作列） */
+@media (min-width:1024px){
+  .top{position:sticky;top:var(--sp-3);z-index:800;padding:var(--sp-3) var(--sp-4);border:0;border-radius:var(--radius-glass);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
+  .top .tabs,.top .tab-edit{box-shadow:var(--glass-rim)}
+  .wrap:has(> .edit-view:not([hidden])) .top{position:static}
+}

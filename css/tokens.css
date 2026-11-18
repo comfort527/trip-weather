@@ -20,6 +20,28 @@
   --bw-1:1px;--bw-2:2px;--bw-4:4px;
   --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
   --measure:46em;
+  /* 液態玻璃：填色、亮邊、陰影、模糊、圓角、背景光暈 */
+  --glass-fill:color-mix(in srgb,var(--surface) 42%,transparent);
+  --glass-fill-strong:color-mix(in srgb,var(--surface) 72%,transparent);
+  --glass-edge:rgba(255,255,255,.5);
+  --glass-rim:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 1px rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,255,255,.45);
+  --glass-shadow:0 10px 30px rgba(15,25,40,.16),0 1px 3px rgba(15,25,40,.1);
+  --glass-shadow-sm:0 2px 8px rgba(15,25,40,.08);
+  --glass-gloss:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 55%);
+  --glass-gloss-rim:inset 0 1px 0 rgba(255,255,255,.45);
+  --glass-active:color-mix(in srgb,var(--accent) 16%,rgba(255,255,255,.35));
+  --glass-glow-accent:0 3px 10px color-mix(in srgb,var(--accent) 40%,transparent);
+  --glass-glow-ink:0 3px 10px rgba(15,25,40,.25);
+  --glass-scrim:rgba(10,16,22,.18);
+  --glass-blur:blur(14px) saturate(190%);
+  --glass-blur-bar:blur(10px) saturate(160%);
+  --glass-blur-panel:blur(30px) saturate(180%);
+  --glass-backdrop:
+    radial-gradient(55% 38% at 8% 4%,color-mix(in srgb,var(--p1) 22%,transparent),transparent 70%),
+    radial-gradient(45% 35% at 95% 18%,color-mix(in srgb,var(--p2) 18%,transparent),transparent 70%),
+    radial-gradient(60% 45% at 40% 100%,color-mix(in srgb,var(--p3) 16%,transparent),transparent 70%),
+    radial-gradient(40% 30% at 100% 80%,color-mix(in srgb,var(--p4) 13%,transparent),transparent 70%);
+  --radius-glass:22px;--radius-sheet:28px;--radius-dock:32px;--radius-dock-item:26px;--radius-pill:999px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -30,7 +52,15 @@
   --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
   --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
   --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}}
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --glass-fill:color-mix(in srgb,var(--surface) 50%,transparent);--glass-fill-strong:color-mix(in srgb,var(--surface) 76%,transparent);
+  --glass-edge:rgba(255,255,255,.1);
+  --glass-rim:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 1px rgba(255,255,255,.06),inset 0 0 0 1px rgba(255,255,255,.12);
+  --glass-shadow:0 10px 30px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3);
+  --glass-gloss:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%);
+  --glass-active:color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.06));
+  --glass-glow-ink:0 3px 10px rgba(0,0,0,.4);--glass-scrim:rgba(0,0,0,.35);
+  color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1319;--surface:#151c24;--surface-2:#1a232d;--ink:#e5ecf2;--muted:#93a1af;--line:#2a3542;--line-2:#222c37;
   --accent:#86adf5;--accent-soft:#1d2b40;--accent-ink:#0e1319;
@@ -39,4 +69,20 @@
   --g1:#8a9bff;--g2:#3fc7bd;--g3:#f0a35a;--g4:#f27aa9;--g5:#ab97ff;--g6:#98c76a;
   --rule-day:#36424f;--rule-group:#5a6979;--bar-ink:#0e1319;--bar-ink-alt:#fff;
   --p0:#9aa7b5;--p1:#8a9bff;--p2:#3fc7bd;--p3:#f0a35a;--p4:#f27aa9;--p5:#ab97ff;--p6:#98c76a;--p7:#6cc4ec;--p8:#d6a272;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark}
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --glass-fill:color-mix(in srgb,var(--surface) 50%,transparent);--glass-fill-strong:color-mix(in srgb,var(--surface) 76%,transparent);
+  --glass-edge:rgba(255,255,255,.1);
+  --glass-rim:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 1px rgba(255,255,255,.06),inset 0 0 0 1px rgba(255,255,255,.12);
+  --glass-shadow:0 10px 30px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3);
+  --glass-gloss:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%);
+  --glass-active:color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.06));
+  --glass-glow-ink:0 3px 10px rgba(0,0,0,.4);--glass-scrim:rgba(0,0,0,.35);
+  color-scheme:dark}
+
+/* 液態玻璃的備援：系統開啟「降低透明度」，或瀏覽器不支援毛玻璃時，改回不透明 */
+@media (prefers-reduced-transparency:reduce){
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface);--glass-backdrop:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface)}
+}
