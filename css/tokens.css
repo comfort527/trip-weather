@@ -42,6 +42,17 @@
     radial-gradient(60% 45% at 40% 100%,color-mix(in srgb,var(--p3) 16%,transparent),transparent 70%),
     radial-gradient(40% 30% at 100% 80%,color-mix(in srgb,var(--p4) 13%,transparent),transparent 70%);
   --radius-glass:22px;--radius-sheet:28px;--radius-dock:32px;--radius-dock-item:26px;--radius-pill:999px;
+  /* 底部導覽列（更透明的懸浮毛玻璃）與地圖標記 */
+  --glass-fill-dock:color-mix(in srgb,var(--surface) 28%,transparent);
+  --glass-blur-dock:blur(22px) saturate(210%);
+  --glass-rim-dock:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 1px rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.5);
+  --glass-shadow-dock:0 14px 40px rgba(15,25,40,.22),0 2px 6px rgba(15,25,40,.1);
+  --glass-active-dock:color-mix(in srgb,var(--accent) 10%,rgba(255,255,255,.3));
+  --dock-icon-glow:drop-shadow(0 4px 6px color-mix(in srgb,var(--accent) 45%,transparent));
+  --shadow-pin:0 2px 6px rgba(0,0,0,.35);
+  --shadow-label:0 2px 8px rgba(0,0,0,.18);
+  --map-label-fill:color-mix(in srgb,var(--surface) 90%,transparent);
+  --fs-xs:12px;--sz-pin:26px;--bw-pin:2px;--radius-label:8px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -60,6 +71,10 @@
   --glass-gloss:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%);
   --glass-active:color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.06));
   --glass-glow-ink:0 3px 10px rgba(0,0,0,.4);--glass-scrim:rgba(0,0,0,.35);
+  --glass-fill-dock:color-mix(in srgb,var(--surface) 40%,transparent);
+  --glass-rim-dock:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -1px 1px rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.14);
+  --glass-shadow-dock:0 14px 40px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --glass-active-dock:color-mix(in srgb,var(--accent) 20%,rgba(255,255,255,.06));
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1319;--surface:#151c24;--surface-2:#1a232d;--ink:#e5ecf2;--muted:#93a1af;--line:#2a3542;--line-2:#222c37;
@@ -77,12 +92,16 @@
   --glass-gloss:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%);
   --glass-active:color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.06));
   --glass-glow-ink:0 3px 10px rgba(0,0,0,.4);--glass-scrim:rgba(0,0,0,.35);
+  --glass-fill-dock:color-mix(in srgb,var(--surface) 40%,transparent);
+  --glass-rim-dock:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -1px 1px rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.14);
+  --glass-shadow-dock:0 14px 40px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --glass-active-dock:color-mix(in srgb,var(--accent) 20%,rgba(255,255,255,.06));
   color-scheme:dark}
 
 /* 液態玻璃的備援：系統開啟「降低透明度」，或瀏覽器不支援毛玻璃時，改回不透明 */
 @media (prefers-reduced-transparency:reduce){
-  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface);--glass-backdrop:none}
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface);--glass-fill-dock:var(--surface);--glass-backdrop:none}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface)}
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--glass-fill:var(--surface);--glass-fill-strong:var(--surface);--glass-fill-dock:var(--surface)}
 }

@@ -519,8 +519,12 @@ footer a{color:var(--muted)}
     </section>
 
     <section class="card mapcard">
-      <h2>行程地圖<span>各組停留城市</span></h2>
-      <div id="tripMap" class="map-box" role="img" aria-label="行程城市地圖"></div>
+      <div class="mapcard__head">
+        <h2>行程地圖</h2>
+        <div class="map-groups" data-js="map-groups" role="group" aria-label="地圖顯示的組別"></div>
+      </div>
+      <p class="map-empty" data-js="map-empty" hidden>這一組還沒有停留城市。</p>
+      <div id="tripMap" class="map-box" role="img" aria-label="行程地圖"></div>
     </section>
   </main>
 
@@ -1170,15 +1174,17 @@ function halfSlots(segs, a) {
 }
 const PLACE_COLORS = ['--p1', '--p2', '--p3', '--p4', '--p5', '--p6', '--p7', '--p8'];
 function placeKey(s) { return isStay(s) ? (s.label || s.place || locKey(s.lat, s.lon)).trim().toLowerCase() : '台北'; }
-function placeColor(proj, s) {
-  const key = placeKey(s); if (key === '台北') return 'var(--p0)';
+function placeColor(proj, s) { return `var(${placeColorToken(proj, s)})`; }
+// 城市顏色的設計變數名稱（例如 --p3）
+function placeColorToken(proj, s) {
+  const key = placeKey(s); if (key === '台北') return '--p0';
   if (!proj._placeIdx) {   // 依日期先後，替每個城市分配一個顏色
     const m = new Map();
     [...proj.segments].filter(x => isStay(x) && placeKey(x) !== '台北').sort((a, b) => a.start.localeCompare(b.start)).forEach(x => { const k = placeKey(x); if (!m.has(k)) m.set(k, m.size); });
     Object.defineProperty(proj, '_placeIdx', { value: m, enumerable: false });
   }
   const i = proj._placeIdx.get(key) ?? 0;
-  return `var(${PLACE_COLORS[i % PLACE_COLORS.length]})`;
+  return PLACE_COLORS[i % PLACE_COLORS.length];
 }
 // 色條上下兩端都標城市名；畫完後依實際高度判斷，放不下兩個時只留上端
 function barLabel(s) { const t = esc(s.label || '未填城市'); return `<span>${t}</span><span class="b2">${t}</span>`; }
@@ -1272,22 +1278,87 @@ function renderAlerts(proj) {
 
 // 讀取 tokens.css 的設計變數（給 Leaflet 這類只能吃色碼字串的地方用）
 const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+/* ========= 行程地圖：選定組別的移動路線 ========= */
 let tripMap = null, tripLayer = null;
+const MAP_ARROW_ID = 'map-arrow';
+function ensureTripMap() {
+  if (tripMap) return;
+  tripMap = L.map('tripMap', { scrollWheelZoom: false });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(tripMap);
+}
+// 路線上的方向箭頭：SVG marker，每組一個（顏色由 CSS 決定）
+function ensureMapArrows() {
+  if (document.getElementById(`${MAP_ARROW_ID}-1`)) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg'), defs = document.createElementNS(NS, 'defs');
+  svg.setAttribute('class', 'map-defs'); svg.setAttribute('aria-hidden', 'true');
+  GROUP_COLORS.forEach((_, i) => {
+    const marker = document.createElementNS(NS, 'marker'), path = document.createElementNS(NS, 'path');
+    Object.entries({ id: `${MAP_ARROW_ID}-${i + 1}`, viewBox: '0 0 10 10', refX: '5', refY: '5', markerWidth: '14', markerHeight: '14', markerUnits: 'userSpaceOnUse', orient: 'auto' }).forEach(([k, v]) => marker.setAttribute(k, v));
+    path.setAttribute('d', 'M1 1 9 5 1 9Z'); path.setAttribute('class', `map-arrow map-arrow--${i + 1}`);
+    marker.append(path); defs.append(marker);
+  });
+  svg.append(defs); document.body.append(svg);
+}
+function selectedMapGroup(proj) {
+  if (!proj.groups.some(g => g.id === mGroup)) mGroup = proj.groups[0]?.id;
+  const index = proj.groups.findIndex(g => g.id === mGroup);
+  return { group: proj.groups[index], colorNo: (index % GROUP_COLORS.length) + 1 };
+}
+function renderMapGroups(proj) {
+  const box = document.querySelector('[data-js="map-groups"]');
+  box.replaceChildren(...proj.groups.map((g, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = `map-group map-group--${(i % GROUP_COLORS.length) + 1}`;
+    btn.textContent = g.name; btn.setAttribute('aria-pressed', String(g.id === mGroup));
+    btn.addEventListener('click', () => selectMapGroup(g.id));
+    return btn;
+  }));
+}
+function selectMapGroup(id) {
+  mGroup = id; sset(MG_KEY, mGroup);
+  const proj = view();
+  renderMap(proj);
+  if (window.matchMedia('(max-width:760px)').matches) renderMobileList(proj);
+}
+// 路線點：每兩個城市之間插入中點，讓箭頭（marker-mid）出現在路段中間
+function routeWithMidpoints(points) {
+  return points.flatMap((p, i) => (i === 0 ? [p] : [[(points[i - 1][0] + p[0]) / 2, (points[i - 1][1] + p[1]) / 2], p]));
+}
+function createMapPin(proj, seg, order) {
+  const pin = document.createElement('span');
+  pin.className = `map-pin map-pin--${placeColorToken(proj, seg).slice(2)}`;
+  pin.textContent = String(order);
+  return L.divIcon({ className: 'map-pin-wrap', iconSize: [26, 26], html: pin });
+}
+function createMapLabel(seg) {
+  const label = document.createElement('span'), dates = document.createElement('small');
+  label.textContent = seg.label; dates.className = 'map-label__dates'; dates.textContent = `${md(seg.start)}–${md(seg.end)}`;
+  label.append(dates);
+  return label;
+}
+// 須在地圖設定好顯示範圍後呼叫，路線的 SVG 元素才會存在
+function drawMapRoute(proj, segs, points, colorNo) {
+  if (points.length > 1) {
+    const line = L.polyline(routeWithMidpoints(points), { className: `map-route map-route--${colorNo}`, weight: 4, opacity: 0.9, smoothFactor: 0 }).addTo(tripLayer);
+    line.getElement()?.setAttribute('marker-mid', `url(#${MAP_ARROW_ID}-${colorNo})`);
+  }
+  segs.forEach((s, i) => L.marker(points[i], { icon: createMapPin(proj, s, i + 1), keyboard: false })
+    .bindTooltip(createMapLabel(s), { permanent: true, direction: 'right', offset: [14, 0], className: 'map-label' }).addTo(tripLayer));
+}
 function renderMap(proj) {
   if (typeof L === 'undefined') { $('tripMap').innerHTML = '<p class="muted map-error">地圖元件無法載入。</p>'; return; }
-  if (!tripMap) { tripMap = L.map('tripMap', { scrollWheelZoom: false }); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(tripMap); }
+  ensureTripMap(); ensureMapArrows();
   if (tripLayer) tripLayer.remove();
   tripLayer = L.layerGroup().addTo(tripMap);
-  const pts = [];
-  proj.groups.forEach((g, gi) => {
-    const segs = proj.segments.filter(s => s.groupId === g.id && s.lat != null && isStay(s)).sort((a, b) => a.start.localeCompare(b.start));
-    const color = cssVar(GROUP_COLORS[gi % GROUP_COLORS.length]) || cssVar('--accent');
-    const off = (gi - (proj.groups.length - 1) / 2) * 0.04; // 同城多組時略微錯開
-    const ll = segs.map(s => [s.lat + off * 0.5, s.lon + off]);
-    if (ll.length > 1) L.polyline(ll, { color, weight: 3, opacity: .8, dashArray: '6 6' }).addTo(tripLayer);
-    segs.forEach((s, i) => { L.circleMarker(ll[i], { radius: 8, color: cssVar('--marker-ring'), weight: 2, fillColor: color, fillOpacity: 1 }).bindTooltip(`${esc(g.name)}・${esc(s.label)}<br>${md(s.start)}–${md(s.end)}`).addTo(tripLayer); pts.push(ll[i]); });
-  });
-  if (pts.length) tripMap.fitBounds(pts, { padding: [36, 36], maxZoom: 9 }); else tripMap.setView([30, 10], 2);
+  const { group, colorNo } = selectedMapGroup(proj);
+  renderMapGroups(proj);
+  const segs = proj.segments.filter(s => s.groupId === group?.id && s.lat != null && isStay(s)).sort((a, b) => a.start.localeCompare(b.start));
+  const points = segs.map(s => [s.lat, s.lon]);
+  if (points.length) tripMap.fitBounds(points, { padding: [50, 50], maxZoom: 8 }); else tripMap.setView([30, 10], 2);
+  drawMapRoute(proj, segs, points, colorNo);
+  document.querySelector('[data-js="map-empty"]').hidden = segs.length > 0;
+  $('tripMap').setAttribute('aria-label', segs.length ? `${group.name}的移動路線：${segs.map(s => s.label).join(' → ')}` : '行程地圖');
   setTimeout(() => tripMap.invalidateSize(), 50);
 }
 
@@ -1306,7 +1377,7 @@ function renderMobileList(proj) {
   const tabs = $('mGroupTabs'), box = $('mList');
   if (!proj.groups.some(g => g.id === mGroup)) mGroup = proj.groups[0]?.id;
   tabs.innerHTML = proj.groups.map(g => `<button type="button" class="gtab" role="tab" data-mg="${esc(g.id)}" aria-selected="${g.id === mGroup}">${esc(g.name)}</button>`).join('');
-  tabs.querySelectorAll('[data-mg]').forEach(b => b.addEventListener('click', () => { mGroup = b.dataset.mg; sset(MG_KEY, mGroup); renderMobileList(view()); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+  tabs.querySelectorAll('[data-mg]').forEach(b => b.addEventListener('click', () => { mGroup = b.dataset.mg; sset(MG_KEY, mGroup); renderMobileList(view()); renderMap(view()); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
   const segs = proj.segments.filter(s => s.groupId === mGroup);
   const sp = tripSpan({ segments: segs });
   if (!sp) { box.innerHTML = `<div class="blist"><div class="bempty">這一組還沒有行程。</div></div>`; return; }

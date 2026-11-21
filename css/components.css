@@ -14,10 +14,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .tab-edit{border:0;border-radius:var(--radius-pill);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
 .tab-edit[aria-current="page"]{background:var(--glass-gloss),var(--ink);box-shadow:var(--glass-gloss-rim),var(--glass-glow-ink)}
 
-/* 手機底部選單：浮動玻璃膠囊（只在手機版顯示） */
-.tabbar{left:max(var(--sp-3),env(safe-area-inset-left,0px));right:max(var(--sp-3),env(safe-area-inset-right,0px));bottom:calc(var(--sp-3) + env(safe-area-inset-bottom,0px));padding:var(--sp-2);border:0;border-radius:var(--radius-dock);background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-shadow)}
-.tabbar .ti{border-radius:var(--radius-dock-item);padding:var(--sp-1) 0}
-.tabbar .ti[aria-current="page"]{background:var(--glass-active);box-shadow:var(--glass-rim)}
+/* 手機底部選單：懸浮毛玻璃；選到的圖示浮起、彈一下並變色（只在手機版顯示） */
+.tabbar{left:max(var(--sp-3),env(safe-area-inset-left,0px));right:max(var(--sp-3),env(safe-area-inset-right,0px));bottom:calc(var(--sp-3) + env(safe-area-inset-bottom,0px));padding:var(--sp-2);border:0;border-radius:var(--radius-dock);background:var(--glass-fill-dock);-webkit-backdrop-filter:var(--glass-blur-dock);backdrop-filter:var(--glass-blur-dock);box-shadow:var(--glass-rim-dock),var(--glass-shadow-dock)}
+.tabbar .ti{border-radius:var(--radius-dock-item);padding:var(--sp-1) 0;transition:color .25s}
+.tabbar .ti svg{transition:transform .35s cubic-bezier(.3,1.5,.5,1),filter .35s}
+.tabbar .ti[aria-current="page"]{color:var(--accent);background:var(--glass-active-dock)}
+.tabbar .ti[aria-current="page"] svg{transform:translateY(-4px) scale(1.14);filter:var(--dock-icon-glow);animation:tab-pop .7s ease-out}
+@keyframes tab-pop{
+  0%{transform:translateY(0) scale(1)}
+  25%{transform:translateY(-15px) scale(1.32)}
+  50%{transform:translateY(0) scale(.98)}
+  70%{transform:translateY(-8px) scale(1.2)}
+  86%{transform:translateY(-3px) scale(1.12)}
+  100%{transform:translateY(-4px) scale(1.14)}
+}
 
 /* 手機組別按鈕 */
 .gtabs{background:transparent;-webkit-backdrop-filter:var(--glass-blur-bar);backdrop-filter:var(--glass-blur-bar)}
@@ -37,3 +47,33 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   .top .tabs,.top .tab-edit{box-shadow:var(--glass-rim)}
   .wrap:has(> .edit-view:not([hidden])) .top{position:static}
 }
+
+/* 行程地圖：組別按鈕、路線、編號圓點、城市標籤 */
+.mapcard__head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--sp-2) var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:var(--bw-1) solid var(--line)}
+.mapcard__head h2{padding:0;border:0}
+.map-groups{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.map-group{border:0;border-radius:var(--radius-pill);padding:var(--sp-1) var(--sp-3);font-weight:700;font-size:var(--fs-xs);color:var(--muted);background:var(--glass-fill);box-shadow:inset 0 0 0 var(--bw-1) var(--line)}
+.map-group[aria-pressed="true"]{color:var(--bar-ink);box-shadow:var(--glass-gloss-rim)}
+.map-group--1[aria-pressed="true"]{background:var(--glass-gloss),var(--g1)}
+.map-group--2[aria-pressed="true"]{background:var(--glass-gloss),var(--g2)}
+.map-group--3[aria-pressed="true"]{background:var(--glass-gloss),var(--g3)}
+.map-group--4[aria-pressed="true"]{background:var(--glass-gloss),var(--g4)}
+.map-group--5[aria-pressed="true"]{background:var(--glass-gloss),var(--g5)}
+.map-group--6[aria-pressed="true"]{background:var(--glass-gloss),var(--g6)}
+.map-empty{margin:0;padding:var(--sp-2) var(--sp-4);font-size:var(--fs-sm);color:var(--muted)}
+.map-defs{position:absolute;width:0;height:0;overflow:hidden}
+.map-route{stroke-linecap:round;stroke-linejoin:round;fill:none}
+.map-route--1{stroke:var(--g1)}.map-arrow--1{fill:var(--g1)}
+.map-route--2{stroke:var(--g2)}.map-arrow--2{fill:var(--g2)}
+.map-route--3{stroke:var(--g3)}.map-arrow--3{fill:var(--g3)}
+.map-route--4{stroke:var(--g4)}.map-arrow--4{fill:var(--g4)}
+.map-route--5{stroke:var(--g5)}.map-arrow--5{fill:var(--g5)}
+.map-route--6{stroke:var(--g6)}.map-arrow--6{fill:var(--g6)}
+.map-pin-wrap{background:none;border:0}
+.map-pin{display:grid;place-items:center;width:var(--sz-pin);height:var(--sz-pin);border-radius:50%;border:var(--bw-pin) solid var(--marker-ring);box-shadow:var(--shadow-pin);color:var(--bar-ink);font:700 var(--fs-sm) var(--f-num)}
+.map-pin--p0{background:var(--p0)}.map-pin--p1{background:var(--p1)}.map-pin--p2{background:var(--p2)}
+.map-pin--p3{background:var(--p3)}.map-pin--p4{background:var(--p4)}.map-pin--p5{background:var(--p5)}
+.map-pin--p6{background:var(--p6)}.map-pin--p7{background:var(--p7)}.map-pin--p8{background:var(--p8)}
+.leaflet-tooltip.map-label{padding:var(--sp-1) var(--sp-2);border:0;border-radius:var(--radius-label);background:var(--map-label-fill);box-shadow:var(--shadow-label);color:var(--ink);font-weight:700;font-size:var(--fs-xs)}
+.leaflet-tooltip.map-label::before{display:none}
+.map-label__dates{margin-left:var(--sp-1);font-weight:400;color:var(--muted)}
