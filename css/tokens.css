@@ -52,7 +52,7 @@
   --shadow-pin:0 2px 6px rgba(0,0,0,.35);
   --shadow-label:0 2px 8px rgba(0,0,0,.18);
   --map-label-fill:color-mix(in srgb,var(--surface) 90%,transparent);
-  --fs-xs:12px;--sz-pin:26px;--bw-pin:2px;--radius-label:8px;
+  --fs-2xs:11px;--fs-xs:12px;--sz-pin:26px;--bw-pin:2px;--radius-label:8px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){

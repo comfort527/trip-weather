@@ -77,3 +77,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .leaflet-tooltip.map-label{padding:var(--sp-1) var(--sp-2);border:0;border-radius:var(--radius-label);background:var(--map-label-fill);box-shadow:var(--shadow-label);color:var(--ink);font-weight:700;font-size:var(--fs-xs)}
 .leaflet-tooltip.map-label::before{display:none}
 .map-label__dates{margin-left:var(--sp-1);font-weight:400;color:var(--muted)}
+
+/* 需要留意（手機）：目前組別排第一並加框，其他組別收合 */
+.malerts .al-grp--mine{box-shadow:inset 0 0 0 var(--bw-2) var(--accent),var(--glass-shadow)}
+.al-grp__mine{padding:0 var(--sp-2);border-radius:var(--radius-pill);background:var(--accent);color:var(--accent-ink);font-size:var(--fs-2xs);font-weight:700}
+.alert-soon{margin-left:var(--sp-1);font-size:var(--fs-2xs);font-weight:700;color:var(--bad);white-space:nowrap}
+.al-grp--other > summary{display:flex;align-items:center;gap:var(--sp-2);list-style:none;cursor:pointer;font-weight:700;font-size:var(--fs-sm)}
+.al-grp--other > summary::-webkit-details-marker{display:none}
+.al-grp--other > summary::after{content:"展開";margin-left:auto;font-size:var(--fs-xs);font-weight:400;color:var(--muted)}
+.al-grp--other[open] > summary{margin-bottom:var(--sp-2)}
+.al-grp--other[open] > summary::after{content:"收合"}

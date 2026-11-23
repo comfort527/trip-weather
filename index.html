@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>行程天氣總覽</title>
+<!-- 連結預覽：貼到 LINE 等聊天 App 時顯示的標題、說明與圖片（圖片網址須為完整網址） -->
+<meta name="description" content="各組每日所在城市的天氣：預報、歷年同期平均、實際天氣">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="行程天氣">
+<meta property="og:title" content="行程天氣｜各組天氣">
+<meta property="og:description" content="各組每日所在城市的天氣：預報、歷年同期平均、實際天氣">
+<meta property="og:url" content="https://comfort527.github.io/trip-weather/">
+<meta property="og:image" content="https://comfort527.github.io/trip-weather/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="行程天氣：公務出訪各組每日天氣看板">
+<meta name="twitter:card" content="summary_large_image">
 <!-- 圖示：更新圖檔時把 ?v= 的數字加 1，讓瀏覽器與手機重新抓取 -->
 <link rel="icon" href="assets/icons/favicon.svg?v=2" type="image/svg+xml">
 <link rel="icon" href="assets/icons/favicon-32.png?v=2" sizes="32x32" type="image/png">
@@ -1259,7 +1271,8 @@ function computeAlerts(proj) {
   const byGroup = proj.groups.map(g => ({ g, list: runs.filter(r => r.s.groupId === g.id).sort((a, b) => a.d0.localeCompare(b.d0) || a.tag.localeCompare(b.tag)) }));
   return { byGroup, runs, pending, T, msg };
 }
-const alertItem = (r, T, msg) => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${isStay(r.s) ? esc(r.s.label) : KIND_TXT[r.s.kind]}：${esc(msg(r))}</button></li>`;
+const ALERT_SOON_DAYS = 3;
+const alertItem = (r, T, msg, soon = false) => `<li><span class="tag ${r.tag}">${T[r.tag]}</span><button type="button" data-seg="${esc(r.s.id)}" data-date="${r.d0}"><span class="num">${r.d0 === r.d1 ? md(r.d0) : `${md(r.d0)}–${md(r.d1)}`}</span> ${isStay(r.s) ? esc(r.s.label) : KIND_TXT[r.s.kind]}：${esc(msg(r))}${soon ? `<span class="alert-soon">近 ${ALERT_SOON_DAYS} 天</span>` : ''}</button></li>`;
 function renderAlerts(proj) {
   const sum = $('alertSum'), body = $('alerts');
   if (!proj.segments.length) { sum.textContent = '尚無行程'; body.innerHTML = ''; renderMobileAlerts(proj, null); return; }
@@ -1319,6 +1332,7 @@ function selectMapGroup(id) {
   mGroup = id; sset(MG_KEY, mGroup);
   const proj = view();
   renderMap(proj);
+  renderAlerts(proj);
   if (window.matchMedia('(max-width:760px)').matches) renderMobileList(proj);
 }
 // 路線點：每兩個城市之間插入中點，讓箭頭（marker-mid）出現在路段中間
@@ -1364,20 +1378,32 @@ function renderMap(proj) {
 
 const MG_KEY = 'tripWeather.group';
 let mGroup = sget(MG_KEY);
+// 提醒清單（資料已在 alertItem 內跳脫）
+function alertListHTML(list, A, soonEnd) {
+  if (!list.length) return `<ul class="alert-list"><li class="muted">${A.pending ? '載入中…' : '沒有需要特別留意的天氣。'}</li></ul>`;
+  return `<ul class="alert-list">${list.map(r => alertItem(r, A.T, A.msg, r.d0 <= soonEnd)).join('')}</ul>`;
+}
+function otherGroupsAlertHTML(others, A, soonEnd) {
+  if (!others.length) return '';
+  return '<p class="hint">其他組別</p>' + others.map(({ g, list }) => `<details class="al-grp al-grp--other"><summary>${esc(g.name)}<span class="muted sub-note al-grp__count">${list.length} 項</span></summary>${alertListHTML(list, A, soonEnd)}</details>`).join('');
+}
+// 手機「需要留意」：紅點只算目前組別；目前組別排第一，其他組收合
 function renderMobileAlerts(proj, A) {
   const box = $('mAlerts'), badge = $('alertBadge');
   if (!A) { box.innerHTML = '<div class="bempty">尚無行程。</div>'; badge.hidden = true; return; }
-  const total = A.runs.length;
-  badge.hidden = !total; badge.textContent = total > 99 ? '99+' : total;
-  const today = localISO(), hz = forecastHorizon();
-  box.innerHTML = `<p class="hint">只檢查預報期間（今天到 ${md(hz)}）：降雨機率 60% 以上或雨量 10 mm 以上、高溫 33°C 以上、低溫 0°C 以下、陣風 55 km/h 以上。</p>` +
-    A.byGroup.map(({ g, list }) => `<div class="al-grp"><h3>${esc(g.name)}<span class="muted sub-note al-grp__count">${list.length} 項</span></h3><ul class="alert-list">${list.length ? list.map(r => alertItem(r, A.T, A.msg)).join('') : `<li class="muted">${A.pending ? '載入中…' : '沒有需要特別留意的天氣。'}</li>`}</ul></div>`).join('');
+  const mine = A.byGroup.find(x => x.g.id === mGroup) ?? A.byGroup[0];
+  const count = mine?.list.length ?? 0;
+  badge.hidden = !count; badge.textContent = count > 99 ? '99+' : count;
+  const soonEnd = addDays(localISO(), ALERT_SOON_DAYS - 1), hz = forecastHorizon();
+  box.innerHTML = `<p class="hint">只檢查預報期間（今天到 ${md(hz)}）：降雨機率 60% 以上或雨量 10 mm 以上、高溫 33°C 以上、低溫 0°C 以下、陣風 55 km/h 以上。</p>`
+    + `<section class="al-grp al-grp--mine"><h3>${esc(mine.g.name)}<span class="al-grp__mine">你的組別</span><span class="muted sub-note al-grp__count">${count} 項</span></h3>${alertListHTML(mine.list, A, soonEnd)}</section>`
+    + otherGroupsAlertHTML(A.byGroup.filter(x => x !== mine), A, soonEnd);
 }
 function renderMobileList(proj) {
   const tabs = $('mGroupTabs'), box = $('mList');
   if (!proj.groups.some(g => g.id === mGroup)) mGroup = proj.groups[0]?.id;
   tabs.innerHTML = proj.groups.map(g => `<button type="button" class="gtab" role="tab" data-mg="${esc(g.id)}" aria-selected="${g.id === mGroup}">${esc(g.name)}</button>`).join('');
-  tabs.querySelectorAll('[data-mg]').forEach(b => b.addEventListener('click', () => { mGroup = b.dataset.mg; sset(MG_KEY, mGroup); renderMobileList(view()); renderMap(view()); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+  tabs.querySelectorAll('[data-mg]').forEach(b => b.addEventListener('click', () => { mGroup = b.dataset.mg; sset(MG_KEY, mGroup); renderMobileList(view()); renderMap(view()); renderAlerts(view()); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
   const segs = proj.segments.filter(s => s.groupId === mGroup);
   const sp = tripSpan({ segments: segs });
   if (!sp) { box.innerHTML = `<div class="blist"><div class="bempty">這一組還沒有行程。</div></div>`; return; }
